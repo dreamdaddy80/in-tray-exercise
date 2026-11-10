@@ -236,7 +236,7 @@ OP("10-3_2","A").tw=[T(g=>g.safe>=50?45:30,"윤 책임이 상담을 취소했습
 OP("10-3_2","B").tw=[T(40,"문지원: \"말려 봤는데요.\" 그대로 떠났습니다.","`yoon_end_left` 사람-3",{ending:"윤 책임은 11월에 희망퇴직했습니다. 8년의 표는 자동화 설명서 부록이 되었습니다."})];
 ["10-3_1","10-3_2"].forEach(id=>S(id).options.forEach(o=>{const f=o.onDone;o.onDone=(g,h)=>{yoonP3(g);if(f)f(g,h);};}));
 const m104=S("10-4");m104.pair=["mfg","mkt"];m104.rel="mfg";m104.multX=g=>g.f.mfg_bloc?1.5:1;
-m104._say=m104.say;m104.say=g=>m104._say.map(x=>x[0]==="mfg"&&g.f.mfg_ally?["mfg",x[1]+" …말은 이렇게 해도, 숫자는 보겠습니다."]:x[0]==="mfg"&&g.f.mfg_exit?["mfg","(메일) "+x[1]]:x);
+m104._say=m104.say;m104.say=g=>m104._say.map(x=>x[0]==="mfg"&&g.f.mfg_ally?["mfg",x[1]+" …말은 이렇게 해도, 숫자는 보겠습니다."]:x[0]==="mfg"&&g.f.mfg_exit?["mfg","(메일로만 의견을 보냈습니다) "+x[1]]:x);
 m104.intro=(m104.intro||[]).concat([g=>g.f.mfg_bloc?"강태식·문지원 쪽이 함께 서명한 문서를 냈다.":""]);
 m104.conds2=[C(g=>g.f.alloc_notice,"4월 공지문의 세 가지 잣대가 옆에 표시된다."),C(g=>g.f.scope_full,"수주 이행에 들어갈 돈이 이미 잡혀 있습니다."),C(g=>g.f.inc_big,"지난달 라인이 6시간 섰다."),C(g=>g.bills.includes("B6"),"F사가 내년 8% 인하를 전제로 하고 있습니다.")];
 m104.enter2=g=>{g.pre104={a:g.trust.mfg+g.trust.src,b:g.trust.mkt+g.trust.rd};return "";};
@@ -247,7 +247,7 @@ const s105=S("10-5");s105.rel="mkt";
 s105.conds=s105.conds.map(c=>/실측 절감만 내년/.test(c.t)?C(c.c,"6월에 실측 절감만 내년 단가에 반영하기로 했습니다."):c);
 s105.xfx=[{c:g=>g.f.ct_measure,o:"BC",fx:"F사만족-2"},{c:g=>g.f.ct_cut,o:"C",fx:"재무-3"}];
 S("10-6_1").rel="prc";S("10-6_2").rel="prc";
-["10-6_1","10-6_2"].forEach(id=>{S(id).intro=[g=>g.prom.P6?"7월에, 10월에는 오 사원이 E-417을 고치기로 했습니다.":""].concat(S(id).intro||[]);});
+["10-6_1","10-6_2"].forEach(id=>{S(id).intro=[g=>g.prom.P6?"7월에 약속했습니다. 10월에는 오 사원이 E-417을 고치기로 했습니다.":""].concat(S(id).intro||[]);});
 OP("10-6_1","B").settle=null;OP("10-6_1","B").onDone=()=>{if(G.prom.P6)settle("P6",Math.random()>.4,"oh");};
 OP("10-6_2","A").tw=[T(35,"추천서를 읽고 이동을 취소했습니다.","`oh_end_prc` 사람+2",{ending:"오 사원은 가공 모듈에서 맡은 일을 늘려 가고 있습니다."})];
 OP("10-6_2","B").tw=[T(45,"이수진이 설득하지 못했습니다.","`oh_end_left` 사람-2",{ending:"오 사원은 11월에 다른 팀으로 옮겼습니다."})];
@@ -353,5 +353,31 @@ a111.say=g=>(g.f.mfg_ally?a111._say.map(x=>x[0]==="mfg"?["mfg",x[1].replace(/^"|
  {const o=OP("6-1","B");(o.tw||[]).forEach(t=>{if(typeof t.t==="string")t.t=t.t.replace("10-1 대형 수주","10월 대형 수주");});}
  GEN.forEach(s=>{if(!s)return;[s,...(Array.isArray(s.cases)?s.cases:[])].forEach(c=>{if(typeof c.title==="string")c.title=c.title.replace(/Wobbler[①②③]\s*/g,"").replace(/\s*\(둘 중 하나\)\s*/g,"").trim()||(c.caseTitle||"").replace(/^경우 \d+:\s*/,"").replace(/\s*\(`[^`]*`\)/g,"")||cleanTitle(s.title)||c.title;if(typeof c.caseTitle==="string")c.caseTitle=c.caseTitle.replace(/\s*\(`[^`]*`\)/g,"");});});
  ["5-6"].forEach(id=>{const p=S(id);(p.cases||[]).forEach(c=>{if(!c.title)c.title=p.title;});});}
+/* ===== 2차 피드백: 고정 대사를 현재 상태에 맞게, 화자 표기 ===== */
+{GEN.forEach(s=>{if(!s)return;[s,...(Array.isArray(s.cases)?s.cases:[])].forEach(c=>{if(typeof c.title==="string")c.title=c.title.replace(/\s*\((발단|전개|결말)\)/g,"");});});
+ {const s=S("11-7_1");s.intro=(s.intro||[]).filter(t=>typeof t!=="string"||!/^\((자리를 잡음|또 제안이 옴)\)/.test(t));}
+ {const s=S("10-1");s.conds=(s.conds||[]).map(c=>typeof c.t==="string"&&/위 대사 뒤/.test(c.t)?{...c,t:"강태식은 말을 마치고 자리를 떴다."}:c);}
+ {const s=S("7-4_1");const [a0,b0,c0]=s.intro;s.intro=[a0];const sy=s.say;s.say=g=>[["src",b0],["mfg",c0],...((typeof sy==="function"?sy(g):sy)||[])];}
+ {const s=S("6-3_1");s.intro=["근태 시스템의 자동 알림: \"김 사원, 최근 3주 새벽 2시 이후 접속 11회. 잔여 연차 14일.\"","김 사원의 DM."];s.say=[["kim","괜찮습니다. 이번 달 대기도 제가 설게요."]];}
+ {const s=S("6-3_2");const t=s.intro[1];s.intro=["김 사원의 DM."];s.say=[["kim",t]];}
+ {const s=S("8-6_1");const [a0,b0,c0]=s.intro;s.intro=["다음 제안 PT 준비 회의."];s.say=[["han",b0],["mkt",c0]];}
+ {const s=S("11-4_2");const t=s.intro[0];s.intro=["문지원의 DM."];s.say=[["src",t]];}
+ {const s=S("8-2");const sy=s.say;s.say=g=>(typeof sy==="function"?sy(g):sy).map(x=>x[0]==="mfg"?["mfg",x[1].replace("두 명 빠지고",g.f.hq_one?"한 명 빠지고":"두 명 빠지고")]:x);}
+ ["8-3_1","8-3_2"].forEach(id=>{const s=S(id);s.conds=(s.conds||[]).map(c=>typeof c.t==="string"&&/지난주 2명이 빠졌다/.test(c.t)?{...c,t:()=>G.f.hq_one?"지난주 1명이 빠졌다.":"지난주 2명이 빠졌다."}:c);});
+ {const s=S("9-3");s.intro=s.intro.map(t=>t==="3월에 받은 질문의 기한이다."?(g=>g.prom.P4?"3월에 받은 질문의 기한이다.":"3월에 배 책임이 물었던 가공 이동 이야기가 다시 나왔다."):t);}
+ {const s=S("9-5");s.intro=s.intro.map(t=>typeof t==="string"&&/^자동화된 발주 분류가/.test(t)?(g=>g.f.auto_defer?"8월에 미뤄 둔 발주 자동화를 서하준이 다시 꺼냈다. 그사이 수작업 분류에서 긴급 건 하나가 일반으로 처리돼 공급사 납기가 하루 늦었다.":t.replace(/\s*\(.*$/,"")):t);}
+ {const s=S("11-1a");const sy=s.say;s.say=g=>(typeof sy==="function"?sy(g):sy).filter(x=>!(x[0]==="mfg"&&g.f.mfg_exit)).map(x=>[x[0],x[1].replace(/^"(.*)"$/,"$1")]);
+  s.options.forEach(o=>{const t0=o.t;Object.defineProperty(o,"t",{get:()=>G.f.mfg_exit?t0.replace("다섯","네"):t0,configurable:true});(o.tw||[]).forEach(w=>{const w0=w.t;if(typeof w0==="string"&&/다섯/.test(w0))Object.defineProperty(w,"t",{get:()=>G.f.mfg_exit?w0.replace("다섯","네"):w0,configurable:true});});});}
+ Object.defineProperty(m125,"say",{get:()=>{const[l]=low(G);const leave=G.f.tae_end_left||G.f.tae_end_plan?" 어차피 나갈 사람이지만.":"";const r={S:0,A:1,B:2,C:3},m=G.grades.mfg,s=G.grades.src;const mg=m?m.등급:"B",sg=s?s.등급:"B";
+  const tae=["mfg",(r[mg]<r[sg]?`이번엔 새벽에 나온 사람이 위네.`:r[mg]>r[sg]?`새벽에 나온 사람은 ${mg}, ${sg}는 저쪽이네.`:`둘이 같은 ${mg}네. 새벽에 나온 건 셈에 없나.`)+leave];
+  const moon=["src",r[mg]<r[sg]?"결국 불 끄는 게 위네요.":"감사 지적 닫은 건 저희입니다. 선배도 아시잖아요."];return l==="src"?[moon,tae]:[tae,moon];},configurable:true});
+ {const b9=BILL.B9;b9.body=()=>{const x=[...G.sig].reverse().find(v=>v.choice==="안 알림");return x?`정리하자면 이렇습니다. ${nm(x.scene)}, 그거 위에서 내려온 지시대로 한 거래요. 이유를 안 알려 준 건 말 못 할 사정이 있어서고요. 다들 아시죠?`:"정리하자면 이렇습니다. 요즘 결정들, 다 위에서 정해져 내려온 거래요. 다들 아시죠?";};}
+ s116.intro=[s116.intro[0],g=>"분기별 집행: "+g.tokSpent.map((v,i)=>{const b=(g.tokBase||[])[i]||0;return `${i+1}분기 ${v} (모듈 평소 사용 ${b} + 안건에서 쓴 ${v-b})`;}).join(" · ")];}
+fixTwText(GEN);fixTwText(CONTENT);
+/* 내가 직접 맡는 안도 팀장 시간이 든다: ⏳가 붙은 안이 늘 정답이 되지 않게 */
+[["11-1a","A",2],["5-1a","A",1],["8-3_1","B",1]].forEach(([id,k,c])=>{const o=OP(id,k);if(!val(o.cost))o.cost=c;});
+{const s=CONTENT.find(x=>x.id==="1-2");if(s){const o=s.options.find(x=>x.k==="A");if(o&&!o.cost)o.cost=1;}}
+{const a=S("7-2a"),b=S("7-2b");if(b.common&&!a.common){a.common=b.common;b.common=null;}}
+{const m=CONTENT.find(x=>x.id==="2-6");if(m&&m.members){const b=m.members.find(x=>x.k==="bae");if(b)b.lead="mfg";}}
 addContent(GEN.filter(Boolean));
 addContent([{id:"FINALE",type:"finale",month:12,bare:true}]);

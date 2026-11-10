@@ -10,7 +10,7 @@ function resultType(){
  const al={성과:(c.GROW||0)+(c.AI||0)>=4,재무:!!(G.f.token_low||G.f.token_mid)&&!G.f.ct_cut&&!G.f.quote_cut,사람:G.over===0&&talk>=.4,안정:(c.SEC||0)+(c.RUN||0)>=4};
  const aligned=pr.every(k=>al[k]);
  if(others.some(k=>g(k)>avg+5))return["방향 이탈","고르지 않은 성적표가 더 크게 움직였습니다. 말한 우선순위와 쓴 자원이 달랐습니다."];
- if(avg>=10){if(others.some(k=>g(k)<=-15)||G.burnout>=4||G.over>=3)return["성과는 냈지만 대가","고른 두 장은 올랐습니다. 다른 곳에서 치른 값을 함께 보세요."];if(aligned&&G.over<=1&&G.burnout<=2)return["정렬된 성공","고른 두 장이 실제로 올랐고, 자원도 그쪽에 놓였습니다."];return["궤도 진입","방향은 맞았습니다. 움직임은 아직 작습니다."];}
+ if(avg>=10){if(others.some(k=>g(k)<=-15)||G.burnout>=4||G.over>=3)return["고른 두 장은 올렸지만 대가","고른 두 장은 올랐습니다. 다른 곳에서 치른 값을 함께 보세요."];if(aligned&&G.over<=1&&G.burnout<=2)return["정렬된 성공","고른 두 장이 실제로 올랐고, 자원도 그쪽에 놓였습니다."];return["궤도 진입","방향은 맞았습니다. 움직임은 아직 작습니다."];}
  if(avg>=3&&aligned)return["궤도 진입","방향은 맞았습니다. 움직임은 아직 작습니다."];
  return["표류","고른 두 장이 거의 움직이지 않았습니다."];
 }
@@ -82,11 +82,12 @@ function SC_FINALE(s){
    return `<div class="task"><b>${AXN[a]}</b><p class="num">자가진단 ${d}% · 실제 행동 ${r.v==null?"-":r.v+"%"}</p><p>${box}</p><p class="note">일치: ${evid(a,"L").join(", ")||"없음"}</p><p class="note">균열: ${evid(a,"P").join(", ")||"없음"}</p>${G.h2_focus===a?`<p class="note">바꾸기로 한 습관입니다. 상반기 ${h1.v==null?"-":h1.v+"%"} → 하반기 ${h2.v==null?"-":h2.v+"%"}</p><p class="note">6월에 쓴 행동: "${G.written.again?G.written.again.행동:""}"</p>`:""}</div>`}).join("")}</div>${nb()}</div>`);
   else if(page===6){const miss=Object.entries(G.billP||{}).filter(([b,p])=>!G.bills.includes(b)&&p>=40);
    let near="";if(!G.wowGot){const ax=[1,2,3,4].map(a=>({a,r:axScore(a)})).filter(x=>x.r.v!=null);if(ax.length&&ax.every(x=>x.r.v>=50)){const lo=ax.sort((p,q)=>p.r.v-q.r.v)[0];near=`<p class="note">가장 아슬아슬했던 축: ${AXN[lo.a]} (리더 쪽 ${lo.r.v}%)</p>`;}}
-   shell(`<div class="pane"><div class="eyebrow">청구서</div><h2>올해 도착한 청구서 ${G.bills.length}장</h2><div class="table">${G.bills.map(b=>{const at=(G.billAt&&G.billAt[b])||12;const cs=billCauses(b).filter(c=>!c.m||c.m<=at);return `<div class="task"><b>${BILL[b].t} · ${at}월 도착</b>${cs.length?cs.map(c=>`<span class="note">${/^\d+월/.test(c.t)||!c.m?"":c.m+"월 "}${c.t}${c.m?` → ${at-c.m}개월 뒤 청구서`:""}</span>`).join(""):`<span class="note">${val(BILL[b].cause)}</span>`}</div>`;}).join("")||'<p class="note">없습니다.</p>'}</div>
+   shell(`<div class="pane"><div class="eyebrow">청구서</div><h2>올해 도착한 청구서 ${G.bills.length}장</h2><div class="table">${G.bills.map(b=>{const at=(G.billAt&&G.billAt[b])||12;return `<div class="task"><b>${BILL[b].t} · ${at}월 도착</b>${causeHtml(b,at)}</div>`;}).join("")||'<p class="note">없습니다.</p>'}</div>
    <h2 style="font-size:18px">아슬아슬하게 피한 청구서</h2><div class="table">${miss.map(([b,p])=>row(BILL[b].t,p+"%")).join("")||'<p class="note">거의 위험이 없었습니다.</p>'}</div>${near}${nb()}</div>`);}
   else if(page===7){const ps=Object.values(G.prom);shell(`<div class="pane"><div class="eyebrow">약속 장부</div><h2>올해 한 약속</h2><div class="ledger">${ps.map(p=>{let t=PROM_TXT[p.id]?(p.status==="파기"?PROM_TXT[p.id][1]:PROM_TXT[p.id][0]):"";if(p.id==="P3"&&p.status==="파기"&&G.f.p3_owned)t="지키지 못했다고 직접 썼습니다.";if(p.status==="진행 중")t="진행 중";if(p.status==="형식 이행")t=p.note||"표는 바뀌었습니다. 쏠림은 다른 곳으로 옮겨 갔습니다.";return `<div>${p.text}<small>상대: ${p.to} · ${p.status}${t&&t!=="진행 중"?" · "+t:""}</small></div>`;}).join("")||'<p class="note">맺은 약속이 없습니다.</p>'}</div>${nb()}</div>`);}
   else if(page===8){const m=["yoon","oh","han","kim","cha","bae"];shell(`<div class="pane"><div class="eyebrow">사람들</div><h2>1년 뒤</h2>${relationMap()}<div class="table">${G.ends.mfg?`<div class="say">${face("mfg",G.trust.mfg)}<div><b>강태식</b><span>${G.ends.mfg}</span></div></div>`:""}${m.map(k=>`<div class="say">${face(k)}<div><b>${name(k)}</b><span>${G.ends[k]||"올해도 자기 자리에서 일하고 있습니다."}${G.grades[k]&&G.grades[k].등급==="C"?" 등급은 C였습니다.":""}</span></div></div>`).join("")}</div>${nb()}</div>`);}
   else if(page===9){const pct=consPct();const n3=(G.goal3&&G.goal3.three);shell(`<div class="pane"><div class="eyebrow">학습 목표</div><h2>성적표가 게임의 결과라면, 아래는 학습의 결과입니다. 둘은 다를 수 있습니다.</h2><div class="table">
+   ${G.ds&&(G.ds.f+G.ds.p)?row("위임의 네 요소",`함께 전한 위임 ${G.ds.f}건 중 되돌아온 일 ${G.ds.bf}건 · 전하지 않은 위임 ${G.ds.p}건 중 되돌아온 일 ${G.ds.bp}건`):""}
    ${row("① 분석",(G.f.urgent_task?"시급한 일을 과제로 삼음":"과제 선택 충족")+" · 근거 문장 사람 채점 대기")}
    ${row("② 정렬",G.goal2?"충족":"미충족")}
    ${row("③ 결정",(n3?"세 기준 포함":"세 기준 미포함")+" · 공지문 사람 채점 대기"+(G.f.sec_breach_data||G.f.sec_hidden?" · 승인되지 않은 데이터 사용":""))}
@@ -95,7 +96,7 @@ function SC_FINALE(s){
    ${row("⑥ 평가",`근거 충족 ${G.evalGood||0}/${G.evalN||11} · ${G.appeal0?("이의제기 0건 ("+(G.appeal0==="침묵"?"말하지 않은 사람이 있었음":"근거가 충족됨")+")"):"이의 면담 "+(G.appealOK?"기록 제시":"기록 미제시")}${G.f.kpi_order?" · KPI 순서대로":""}`)}
    </div>
    ${(G.badEvid||[]).length?`<h2 style="font-size:18px">쓰면 안 되는 근거</h2><p>12월에 근거로 고른 다음 기록은 등급의 근거가 될 수 없습니다.</p><div class="prose" style="font-size:14.5px">${G.badEvid.map(x=>`<p>${x}</p>`).join("")}</div><div class="table">${[["투입 시간","오래 일한 것은 무엇을 해냈는지를 말해 주지 않습니다. 6월 지침에서 제외되었습니다."],["병가·휴직","아픈 것은 평가 대상이 아닙니다."],["익명 글·소문","확인되지 않은 일이고, 글쓴이를 추정한 것은 쓸 수 없습니다."],["내부 제보·반대 의견","말한 사람이 등급으로 불이익을 받으면 다음 사람은 말하지 않습니다."],["이동·이직 의사","앞날에 대한 의사이지 올해의 기여가 아닙니다."]].map(([a,b])=>`<div class="task"><b>${a}</b><span class="note">${b}</span></div>`).join("")}</div>`:""}
-   <p class="note">업적: ${G.ach.join(", ")||"없음"}</p>${nb()}</div>`);}
+   <p class="note">업적: ${G.ach.join(", ")||"없음"}</p>${window.SEEDED?`<p class="note">진단 모드 · 시드 ${window.SEEDED}: 같은 선택을 하면 같은 확률 결과가 나옵니다.</p>`:`<p class="note">확률로 일어난 일은 "일어난 일" 화면에 따로 표시했습니다. 같은 선택도 회차마다 결과가 다를 수 있습니다. 평가 도구로 쓸 때는 주소 끝에 ?seed=숫자 를 붙여 진단 모드로 실행하세요.</p>`}${nb()}</div>`);}
   else if(page===10){const keyOf=r=>r[0].split(" ")[0];const hot=r=>G.sig.some(x=>x.scene.startsWith(keyOf(r)));const all=REVIEW1.concat(REVIEW2);const first=all.filter(hot).slice(0,8),rest=all.filter(r=>!first.includes(r));
    shell(`<div class="pane"><div class="eyebrow">1년 결정 복기</div><h2>그 결정이 무엇과 무엇을 바꿨는가</h2><div class="prose" style="font-size:15px">${first.map(r=>`<p><b>${stripId(r[0])}</b> ${r[1]}</p>`).join("")}</div><details class="ref"><summary>전체 보기</summary><div class="prose" style="font-size:15px;margin-top:8px">${rest.map(r=>`<p><b>${stripId(r[0])}</b> ${r[1]}</p>`).join("")}</div></details>${nb()}</div>`);}
   else{

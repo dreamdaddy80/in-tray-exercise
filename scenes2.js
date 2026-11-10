@@ -64,13 +64,13 @@ function SC_ALLOC(s){
 }
 
 /* 세 개의 설명 (원고 03-6 6-2, 03-9 9-6, 03-12 12-6) */
-const KW={crit:["실측","절감","비용","위험","효과","기준"],next:/\d+일|\d+월|기한|까지|다음 회의|다음 달|내년|다음 주/};
+const KW={crit:["실측","절감","비용","위험","효과","기준","원칙","근거"],next:/\d+일|\d+월|기한|까지|다음 회의|다음 달|내년|다음 주/};
 function jacc(a,b){const g=t=>{const s=new Set();t=t.replace(/\s/g,"");for(let i=0;i<t.length-1;i++)s.add(t.slice(i,i+2));return s;};const x=g(a),y=g(b);if(!x.size||!y.size)return 0;let n=0;x.forEach(v=>{if(y.has(v))n++;});return n/(x.size+y.size-n);}
 function SC_WRITE(s){
  let why=null,draftUsed=false;const texts={};s.targets.forEach(t=>texts[t.k]="");
- const list=has("pub_leaders")?[]:G.pub;
+ const list=principleList().concat(gradeList());
  const d1=()=>{paint("");
-  shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>${val(s.title)}</h2><div class="prose">${para(s.intro||[])}</div><p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}<div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const fit=(val(s.fit)||[]).includes(why);G.cons.push({scene:s.id,choice:"글",why,fit});}d2();})}>쓰기 시작</button></div></div>`);
+  shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>${val(s.title)}</h2><div class="prose">${para(s.intro||[])}</div><p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}<div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const f=fitSet(val(s.fit)||[]);const fit=f.any||f.grade.includes(why)||f.prin.includes(why);G.cons.push({scene:s.id,choice:"글",why,fit});}d2();})}>쓰기 시작</button></div></div>`);
  };
  const grab=()=>s.targets.forEach(t=>{const e=$("w"+t.k);if(e)texts[t.k]=e.value;});
  const d2=()=>{paint("");
@@ -85,13 +85,13 @@ function SC_WRITE(s){
   const badT=s.targets.filter(t=>texts[t.k].trim()&&!readable(texts[t.k],12).ok);if(badT.length){warn=badT.map(t=>`${val(t.n)}에게 쓴 글: ${readable(texts[t.k],12).why}`).join("<br>");d2();return;}warn="";
   const d=val(s.draft),res={},live={};let sum=0,missing=0,miss={};
   s.targets.forEach(t=>{const x=texts[t.k].trim();if(!x){missing++;res[t.k]=-1;return;}
-   let n=0;const m=[];const crit=[...KW.crit,...(why?[why]:[])].some(w=>x.includes(w));if(crit)n++;else m.push("무엇을 기준으로 정했는지");if(t.words.some(w=>x.includes(w)))n++;else m.push("이 사람이 가장 신경 쓰는 것");if(KW.next.test(x))n++;else m.push("언제 무엇을 하는지");miss[t.k]=m;res[t.k]=n;sum+=n;});
+   let n=0;const m=[],hitw=[];const cw=[...KW.crit,...(why?[why]:[]),...principleList()].find(w=>x.includes(w));if(cw){n++;hitw.push(`기준 "${cw}"`);}else m.push("무엇을 기준으로 정했는지");const qw=t.words.concat(qStems(val(t.q))).find(w=>x.includes(w));if(qw){n++;hitw.push(`질문에 답한 말 "${qw}"`);}else m.push(`이 사람의 질문("${val(t.q)}")에 대한 답`);const nx=x.match(KW.next);if(nx){n++;hitw.push(`다음 단계 "${nx[0]}"`);}else m.push("언제 무엇을 하는지");miss[t.k]=m;(G.wroteHit=G.wroteHit||{})[s.id+t.k]=hitw;res[t.k]=n;sum+=n;});
   const v=s.targets.filter(t=>texts[t.k].trim());let copy=false;for(let i=0;i<v.length;i++)for(let j=i+1;j<v.length;j++)if(jacc(texts[v[i].k],texts[v[j].k])>=.7)copy=true;
   G.written[s.id]={근거:why,글:{...texts},자동참고:res,초안미수정:s.targets.filter(t=>texts[t.k].trim()===d).map(t=>val(t.n))};
   if(!missing&&sum>=6)applySig("④L",1,s.id,"세 편");if(missing){applySig("④P",1,s.id,"미공지");applyFx("안전-2 소문규칙",{live,rel:"rd"});}
   G.wrote[s.id]=sum;(G.wrotePieces=G.wrotePieces||{})[s.id]=Object.values(res);
   const lines=[];
-  s.targets.forEach(t=>{const n=res[t.k];if(n<0){lines.push(`${val(t.n)}: 미공지로 기록했습니다.`);return;}const i=n>=3?0:n===2?1:2;lines.push(`${val(t.n)}${/^[^"“:]{1,12}: /.test(t.reply[i][0])?" · ":": "}${t.reply[i][0]}`);if(miss[t.k]&&miss[t.k].length)lines.push(`<span class="note">└ 이 글에 없던 것: ${miss[t.k].join(", ")}</span>`);applyFx(t.reply[i][1],{live});});
+  s.targets.forEach(t=>{const n=res[t.k];if(n<0){lines.push(`${val(t.n)}: 미공지로 기록했습니다.`);return;}const i=n>=3?0:n===2?1:2;lines.push(`${val(t.n)}${/^[^"“:]{1,12}: /.test(t.reply[i][0])?" · ":": "}${t.reply[i][0]}`);{const h=(G.wroteHit||{})[s.id+t.k]||[];lines.push(`<span class="note">└ 자동 참고 채점 ${n}/3${h.length?" · 찾은 것: "+h.join(", "):""}${miss[t.k]&&miss[t.k].length?" · 없던 것: "+miss[t.k].join(", "):""}. 낱말을 찾는 참고 점수이며, 최종 평가는 사람이 합니다.</span>`);}applyFx(t.reply[i][1],{live});});
   if(s.bad6&&texts.f.trim()===d&&d.includes("140"))applyFx("B6+10");
   if(copy){G.f.copy_voice=true;applyFx("F사만족-2 안전-2",{live});lines.push("유 과장: \"사내 공지가 잘못 온 줄 알았습니다.\"");lines.push("게시판: \"고객한테 보낸 메일이네.\"");}
   let leak=false;const bk=s.targets.find(t=>t.k==="b"),tk=s.targets.find(t=>t.k==="t");
@@ -167,7 +167,11 @@ const BILL_CAUSE={
  B11:[()=>Object.values(G.prom).filter(p=>p.status==="파기").map(p=>["지키지 못한 약속: "+p.text,p.due])],
 };
 const MON=sc=>{const m=String(sc).match(/^(\d+)-/);if(m)return +m[1];const mm=String(sc).match(/^M(\d+)/);if(mm)return +mm[1]<=17?1:+mm[1]<=30?4:7;const d=String(sc).match(/^(\d+)월/);return d?+d[1]:null;};
-function billCauses(b){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"){c(G).forEach(x=>out.push({t:x[0],m:MON(x[1])}));return;}const ok=typeof c[0]==="function"?c[0](G):G.f[c[0]];if(ok)out.push({t:nm(c[2])+" — "+stripId(c[1]),m:c[3]});});const seen={};return out.filter(x=>{const k=x.t;if(seen[k])return false;seen[k]=1;return true;});}
+function billCauses(b){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"){c(G).forEach(x=>out.push({t:x[0],m:MON(x[1])}));return;}const ok=typeof c[0]==="function"?c[0](G):G.f[c[0]];if(ok)out.push({t:nm(c[2])+" — "+stripId(c[1]),m:c[3]});});if((b==="B5"||b==="B7")&&G.over>0)out.push({t:`초과 부하가 ${G.over}번 쌓였습니다`,m:null});if(b==="B7"&&G.fatigue>0)out.push({t:`큰 변화가 ${G.fatigue}번 이어졌습니다`,m:null});const seen={};return out.filter(x=>{const k=x.t;if(seen[k])return false;seen[k]=1;return true;});}
+function causeHtml(b,at){const cs=billCauses(b).filter(c=>!c.m||c.m<=at);const why=(G.billWhy||{})[b];
+ if(cs.length)return `<p><b>기록에 남은 관련 결정</b></p>${cs.map(c=>`<p class="note">${/^\d+월/.test(c.t)||!c.m?"":c.m+"월 "}${c.t}${c.m?` → ${at-c.m}개월 뒤 청구서`:""}</p>`).join("")}<p class="note">이 결정들이 확률을 올렸습니다. 청구서는 확률로 오므로, 하나가 곧바로 원인이라고 단정할 수는 없습니다.</p>`;
+ if(why==="wow")return `<p><b>왜 왔나:</b> 특정한 결정 하나가 아니라, 올해 기록에서 가장 약하게 나온 습관(${AXN[BILL[b].ax]})에서 왔습니다.</p>`;
+ return `<p><b>왜 왔나:</b> 기록에서 이 청구서와 이어지는 결정을 찾지 못했습니다. 팀 바깥의 사정이나 운으로 왔을 수 있습니다.</p>`;}
 function billP(id){const g=G,b=(g.bill[id]||0),c=g.cells||{};let p=0;const dirR=()=>{const d=g.decisions.filter(x=>x.choice==="직접"&&/^M\d/.test(x.scene)).length,all=g.decisions.filter(x=>/^M\d/.test(x.scene)).length;return all&&d/all>=.5;};
  if(id==="B1")p=5+b+(g.f.d_M13?15:0)+(g.f.fam_direct?20:0)+(g.f.oh_depends?15:0)+(dirR()?20:0)+(g.trust.prc<=40?10:0);
  if(id==="B2")p=5+b+(g.f.unfam_direct?20:0)+((c.SEC||0)<=1?15:0);
@@ -191,11 +195,11 @@ function SC_BILLS(s){
   if(ax&&!G.bills.concat(arrive.map(x=>x.b)).some(b=>BILL[b].ax===ax.a)){const ids=Object.keys(BILL).filter(b=>BILL[b].ax===ax.a).sort((a,b)=>billP(b)-billP(a));arrive.push({b:ids[0],wow:true});G.wowGot=ids[0];}}
  if(!arrive.length){next();return;}
  const step=i=>{if(i>=arrive.length){next();return;}
-  const {b,wow}=arrive[i],c=BILL[b];G.bills.push(b);(G.billAt=G.billAt||{})[b]=G.month;
+  const {b,wow}=arrive[i],c=BILL[b];G.bills.push(b);(G.billAt=G.billAt||{})[b]=G.month;(G.billWhy=G.billWhy||{})[b]=wow?"wow":billCauses(b).length?"cause":"chance";
   let fx=c.fx;if(b==="B9")fx+=" "+lowLeader(G)+"-3";
   const live=applyFx(wow?scaleFx(fx,1.5):fx);
   paint("");beep(160,.25,"sawtooth");
-  shell(`<div class="pane"><div class="eyebrow">📮 ${G.month}월의 청구서</div><h2>${c.t}</h2><div class="prose"><p class="note">${c.pre}</p>${c.say?sayHtml(c.who,c.say):`<p class="voice">${val(c.body)}</p>`}${wow&&val(c.wow)?`<p class="voice"><b>${val(c.wow)}</b></p>`:""}<p><b>원인:</b> ${val(c.cause)}</p></div><div class="foot"><span></span>${BTN(()=>step(i+1),"다음","main")}</div></div>`,live);
+  shell(`<div class="pane"><div class="eyebrow">📮 ${G.month}월의 청구서</div><h2>${c.t}</h2><div class="prose"><p class="note">${c.pre}</p>${c.say?sayHtml(c.who,c.say):`<p class="voice">${val(c.body)}</p>`}${wow&&val(c.wow)?`<p class="voice"><b>${val(c.wow)}</b></p>`:""}${causeHtml(b,G.month)}</div><div class="foot"><span></span>${BTN(()=>step(i+1),"다음","main")}</div></div>`,live);
  };
  step(0);
 }
@@ -287,3 +291,7 @@ function SC_APPEAL(s){
  if(!cands.length){paint("");shell(`<div class="pane"><div class="eyebrow">12월</div><h2>${G.baeAppeal?"배 책임 외에는 이의제기가 없었습니다.":"올해 이의제기는 0건입니다."}</h2>${!G.baeAppeal&&(G.evalGood||0)<(G.evalN||0)?`<p class="note">근거를 갖추지 못한 등급이 ${(G.evalN||0)-(G.evalGood||0)}건 있었습니다. 묻지 않은 것과 물을 것이 없었던 것은 다릅니다.</p>`:""}<div class="foot"><span></span>${BTN(()=>finishBae(),"다음","main")}</div></div>`);return;}
  step(0);
 }
+
+/* 질문에서 핵심 낱말의 앞 두 글자를 뽑아, 질문마다 다른 채점 낱말을 만든다 */
+function qStems(q){const stop=["어디","다음","저희","우리","제가","그럼","이번","혹시","정말","그냥","팀장","어떻게","무엇","뭘","왜","누가","언제","있나","하나","되나","인가"];
+ return String(q||"").split(/[^가-힣A-Za-z0-9%]+/).filter(w=>w.length>=2).map(w=>w.replace(/(은|는|이|가|을|를|에|에서|으로|로|와|과|도|요|나요|까요|ㄴ가요|인가요|습니까|입니까|세요)$/,"")).filter(w=>w.length>=2&&!stop.some(x=>w.startsWith(x))).map(w=>w.slice(0,2));}

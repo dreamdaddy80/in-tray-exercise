@@ -9,7 +9,7 @@ const QS={
 };
 const PICK={
  "5-6":g=>{let p=20+(g.f.token_drain?30:0)+(g.f.token_low?20:0)+(g.f.token_game?10:0)-(g.f.token_audit?10:0)-(g.f["c_4-2b_B"]?10:0);if(g.tokenCap&&g.token<g.tokenCap*.2)p=100;return Math.random()*100<p?0:1;},
- "7-4":g=>{if(!g.f.kim_fragile)return 0;const p=(g.f.d_M39?30:60)+g.over*10;return Math.random()*100<p?1:0;},
+ "7-4":g=>{if(!g.f.kim_fragile)return 0;const p=(g.f.r_M39&&g.f.night_seen?30:60)+g.over*10;return Math.random()*100<p?1:0;},
  "11-4":g=>g.f.mfg_ally?0:1,
  "11-7":g=>g.f.cha_left?1:0,
 };

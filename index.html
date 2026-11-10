@@ -153,7 +153,7 @@ pre.dev{font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:b
   .tb{width:40px}.delta{right:2px}
   .cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:0}
   .card{display:flex;justify-content:space-between;align-items:baseline;gap:4px;padding:2px 6px;flex-wrap:wrap}
-  .card span{font-size:11px}.card b{font-size:14px}.card em{display:none}
+  .card span{font-size:11px}.card b{font-size:14px}.card em{display:block;width:100%;font-size:10px;font-style:normal;color:var(--muted)}
   .mail{grid-template-columns:minmax(0,1fr);min-height:0}
   .list{border-right:0;max-height:none}
   .mail.open .list{display:none}
@@ -188,6 +188,7 @@ pre.dev{font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:b
 <script src="specials.js"></script>
 <script src="c_months.js"></script>
 <script src="replies.js"></script>
+<script src="fixtext.js"></script>
 <script src="done.js"></script>
 <script src="patch.js"></script>
 <script>boot();</script>
