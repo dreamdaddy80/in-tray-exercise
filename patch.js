@@ -337,5 +337,21 @@ a111.say=g=>(g.f.mfg_ally?a111._say.map(x=>x[0]==="mfg"?["mfg",x[1].replace(/^"|
  OP("11-4_1","C").ending="강태식은 다른 팀 팀장 후보로 올라갔습니다. 운영 쪽 내년 인계자는 아직 정해지지 않았습니다.";
  {const a=S("12-3a").options[0];a.cost=g=>g.f.dec_extend?0:2;}
  OP("9-1","C").tw=[T(50,"사후 감사에서 드러났습니다.","안정-8 F사만족-4 src-4 `inc_found`"),T(50,"아무도 묻지 않았습니다.","")];}
+/* 약속 판정을 형식이 아니라 결과로: P2는 7월에 다시 본다 */
+{const i=S("7-1"),f0=i.onStart;i.onStart=(g,s)=>{if(f0)f0(g,s);const p=g.prom.P2;if(p&&p.status==="이행"&&(!g.f.night_open||kimHard())){p.status="형식 이행";p.note=kimHard()?"표는 바뀌었지만 김 사원은 아직 집에서 경고를 봅니다.":"표는 바뀌었지만 대기는 다른 저연차에게 옮겨 갔습니다.";g.f.p2_hollow=true;}};}
+/* ===== 화면에 새던 원고 메모 정리 (효과는 위에서 이미 enter/say로 처리됨) ===== */
+{const strip=t=>typeof t==="string"?t.replace(/\s*\((3-5에서|M37이|P4가 있으면)[^)]*\)\s*/g,"").trim():t;
+ const fixIntro=s=>{if(Array.isArray(s.intro))s.intro=s.intro.map(strip);};
+ ["5-4","7-5"].forEach(id=>fixIntro(S(id)));
+ S("9-2").intro=S("9-2").intro.filter(t=>typeof t!=="string"||!/원인이 가공이면/.test(t));
+ {const s=S("7-2b");s.intro=s.intro.filter(t=>typeof t!=="string"||!/P5가 있으면/.test(t));s.top=()=>G.prom.P5?`<div class="happen"><span class="label">약속 장부</span>5월에 차 선임에게 설계를 맡기겠다고 했습니다.</div>`:"";}
+ {const s=S("9-3");const sy=s.say;s.say=g=>(typeof sy==="function"?sy(g):sy).map(x=>x[0]==="bae"?["bae",(g.prom.P4?"9월까지라고 하셨죠. ":"")+strip(x[1]).replace(/"$/,"")]:x);}
+ {const s=S("12-2");s.intro=s.intro.filter(t=>typeof t!=="string"||!/9-1과 같다/.test(t));s.top=()=>`<details class="ref"><summary>장애 절차</summary><p style="margin-top:6px">1등급 장애는 지휘자 1인을 지정한다. 운영 변경은 긴급 승인자의 확인을 거친다. 고객 통지는 인지 후 30분 안에 한다.</p></details>`;}
+ {const s=S("10-4");s.conds2=(s.conds2||[]).map(c=>/세 가지 잣대/.test(c.t)?{...c,t:()=>"4월 공지문에 쓴 기준: "+((G.written.notice&&G.written.notice.기준||[]).join(", ")||"(기준 없음)")}:c);}
+ {const s=S("11-5_2");s.conds=(s.conds||[]).map(c=>/1월의 금요일/.test(c.t)?{...c,t:"1월, 김 사원은 금요일 하루를 쉬지 못했다."}:c);}
+ {const o=OP("11-7_2","C");o.tw=o.tw.map(t=>/표시된다/.test(t.t)?{...t,t:"인사팀: \"비슷한 사유의 퇴직이 내년에도 나올 수 있습니다.\""}:t);}
+ {const o=OP("6-1","B");(o.tw||[]).forEach(t=>{if(typeof t.t==="string")t.t=t.t.replace("10-1 대형 수주","10월 대형 수주");});}
+ GEN.forEach(s=>{if(!s)return;[s,...(Array.isArray(s.cases)?s.cases:[])].forEach(c=>{if(typeof c.title==="string")c.title=c.title.replace(/Wobbler[①②③]\s*/g,"").replace(/\s*\(둘 중 하나\)\s*/g,"").trim()||(c.caseTitle||"").replace(/^경우 \d+:\s*/,"").replace(/\s*\(`[^`]*`\)/g,"")||cleanTitle(s.title)||c.title;if(typeof c.caseTitle==="string")c.caseTitle=c.caseTitle.replace(/\s*\(`[^`]*`\)/g,"");});});
+ ["5-6"].forEach(id=>{const p=S(id);(p.cases||[]).forEach(c=>{if(!c.title)c.title=p.title;});});}
 addContent(GEN.filter(Boolean));
 addContent([{id:"FINALE",type:"finale",month:12,bare:true}]);

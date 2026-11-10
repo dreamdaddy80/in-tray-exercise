@@ -154,7 +154,7 @@ function render(){
 const sayHtml=(who,t)=>`<div class="say">${face(who,LD[who]?G.trust[who]:null)}<div><b>${name(who)}</b><p class="voice">${t}</p></div></div>`;
 const head=(s)=>`<div class="eyebrow">${[s.tag,val(s.when)].filter(Boolean).join(" · ")}</div><h2>${val(s.title)}</h2>`;
 const para=a=>a.map(x=>val(x)).filter(Boolean).map(x=>`<p>${x}</p>`).join("");
-function condLines(s){const l=(s.conds||[]).filter(c=>c.c(G)).map(c=>c.t);return l.length?`<div class="cond">${l.map(x=>`<span>${x}</span>`).join("")}</div>`:"";}
+function condLines(s){const l=(s.conds||[]).filter(c=>c.c(G)).map(c=>val(c.t));return l.length?`<div class="cond">${l.map(x=>`<span>${x}</span>`).join("")}</div>`:"";}
 
 /* ---------- 장면 ---------- */
 const SCENES={
@@ -162,7 +162,7 @@ const SCENES={
   const old=load();
   shell(paint(`<div class="title-card"><div class="eyebrow">신임 팀장 In-Tray 시뮬레이션</div><h1>${s.title}</h1><div class="prose">${para(s.body)}</div>
   ${old&&old.h2_focus&&old.idx>0?`<div class="happen"><span class="label">지난번에 고른 바꿀 습관</span>${["","① 일 맡기기","② 평가하기","③ 자원 나누기","④ 설명하기"][old.h2_focus]}<br><span class="label">다시 한다면</span>${old.written&&old.written.again?old.written.again.행동:""}</div>`:""}
-  <div class="btns"><button class="btn main" ${A(()=>{G=newGame();clearSave();next();beep(520,.1);})}>처음부터 시작</button>${old&&old.idx>0?`<button class="btn" ${A(()=>{G=old;render();})}>이어서 하기</button>`:""}</div>
+  <div class="btns"><button class="btn main" ${A(()=>{G=newGame();clearSave();next();beep(520,.1);})}>처음부터 시작</button>${old&&old.idx>0?`<button class="btn" ${A(()=>{G=old;render();})}>이어서 하기${old.month?` (${old.month}월)`:""}</button>`:""}</div>
   <button class="tool" style="justify-self:start" ${A(()=>{G=newGame();G.idx=CONTENT.findIndex(x=>x.id==="1-1")-1;G.pledge="(검토용 건너뛰기)";G.prio=["성과","사람"];next();})}>프롤로그 건너뛰기 (검토용)</button></div>`));
  },
  doc(s){
@@ -172,24 +172,24 @@ const SCENES={
   shell(paint(`<div class="pane"><div class="eyebrow">📘 ${s.tag}</div><h2>${s.title}</h2><div class="prose">${para(s.body)}<p><b>${s.q}</b></p></div><div class="foot"><span></span><button class="btn main" ${A(next)}>${s.btn||"다음"}</button></div></div>`));
  },
  diag(s){
-  const a={};
-  const opts=["전혀 아니다","아니다","보통","그렇다","매우 그렇다"];
+  const a={};G.diagSide=G.diagSide||s.items.map(()=>Math.random()<.5);const sw=G.diagSide;
+  const lab=["가에 가깝다","조금 가 쪽","조금 나 쪽","나에 가깝다"];
   const draw=()=>{paint("");const done=Object.keys(a).length===s.items.length;
-   shell(`<div class="pane">${head(s)}<div class="prose">${para(s.intro)}</div><div>${s.items.map((it,i)=>`<div class="likert"><div>${it.t}</div><div class="scale">${opts.map((o,v)=>`<button aria-pressed="${a[i]===v+1}" ${A(()=>{a[i]=v+1;draw();})}>${o}</button>`).join("")}</div></div>`).join("")}</div>
+   shell(`<div class="pane">${head(s)}<div class="prose">${para(s.intro)}</div><div>${s.items.map((it,i)=>{const L=sw[i]?it.y:it.x,R=sw[i]?it.x:it.y;return `<div class="likert"><div><b style="font-weight:600">${i+1}.</b> ${it.sc}<span style="display:block;margin-top:6px;color:var(--ink);font-size:14.5px"><b>가</b> ${L}</span><span style="display:block;color:var(--ink);font-size:14.5px"><b>나</b> ${R}</span></div><div class="scale">${lab.map((o,v)=>`<button aria-pressed="${a[i]===v}" ${A(()=>{a[i]=v;draw();})}>${o}</button>`).join("")}</div></div>`}).join("")}</div>
    <div class="foot"><span class="note num">${Object.keys(a).length}/${s.items.length}</span><button class="btn main" ${done?"":"disabled"} ${A(()=>{
-    const ax={1:[],2:[],3:[],4:[]};s.items.forEach((it,i)=>ax[it.a].push(it.r?6-a[i]:a[i]));
-    G.diag={};for(const k in ax)G.diag[k]=Math.round((ax[k].reduce((x,y)=>x+y,0)/ax[k].length-1)/4*100);next();})}>완료</button></div></div>`);};
+    const ax={1:[],2:[],3:[],4:[]};s.items.forEach((it,i)=>{const toR=a[i];/* 0=가 쪽 강, 3=나 쪽 강 */const lead=sw[i]?3-toR:toR;ax[it.a].push(lead);});
+    G.diag={};for(const k in ax)G.diag[k]=Math.round(ax[k].reduce((x,y)=>x+y,0)/(ax[k].length*3)*100);next();})}>완료</button></div></div>`);};
   draw();
  },
  pledge(s){
   let txt=G.pledge||"",pr=[...G.prio];
-  const draw=()=>{paint("");const ok=txt.trim().length>=20&&pr.length===2;
+  const draw=()=>{paint("");const ok=readable(txt,12).ok&&pr.length===2;
    shell(`<div class="pane">${head(s)}<div class="prose">${para(s.intro)}</div>
    <label class="label" for="pl">나는 이런 팀장이 되겠다 (20자 이상)</label><textarea id="pl">${txt}</textarea>
    <div class="prose" style="font-size:15px"><p>${s.prioText}</p></div>
    <div class="btns">${SCORES.map(k=>`<button class="btn ${pr.includes(k)?"main":""}" ${A(()=>{const t=$("pl").value;txt=t;const i=pr.indexOf(k);if(i>=0)pr.splice(i,1);else if(pr.length<2)pr.push(k);draw();})}>${k}${pr.indexOf(k)>=0?" "+(pr.indexOf(k)+1)+"위":""}</button>`).join("")}</div>
    <div class="foot"><span class="note num" id="plc">${txt.trim().length}자</span><button class="btn main" id="pgo" ${ok?"":"disabled"} ${A(()=>{G.pledge=$("pl").value.trim();G.prio=pr;next();})}>임명장 받기</button></div></div>`);
-   $("pl").oninput=e=>{txt=e.target.value;$("plc").textContent=txt.trim().length+"자";$("pgo").disabled=!(txt.trim().length>=20&&pr.length===2);};};
+   $("pl").oninput=e=>{txt=e.target.value;$("plc").textContent=txt.trim().length+"자";$("pgo").disabled=!(readable(txt,12).ok&&pr.length===2);};};
   draw();
  },
  inbox(s){SC_INBOX(s);},
@@ -204,7 +204,7 @@ const SCENES={
  alloc(s){SC_ALLOC(s);},write(s){SC_WRITE(s);},review(s){SC_REVIEW(s);},bills(s){SC_BILLS(s);},evalc(s){SC_EVAL(s);},appeal(s){SC_APPEAL(s);},finale(s){SC_FINALE(s);},
  monthEnd(s){
   if(s.onEnd&&!G.ent[s.id]){G.ent[s.id]=1;s.onEnd(G);if(s.quarter)endQuarter();save();}
-  shell(paint(`<div class="pane"><div class="eyebrow">${s.month}월</div><h2>${val(s.title)}</h2><div class="foot"><span></span><button class="btn main" ${A(next)}>${s.btn||"다음 달로"}</button></div></div>`));
+  shell(paint(`<div class="pane"><div class="eyebrow">${s.month}월</div><h2>${val(s.title)}</h2><p class="note">💾 ${s.month}월까지 저장했습니다. 지금 창을 닫아도 다음에 첫 화면의 "이어 하기"로 ${s.month+1<=12?s.month+1+"월부터":"결산부터"} 계속할 수 있습니다.</p><div class="foot"><span></span><button class="btn main" ${A(next)}>${s.btn||"다음 달로"}</button></div></div>`));
  },
  buildEnd(s){
   const sigs={1:{L:0,P:0},2:{L:0,P:0},3:{L:0,P:0},4:{L:0,P:0}};G.sig.forEach(x=>sigs[x.a][x.s]+=x.w);
@@ -222,18 +222,18 @@ function SC_INBOX(s){
  s=Object.assign({},s,{mail:mailAll.filter(m=>m.need==null||G.safe>=m.need)});
  mailAll.forEach(m=>{if(s.mail.includes(m))G.f["got_"+m.id]=true;else if(m.unsent&&!G.unsent.includes(m.unsent))G.unsent.push(m.unsent);});
  if(s.onStart)s.onStart(G,s);
- const st=CONTENT[G.idx]._st={sel:null,opened:{},done:{},mode:null,to:null,four:false,left:val(s.seconds),over:false,direct:0};
+ const st=CONTENT[G.idx]._st={sel:null,opened:{},done:{},mode:null,to:null,four:false,left:val(s.seconds),over:false,direct:0,replies:0,holds:0,ord:{},settled:false};
  G.seen=0;
  const startClock=()=>{if(CLOCK||st.over)return;CLOCK=setInterval(()=>{st.left--;if(st.left<=0){st.left=0;expire();}drawBar(st.left);},1000);};
  const expire=()=>{clearInterval(CLOCK);CLOCK=null;st.over=true;beep(240,.3,"square");
-  s.mail.forEach(m=>{if(!st.done[m.id]){const r=resolveRow(m.hold);st.done[m.id]=r[0];applyFx(r[1],{rel:m.rel});G.f["h_"+m.id]=true;record(m.id,"시간 초과(보류)");}});
+  s.mail.forEach(m=>{if(!st.done[m.id]){const r=resolveRow(m.hold);st.done[m.id]=r[0];applyFx(r[1],{rel:m.rel});G.f["h_"+m.id]=true;st.holds++;record(m.id,"시간 초과(보류)");}});
   draw();};
  const resolveRow=r=>typeof r==="function"?r(st.opened):r;
  const finish=(m,row,kind,to)=>{
   const r=resolveRow(row),[text,fx,sig,o]=r;
   st.done[m.id]=text;const live=applyFx(fx,{rel:m.rel});
   applySig(sig,.5,m.id,kind);record(m.id,kind+(to?":"+name(to):""));
-  G.f[(kind==="직접"?"d_":kind==="보류"?"h_":"del_")+m.id]=true;
+  if(!(kind==="직접"&&o&&o.nod))G.f[(kind==="직접"?"d_":kind==="보류"?"h_":"del_")+m.id]=true;if(kind==="직접")st.replies++;if(kind==="보류")st.holds++;
   if(kind==="직접"&&/①P/.test(sig||""))st.direct++;
   if(kind==="위임"){let p=10+((o&&o.ret)||0);if(st.four)p=Math.max(0,p-15);G.rets.push({id:m.id,p,to,four:st.four});}
   if(o&&o.pr)addPromise(o.pr);
@@ -248,20 +248,23 @@ function SC_INBOX(s){
    return `<button class="item ${x.id===st.sel?"on":""} ${st.opened[x.id]?"read":""} ${d?"done":""}" ${A(()=>{st.sel=x.id;st.opened[x.id]=true;G.f["opened_"+x.id]=true;st.mode=null;st.to=null;st.four=false;startClock();draw();})}><span class="top"><span class="tag ${x.t}">${x.t}</span>${x.from}<span class="num" style="margin-left:auto">${x.at}</span></span><span class="sub">${x.sub}</span>${d?`<span class="what">${d}</span>`:""}</button>`}).join("");
   let r;
   if(!m){
-   if(st.over||all){r=`<div class="rhead"><h2>${st.over?"10시입니다. 스탠드업이 시작됐습니다.":s.quiet&&s.quiet(G)?"10시 전에 받은편지함이 비었습니다.":"10시 전에 모두 처리했습니다."}</h2><p>${st.over?"처리하지 못한 메시지는 그대로 남았습니다.":""}</p></div><div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
+   if(st.over||all){const bill=inboxSettle(st);r=`<div class="rhead"><h2>${st.over?"10시입니다. 스탠드업이 시작됐습니다.":s.quiet&&s.quiet(G)?"10시 전에 받은편지함이 비었습니다.":"10시 전에 모두 처리했습니다."}</h2><p>${st.over?"처리하지 못한 메시지는 보류로 남았습니다.":""}</p>${bill}</div><div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
    else r=`<div class="rhead"><h2>${s.title}</h2><p>${s.lead}</p></div>`;
   }else{
    const d=st.done[m.id],person=m.t==="DM";
    r=`<button class="back" ${A(()=>{st.sel=null;draw();})}>← 목록</button><div class="rhead"><h2>${m.sub}</h2><p>${m.from} · <span class="num">${m.at}</span></p></div><div class="body"><p class="${person?"voice":""}">${m.body}</p>${m.attach?`<p class="attach">${m.attach}</p>`:""}</div>`;
    if(d){r+=`<div class="happen"><span class="label">일어난 일</span>${d}</div>`;
-    if(st.over||all)r+=`<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
+    if(st.over||all)r+=`${inboxSettle(st)}<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
    else if(!st.over){
     r+=`<div class="ask">`;
     if(st.mode==="del"){
      r+=`<div class="label">누구에게 맡길까요?</div><div class="pick">${Object.keys(LD).map(k=>`<button aria-pressed="${st.to===k}" ${A(()=>{st.to=k;draw();})}>${face(k,G.trust[k])}${LD[k].n}</button>`).join("")}</div>
-     <label class="chk"><input type="checkbox" id="four" ${st.four?"checked":""}><span>기대 결과·기한·권한·이유를 함께 전달한다<small>제한 시간에서 10초가 줄어듭니다.</small></span></label>
-     <div class="btns"><button class="btn main" ${st.to?"":"disabled"} ${A(()=>{if(st.four)st.left=Math.max(1,st.left-10);finish(m,(m.to&&m.to[st.to])||m.other,"위임",st.to);})}>맡기기</button><button class="btn" ${A(()=>{st.mode=null;st.to=null;draw();})}>취소</button></div>`;
-    }else r+=`<div class="btns"><button class="btn" ${A(()=>finish(m,m.self,"직접"))}>직접 처리</button>${m.noDel?"":`<button class="btn" ${A(()=>{st.mode="del";draw();})}>위임</button>`}<button class="btn" ${A(()=>finish(m,m.hold,"보류"))}>보류</button></div>`;
+     <label class="chk"><input type="checkbox" id="four" ${st.four?"checked":""}><span>기대 결과·기한·권한·이유를 함께 전달한다<small>메시지를 쓰는 데 ${IBT.four}초가 더 듭니다.</small></span></label>
+     <div class="btns"><button class="btn main" ${st.to&&st.left>IBT.del+(st.four?IBT.four:0)?"":"disabled"} ${A(()=>{spend(st,IBT.del+(st.four?IBT.four:0));finish(m,(m.to&&m.to[st.to])||m.other,"위임",st.to);})}>맡기기 · ${IBT.del+(st.four?IBT.four:0)}초</button><button class="btn" ${A(()=>{st.mode=null;st.to=null;draw();})}>취소</button></div>`;
+    }else if(st.mode==="reply"){const reps=replyOpts(m,st);
+     r+=`<div class="label">어떻게 답할까요? <span class="note">답장 하나에 ${IBT.reply}초</span></div><div class="opts">${reps.map((x,i)=>`<button class="opt" ${A(()=>{spend(st,IBT.reply);const row=x.self?m.self:x.r;const rr=typeof row==="function"?row(st.opened):row;finish(m,[rr[0],rr[1],rr[2],{...(rr[3]||{}),nod:x.d===false}],"직접");})}><span class="k">${"ABCD"[i]}</span><span>${x.t}</span></button>`).join("")}</div><div class="btns"><button class="btn" ${A(()=>{st.mode=null;draw();})}>취소</button></div>`;}
+    else{const low=k=>st.left<=IBT[k];
+     r+=`<div class="btns"><button class="btn" ${low("reply")?"disabled":""} ${A(()=>{if(REPLIES[m.id]){st.mode="reply";draw();}else{spend(st,IBT.reply);finish(m,m.self,"직접");}})}>직접 답장 · ${IBT.reply}초</button>${m.noDel?"":`<button class="btn" ${low("del")?"disabled":""} ${A(()=>{st.mode="del";draw();})}>위임 · ${IBT.del}초~</button>`}<button class="btn" ${A(()=>finish(m,m.hold,"보류"))}>보류</button></div><p class="note">보류한 메시지는 오늘 아무도 처리하지 않습니다. 보류가 3건을 넘으면 밀린 일이 팀장 시간과 안정에서 빠집니다.${low("reply")?" 남은 시간이 직접 답장에 모자랍니다.":""}</p>`;}
     r+=`</div>`;
    }
   }
@@ -272,13 +275,17 @@ function SC_INBOX(s){
 }
 
 /* 선택 장면: 결정 → (근거 → 알리기) → 일어난 일 */
+function partialLinkF(o,L,c,on,pick){return c>1?`<div style="padding-left:32px"><button class="link" aria-pressed="${on}" ${A(pick)}>${L}안을 줄여서 하기: 남은 ⏳${Math.max(0,G.time)}만 쓰고, 좋은 효과는 절반만 얻습니다${on?" (선택됨)":""}</button></div>`:"";}
 function borrowLink(lack,redraw){return G.ot+lack<=3?`<div style="padding-left:32px"><button class="link" ${A(()=>{G.ot+=lack;G.time+=lack;G.burnout+=lack;beep(200,.12,"sawtooth");redraw();})}>야근 ${lack}을 빌려서 고를 수 있게 하기</button></div>`:"";}
 const TELL=[{id:"full",t:"기준과 근거를 설명한다",c:2},{id:"short",t:"결과만 간단히 알린다",c:1},{id:"none",t:"따로 알리지 않는다",c:0}];
 function SC_CHOICE(s,opt={}){
  if(s.enter&&!G.ent[s.id]){G.ent[s.id]=1;applyFx(val(s.enter),{rel:s.rel});}
  const mult=opt.mult||G.nextMult||undefined;
- let sel=null,why=null,tell=null,step=s.prep&&!G.ent[s.id+":p"]?"prep":"opt";
+ let sel=null,why=null,tell=null,partial=false,consNote="",step=s.prep&&!G.ent[s.id+":p"]?"prep":"opt";
  const opts=val(s.options),O=()=>opts.find(o=>o.k===sel);
+ G.ord=G.ord||{};if(!G.ord[s.id]||G.ord[s.id].length!==opts.length||!opts.every(o=>G.ord[s.id].includes(o.k))){const ks=opts.map(o=>o.k);for(let i=ks.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ks[i],ks[j]]=[ks[j],ks[i]];}G.ord[s.id]=ks;}
+ const shown=G.ord[s.id].map(k=>opts.find(o=>o.k===k));
+ const partialLink=(o,L,c)=>partialLinkF(o,L,c,sel===o.k&&partial,()=>{sel=o.k;partial=true;draw();});
  if(s.pre)s.pre(G);
  const top=()=>`${head(s)}${s.top?val(s.top):""}<div class="prose">${para(s.intro||[])}</div>${(val(s.say)||[]).map(x=>sayHtml(x[0],val(x[1]))).join("")}${condLines(s)}${s.ref?`<details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">${s.ref}</p></details>`:""}`;
  const draw=()=>{paint("");
@@ -288,24 +295,24 @@ function SC_CHOICE(s,opt={}){
    shell(`<div class="pane">${head(s)}<p><b>면담 전에 어떻게 할까요?</b></p><div class="opts"><button class="opt" ${short?"disabled":""} ${A(()=>pick(true))}><span class="k">·</span><span>기준 문서를 먼저 보내고 의견을 묻는다</span><span class="cost">⏳1</span></button>${short?borrowLink(1,draw):""}<button class="opt" ${A(()=>pick(false))}><span class="k">·</span><span>면담 자리에서 바로 이야기한다</span><span class="cost"></span></button></div></div>`);
   }else if(step==="opt"){
    shell(`<div class="pane">${top()}${s.ask?`<p><b>${s.ask}</b></p>`:""}
-   <div class="opts">${opts.map(o=>{const c=val(o.cost)||0,short=c>G.time,lack=c-G.time,tk=o.tok&&(G.token||0)<o.tok,dis=(o.dis&&o.dis(G))||(tk?`토큰이 모자랍니다. (${o.tok} 필요)`:"");const tag=[c?"⏳"+c:"",o.tok?"💳"+o.tok:"",o.tagText||""].filter(Boolean).join(" ");
-    return `<button class="opt" aria-pressed="${sel===o.k}" ${short||dis?"disabled":""} ${A(()=>{sel=o.k;draw();})}><span class="k">${o.k}</span><span>${o.t}</span><span class="cost">${tag}</span>${dis?`<span class="why">${dis}</span>`:short?`<span class="why">팀장 시간이 ${lack} 모자랍니다.</span>`:""}</button>${short&&!dis?borrowLink(lack,draw):""}`}).join("")}</div>
-   <div class="foot"><span class="note">결정한 뒤에는 고칠 수 없습니다.</span><button class="btn main" ${sel?"":"disabled"} ${A(()=>{const c=s.common;if(!c){finish();return;}step=c.noWhy?"tell":"why";draw();})}>결정</button></div></div>`);
+   <div class="opts">${shown.map((o,i)=>{const c=val(o.cost)||0,short=c>G.time,lack=c-G.time,tk=o.tok&&(G.token||0)<o.tok,dis=(o.dis&&o.dis(G))||(tk?`토큰이 모자랍니다. (${o.tok} 필요)`:"");const tag=[c?"⏳"+c:"",o.tok?"💳"+o.tok:"",o.tagText||""].filter(Boolean).join(" ");const L="ABCD"[i];
+    return `<button class="opt" aria-pressed="${sel===o.k&&!partial}" ${short||dis?"disabled":""} ${A(()=>{sel=o.k;partial=false;draw();})}><span class="k">${L}</span><span>${o.t}</span><span class="cost">${tag}</span>${dis?`<span class="why">${dis}</span>`:short?`<span class="why">이번 분기 팀장 시간이 ${lack} 모자라 고를 수 없습니다.${G.ot+lack>3?` 야근으로 빌릴 수 있는 한도(분기 3)도 ${G.ot>=3?"다 썼습니다":`${3-G.ot}만 남았습니다`}.`:""}</span>`:""}</button>${short&&!dis?borrowLink(lack,draw)+partialLink(o,L,c):""}`}).join("")}</div>
+   <div class="foot"><span class="note">결정한 뒤에는 고칠 수 없습니다.</span><button class="btn main" ${sel?"":"disabled"} ${A(()=>{const c=s.common;if(!c){finish();return;}const nolist=has("pub_leaders")||!G.pub.length;if(nolist&&!c.noWhy){G.judge=(G.judge||0)+1;}step=c.noWhy||nolist?((c.noTell||O().noTell)?null:"tell"):"why";if(!step){finish();return;}draw();})}>결정</button></div></div>`);
   }else if(step==="why"){
    const list=has("pub_leaders")?[]:G.pub;
    shell(`<div class="pane"><div class="eyebrow">근거</div><h2>이 결정의 근거는 무엇입니까?</h2>${list.length?`<p class="note">공개한 기준만 나옵니다. 공개하지 않은 기준은 근거로 쓸 수 없습니다.</p><div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;draw();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:`<div class="happen">${has("pub_leaders")?"공개한 기준이 없어 고를 수 없습니다.":"근거로 고를 수 있는 공개 기준이 아직 없습니다."} 이 결정은 "팀장 판단"으로 기록됩니다.</div>`}
-   <div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const fit=!!(s.common.fit&&((s.common.fit[sel]||[]).includes(why)||(s.common.fit[sel]||[]).some(x=>x.startsWith("어느 공개"))));G.cons.push({scene:s.id,choice:sel,why,fit:fit,half:has("rule_silent")&&["AI 활용 효과"].includes(why)});if(has("rule_silent")&&why==="AI 활용 효과"&&s.rel)applyFx(s.rel+"-1");}if(s.common.noTell||O().noTell){finish();}else{step="tell";draw();}})}>다음</button></div></div>`);
+   <div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const fit=!!(s.common.fit&&((s.common.fit[sel]||[]).includes(why)||(s.common.fit[sel]||[]).some(x=>x.startsWith("어느 공개"))));G.cons.push({scene:s.id,choice:sel,why,fit:fit,half:has("rule_silent")&&["AI 활용 효과"].includes(why)});consNote=fit?`근거로 고른 "${why}"와 맞는 결정으로 기록됐습니다.`:`근거로 고른 "${why}"로는 이 결정을 설명하기 어렵다고 기록됐습니다. 공개한 기준과 실제 결정이 어긋난 것으로 남습니다.`;if(has("rule_silent")&&why==="AI 활용 효과"&&s.rel)applyFx(s.rel+"-1");}if(s.common.noTell||O().noTell){finish();}else{step="tell";draw();}})}>다음</button></div></div>`);
   }else if(step==="tell"){
-   const left=G.time-(val(O().cost)||0);
-   shell(`<div class="pane"><div class="eyebrow">알리기</div><h2>누구에게 어떻게 알릴까요?</h2>${s.tellNote?`<p class="note">${s.tellNote}</p>`:""}<div class="opts">${TELL.map(t=>{const short=t.c>left,lack=t.c-left;return `<button class="opt" aria-pressed="${tell===t.id}" ${short?"disabled":""} ${A(()=>{tell=t.id;draw();})}><span class="k">·</span><span>${t.t}</span><span class="cost">${t.c?"⏳"+t.c:"0"}</span>${short?`<span class="why">팀장 시간이 ${lack} 모자랍니다.</span>`:""}</button>${short?borrowLink(lack,draw):""}`}).join("")}</div>
+   const left=G.time-(partial?Math.max(0,Math.min(val(O().cost)||0,G.time)):(val(O().cost)||0));
+   shell(`<div class="pane"><div class="eyebrow">알리기</div><h2>누구에게 어떻게 알릴까요?</h2>${s.tellNote?`<p class="note">${s.tellNote}</p>`:""}${!s.common.noWhy&&(has("pub_leaders")||!G.pub.length)?`<p class="note">공개한 기준이 없어 이 결정은 "팀장 판단"으로 기록됩니다.</p>`:""}<div class="opts">${TELL.map(t=>{const short=t.c>0&&t.c>left,lack=t.c-Math.max(0,left);return `<button class="opt" aria-pressed="${tell===t.id}" ${short?"disabled":""} ${A(()=>{tell=t.id;draw();})}><span class="k">·</span><span>${t.t}</span><span class="cost">${t.c?"⏳"+t.c:"0"}</span>${short?`<span class="why">이번 분기 팀장 시간이 ${lack} 모자랍니다.${G.ot+lack>3?` 야근으로 빌릴 수 있는 한도(분기 3)도 남지 않았습니다.${t.id==="full"&&left>=1?" 결과만 알리는 쪽은 ⏳1로 가능합니다.":""}`:""}</span>`:""}</button>${short?borrowLink(lack,draw):""}`}).join("")}</div>
    <div class="foot"><span></span><button class="btn main" ${tell?"":"disabled"} ${A(finish)}>확정</button></div></div>`);
   }
  };
  const finish=()=>{
-  const o=O(),oc=val(o.cost)||0;if(oc){G.time-=oc;G.tu.all+=oc;if(s.meet)G.tu.meet+=oc;}if(o.tok){G.token=Math.max(0,G.token-o.tok);G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+o.tok;}
+  const o=O(),oc=partial?Math.max(0,Math.min(val(o.cost)||0,G.time)):(val(o.cost)||0);if(oc){G.time-=oc;G.tu.all+=oc;if(s.meet)G.tu.meet+=oc;}if(o.tok){G.token=Math.max(0,G.token-o.tok);G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+o.tok;}
   G.nextMult=undefined;
   const ex=s.ctxFn?s.ctxFn(G):{};
-  let pos=1,neg=1;(s.boost||[]).forEach(b=>{if(b.o.includes(o.k)&&b.c(G))pos*=b.m;});(s.harm||[]).forEach(b=>{if(b.o.includes(o.k)&&b.c(G))neg*=b.m;});
+  let pos=partial?.5:1,neg=1;(s.boost||[]).forEach(b=>{if(b.o.includes(o.k)&&b.c(G))pos*=b.m;});(s.harm||[]).forEach(b=>{if(b.o.includes(o.k)&&b.c(G))neg*=b.m;});
   const live=applyFx(val(o.fx),{rel:s.rel,mult,...ex,pos:pos!==1?pos:undefined});applySig(val(o.sig),1,s.id,o.k);record(s.id,o.k);
   const base=s.id.replace(/_\d$/,"").replace(/[abc]$/,"");G.f["c_"+base+"_"+o.k]=true;G.f["c_"+s.id+"_"+o.k]=true;
   (s.xfx||[]).forEach(x=>{const inO=x.o.includes(o.k);if(x.c(G)&&(x.neg?!inO:inO))applyFx(val(x.fx),{live,rel:s.rel,mult});});
@@ -326,7 +333,7 @@ function SC_CHOICE(s,opt={}){
   const after=val(o.after);let afterDone=false;const go=()=>{(opt.done||next)(o,hit);};
   const says=(val(o.says)||[]);
   const drawR=()=>{paint("");
-   shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>${val(s.title)}</h2><div class="prose"><p>${val(o.done)||o.t}${o.recover?` (복구 ${val(o.recover)})`:""}</p>${hit&&!hit.who?`<p>${val(hit.t)}</p>`:""}${hits2.map(t=>`<p>${val(t.t)}</p>`).join("")}</div>${says.map(x=>sayHtml(x[0],x[1])).join("")}${hit&&hit.who?sayHtml(hit.who,val(hit.t)):""}${tail?sayHtml(tail.who,tail.t):""}${tellLine?`<div class="happen">${tellLine}</div>`:""}
+   shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>${val(s.title)}</h2><div class="prose"><p>${val(o.done)||o.t}${o.recover?` (복구 ${val(o.recover)})`:""}</p>${hit&&!hit.who?`<p>${val(hit.t)}</p>`:""}${hits2.map(t=>`<p>${val(t.t)}</p>`).join("")}</div>${says.map(x=>sayHtml(x[0],x[1])).join("")}${hit&&hit.who?sayHtml(hit.who,val(hit.t)):""}${tail?sayHtml(tail.who,tail.t):""}${tellLine?`<div class="happen">${tellLine}</div>`:""}${consNote?`<p class="note">${consNote}</p>`:""}
    ${after&&!afterDone?`<div class="ask"><p class="voice">${after.t}</p><div class="btns">${after.opts.map(x=>`<button class="btn" ${A(()=>{afterDone=true;if(x.pr)addPromise(x.pr);if(x.fx)applyFx(val(x.fx),{live:{},rel:s.rel});record(s.id+"+",x.t);drawSide();drawR();})}>${x.t}</button>`).join("")}</div></div>`:`<div class="foot"><span></span><button class="btn main" ${A(go)}>다음</button></div>`}</div>`,live);
   };
   beep(560,.06);drawR();
@@ -445,8 +452,8 @@ function SC_TASKS(s){
  const order=s.items.map((_,i)=>i).sort(()=>Math.random()-.5);
  const keep=()=>pick.forEach(i=>{const a=$("t"+i),b=$("c"+i);if(a)data[i]={t:a.value,c:b.value};});
  const draw=()=>{paint("");
-  const ok=()=>pick.length===3&&pick.every(i=>{const a=$("t"+i),b=$("c"+i);return a&&a.value.trim().length>=10&&b&&b.value;});
-  shell(`<div class="pane">${head(s)}<div class="prose">${para(s.intro)}</div><details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">${s.ref}</p></details>
+  const ok=()=>pick.length===3&&pick.every(i=>{const a=$("t"+i),b=$("c"+i);return a&&readable(a.value,6).ok&&b&&b.value;});
+  shell(`<div class="pane">${head(s)}<div class="prose">${para(s.intro)}</div>${s.id==="1-3"||/1월/.test(s.when||"")?morningMirror():""}<details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">${s.ref}</p></details>
   <div class="opts">${order.map(i=>{const on=pick.includes(i);return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${on}" ${A(()=>{keep();const j=pick.indexOf(i);if(j>=0)pick.splice(j,1);else if(pick.length<3)pick.push(i);draw();})}><span class="k">${on?"✓":""}</span><span>${s.items[i]}</span></button>`}).join("")}</div>
   ${pick.map(i=>`<div class="task"><b>${s.items[i]}</b><label class="label" for="c${i}">영향을 주는 성적표</label><select id="c${i}"><option value="">고르세요</option>${SCORES.map(c=>`<option ${data[i]&&data[i].c===c?"selected":""}>${c}</option>`).join("")}</select><label class="label" for="t${i}">근거 한 문장 (10자 이상)</label><textarea id="t${i}" placeholder="${val(s.hint,i)||""}">${data[i]?data[i].t:""}</textarea></div>`).join("")}
   <div class="foot"><span class="note num">${pick.length}/3</span><button class="btn main" id="tgo" disabled ${A(()=>{keep();G.written.tasks=pick.map(i=>({과제:s.items[i],성적표:data[i].c,근거:data[i].t}));if(pick.some(i=>i>=6))G.f.urgent_task=true;record(s.id,pick.map(i=>i+1).join(","));next();})}>메모 닫기</button></div></div>`);
@@ -486,3 +493,35 @@ function boot(){
  if(old&&old.sound!==undefined)G.sound=old.sound;
  render();
 }
+
+/* ===== 사람이 읽는 이름: 화면에 장면 ID가 나가지 않게 ===== */
+function sceneOf(id){id=String(id);for(const s of CONTENT){if(s.id===id)return s;if(Array.isArray(s.cases))for(const c of s.cases)if(c.id===id)return c;}const base=id.replace(/(_\d+|[a-z]|-\d+)$/,"");return base!==id?sceneOf(base):null;}
+function mailOf(id){for(const s of CONTENT)if(Array.isArray(s.mail)){const m=s.mail.find(x=>x.id===id);if(m)return{m,month:s.month};}return null;}
+function cleanTitle(t){return String(val(t)||"").replace(/Wobbler[①②③]\s*/g,"").replace(/^리더 회의[①②③④]?\s*·\s*/,"").replace(/^[^·]*면담\s*·\s*/,"").replace(/\s*\(.*?\)\s*/g," ").replace(/[🚨⚖️📚👥🗣️]/gu,"").replace(/\s+/g," ").trim();}
+function nm(id){id=String(id);const ml=mailOf(id.split("~")[0]);if(ml)return `${ml.month}월 「${ml.m.sub}」`;const R={"R-6":"6월 반기 회고 재배분","4-2":"4월 자원 배분"};if(R[id])return R[id];const s=sceneOf(id);const mo=MON?MON(id):null;return (mo?mo+"월 ":"")+(s?`「${cleanTitle(s.title)||cleanTitle(s.tag)||"결정"}」`:"결정");}
+function choiceText(id,ch){const map={"직접":"직접 처리","위임":"위임","보류":"보류","안 알림":"알리지 않음","설명":"이유까지 설명","기준 먼저 공유":"기준 먼저 공유"};if(map[ch])return map[ch];if(/^[a-z]+:/.test(ch)){const [k,how]=ch.split(":");return name(k)+" 면담 "+(how==="몰래"?"(몰래 알아봄)":how);}
+ const s=sceneOf(id);const o=s&&Array.isArray(s.options)&&s.options.find(x=>x.k===ch);if(o){let t=String(val(o.t)).replace(/\s*⏳\d*/g,"");const cut=t.search(/[,.]/);if(cut>8&&cut<34)t=t.slice(0,cut);else if(t.length>34)t=t.slice(0,32)+"…";return t;}return ch;}
+function label(id,ch){return nm(id)+" — "+choiceText(id,ch);}
+function stripId(t){return String(t).replace(/^(M\d+(~M\d+)?|R-\d|\d+-\d+[a-z]?(_\d)?)\s+/,"");}
+function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`사람 점수 때문에 다음 분기 안정이 ${sg(c.사람_안정)}`);if(c.안정_F사)p.push(`안정 점수 때문에 F사 만족이 ${sg(c.안정_F사)}`);if(c.F사_재무)p.push(`F사 만족 때문에 재무가 ${sg(c.F사_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
+
+/* 받은편지함 시간 비용(초)과 마감 정산 */
+const IBT={reply:35,del:12,four:12};
+function spend(st,sec){st.left=Math.max(0,st.left-sec);}
+function replyOpts(m,st){const reps=REPLIES[m.id]||[];if(!st.ord[m.id]){const o=reps.map((x,i)=>i);for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}st.ord[m.id]=o;}return st.ord[m.id].map(i=>reps[i]);}
+function inboxSettle(st){
+ if(!st.settled){st.settled=true;st.lt=Math.floor(st.replies/3);st.ht=st.holds>3?Math.ceil((st.holds-3)/2):0;st.hs=Math.max(0,st.holds-3);
+  const take=n=>{const t=Math.max(0,Math.min(n,G.time));G.time-=t;G.tu.all+=t;return t;};st.lt=take(st.lt);st.ht=take(st.ht);if(st.hs)applyFx("안정-"+st.hs);if(st.holds>=6)applyFx("소문1");}
+ const l=[];if(st.lt)l.push(`직접 답장 ${st.replies}건의 후속 처리에 팀장 시간 ⏳${st.lt}을 썼습니다.`);
+ if(st.holds)l.push(`보류 ${st.holds}건${st.ht?`: 밀린 일을 처리하느라 팀장 시간 ⏳${st.ht}을 더 썼고, 안정이 ${st.hs} 내려갔습니다`:": 아직은 감당할 만합니다"}.${st.holds>=6?" 처리되지 않은 일 이야기가 팀에 돌기 시작했습니다.":""}`);
+ return l.length?`<div class="happen"><span class="label">오늘 받은편지함의 값</span>${l.join("<br>")}</div>`:"";}
+
+/* 서술 입력 검사: 자모만 치거나 같은 글자를 반복한 글은 받지 않는다 */
+function readable(t,min){t=String(t||"").trim();const syl=(t.match(/[가-힣]/g)||[]).length,jamo=(t.match(/[ㄱ-ㅎㅏ-ㅣ]/g)||[]).length,words=t.split(/\s+/).filter(w=>/[가-힣A-Za-z0-9]{2,}/.test(w)).length;
+ if(!t)return{ok:false,why:"비어 있습니다."};if(jamo>syl*.2)return{ok:false,why:"자음·모음만으로 된 글자는 읽을 수 없습니다."};if(/(.){4,}/.test(t.replace(/\s/g,"")))return{ok:false,why:"같은 글자가 반복됩니다."};
+ const uniq=new Set(t.replace(/[^가-힣]/g,"")).size;if(syl<min||uniq<Math.min(min,8)||words<3)return{ok:false,why:`문장으로 읽히지 않습니다. 한글 ${min}자 이상, 낱말 세 개 이상으로 써 주세요.`};return{ok:true};}
+/* 1월 핵심 과제 화면: 오늘 아침 시간을 쓴 곳과 선임 때 고른 우선순위를 나란히 */
+const MAIL_AREA={M01:"성과",M02:"성과",M03:"성과",M04:"재무",M05:"재무",M06:"안정",M07:"안정",M08:"안정",M09:"사람",M10:"사람",M11:"안정",M12:"사람",M13:"안정",M14:"사람",M15:"사람",M16:"안정",M17:"사람"};
+function morningMirror(){const c={},h={};Object.keys(MAIL_AREA).forEach(id=>{const a=MAIL_AREA[id];if(G.f["d_"+id]||G.f["del_"+id]){c[a]=(c[a]||0)+(G.f["d_"+id]?1:.5);}if(G.f["h_"+id])h[a]=(h[a]||0)+1;});
+ const top=SCORES.slice().sort((a,b)=>(c[b]||0)-(c[a]||0)).filter(a=>c[a]).slice(0,2);
+ return `<div class="cond"><span>선임 때 고른 우선순위: ${G.prio.join(", ")}</span><span>오늘 아침 손을 가장 많이 쓴 곳: ${top.join(", ")||"없음"} (직접 답장 1, 위임 0.5로 셈)</span>${Object.keys(h).length?`<span>보류한 메일이 가장 많았던 곳: ${SCORES.filter(a=>h[a]).sort((a,b)=>h[b]-h[a])[0]}</span>`:""}</div>`;}
