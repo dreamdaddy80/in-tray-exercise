@@ -31,7 +31,7 @@ function evalAch(){const a=x=>{if(!G.ach.includes(x))G.ach.push(x);};
  if((G.hist||[]).every(h=>h.사람>=50)&&G.score.사람>=50)a("연쇄를 끊다");
  const wp=G.wrotePieces||{};if(["6-2","9-6","12-6"].every(k=>wp[k]&&wp[k].every(n=>n>=2)))a("세 개의 목소리");
 }
-function exportBundle(){const w=G.written;return JSON.stringify({선임다짐:G.pledge,우선순위:G.prio,우선순위변경:!!G.f.prio_changed,핵심과제:w.tasks,공개한기준:w.kpi,공개수준:G.f.pub_full?"전체":G.f.pub_items?"항목":"리더만",공지문:w.notice,"세개의설명6월":w["6-2"],"세개의설명9월":w["9-6"],"세개의설명12월":w["12-6"],반기회고:w.again,약속장부:G.prom,연말등급:G.grades,일관성:consPct(),기준의질:G.quality,기준미달:breaches(),디브리핑:w.debrief,실행카드:w.action},null,2);}
+function exportBundle(){const w=G.written;return JSON.stringify({선임다짐:G.pledge,우선순위:G.prio,우선순위변경:!!G.f.prio_changed,핵심과제:w.tasks,공개한기준:w.kpi,공개수준:G.f.pub_full?"전체":G.f.pub_items?"항목":"리더만",공지문:w.notice,"세개의설명6월":w["6-2"],"세개의설명9월":w["9-6"],"세개의설명12월":w["12-6"],반기회고:w.again,약속장부:G.prom,연말등급:G.grades,일관성:consPct(),기준의질:G.quality,기준미달:breaches(),AI검증:typeof verStats==="function"?{지표:verStats(),기록:G.ver||[]}:null,디브리핑:w.debrief,실행카드:w.action},null,2);}
 
 /* 분기별 추이 차트: 네 성적표, 시작~4분기, 같은 축 0~100 */
 function trendChart(){
@@ -95,6 +95,7 @@ function SC_FINALE(s){
    ${row("⑤ 조율",[["6-2","6월"],["9-6","9월"],["12-6","12월"]].map(([k,m])=>m+" 설명 "+(G.wrote[k]!=null?G.wrote[k]+"/9":"-")).join(" · ")+" · 사람 채점 대기")}
    ${row("⑥ 평가",`근거 충족 ${G.evalGood||0}/${G.evalN||11} · ${G.appeal0?("이의제기 0건 ("+(G.appeal0==="침묵"?"말하지 않은 사람이 있었음":"근거가 충족됨")+")"):"이의 면담 "+(G.appealOK?"기록 제시":"기록 미제시")}${G.f.kpi_order?" · KPI 순서대로":""}`)}
    </div>
+   ${typeof verHtml==="function"?verHtml():""}
    ${(G.badEvid||[]).length?`<h2 style="font-size:18px">쓰면 안 되는 근거</h2><p>12월에 근거로 고른 다음 기록은 등급의 근거가 될 수 없습니다.</p><div class="prose" style="font-size:14.5px">${G.badEvid.map(x=>`<p>${x}</p>`).join("")}</div><div class="table">${[["투입 시간","오래 일한 것은 무엇을 해냈는지를 말해 주지 않습니다. 6월 지침에서 제외되었습니다."],["병가·휴직","아픈 것은 평가 대상이 아닙니다."],["익명 글·소문","확인되지 않은 일이고, 글쓴이를 추정한 것은 쓸 수 없습니다."],["내부 제보·반대 의견","말한 사람이 등급으로 불이익을 받으면 다음 사람은 말하지 않습니다."],["이동·이직 의사","앞날에 대한 의사이지 올해의 기여가 아닙니다."]].map(([a,b])=>`<div class="task"><b>${a}</b><span class="note">${b}</span></div>`).join("")}</div>`:""}
    <p class="note">업적: ${G.ach.join(", ")||"없음"}</p>${window.SEEDED?`<p class="note">진단 모드 · 시드 ${window.SEEDED}: 같은 선택을 하면 같은 확률 결과가 나옵니다.</p>`:`<p class="note">확률로 일어난 일은 "일어난 일" 화면에 따로 표시했습니다. 같은 선택도 회차마다 결과가 다를 수 있습니다. 평가 도구로 쓸 때는 주소 끝에 ?seed=숫자 를 붙여 진단 모드로 실행하세요.</p>`}${nb()}</div>`);}
   else if(page===10){const keyOf=r=>r[0].split(" ")[0];const hot=r=>G.sig.some(x=>x.scene.startsWith(keyOf(r)));const all=REVIEW1.concat(REVIEW2);const first=all.filter(hot).slice(0,8),rest=all.filter(r=>!first.includes(r));

@@ -225,7 +225,7 @@ function SC_INBOX(s){
  const st=CONTENT[G.idx]._st={sel:null,opened:{},done:{},mode:null,to:null,four:false,left:val(s.seconds),over:false,direct:0,replies:0,holds:0,ord:{},settled:false};
  G.seen=0;
  const startClock=()=>{if(CLOCK||st.over)return;CLOCK=setInterval(()=>{st.left--;if(st.left<=0){st.left=0;expire();}drawBar(st.left);},1000);};
- const expire=()=>{clearInterval(CLOCK);CLOCK=null;st.over=true;beep(240,.3,"square");
+ const expire=()=>{clearInterval(CLOCK);CLOCK=null;st.over=true;beep(240,.3,"square");if(typeof aiInboxExpire==="function")aiInboxExpire(s,st);
   s.mail.forEach(m=>{if(!st.done[m.id]){const r=resolveRow(m.hold);st.done[m.id]=r[0];applyFx(r[1],{rel:m.rel});G.f["h_"+m.id]=true;st.holds++;record(m.id,"시간 초과(보류)");}});
   draw();};
  const resolveRow=r=>typeof r==="function"?r(st.opened):r;
@@ -255,6 +255,7 @@ function SC_INBOX(s){
    r=`<button class="back" ${A(()=>{st.sel=null;draw();})}>← 목록</button><div class="rhead"><h2>${m.sub}</h2><p>${m.from} · <span class="num">${m.at}</span></p></div><div class="body"><p class="${person?"voice":""}">${m.body}</p>${m.attach?`<p class="attach">${m.attach}</p>`:""}</div>`;
    if(d){r+=`<div class="happen"><span class="label">일어난 일</span>${d}</div>`;
     if(st.over||all)r+=`${inboxSettle(st)}<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
+   else if(!st.over&&typeof AIREP!=="undefined"&&AIREP[m.id]&&!(st.vdone||{})[m.id]){r+=aiInbox(m,st,()=>draw());}
    else if(!st.over){
     r+=`<div class="ask">`;
     if(st.mode==="del"){
