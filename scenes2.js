@@ -106,7 +106,7 @@ function SC_WRITE(s){
 
 /* 반기 회고 (원고 03-6 R-1~R-7) */
 function SC_REVIEW(s){
- let page=0;
+ let page=1;
  const add={RUN:0,AI:0,GROW:0,SEC:0};let moves=0;let focus=null;
  const nextBtn=(t,fn)=>`<div class="foot"><span></span>${BTN(fn||(()=>{page++;draw();}),t||"다음","main")}</div>`;
  const draw=()=>{paint("");window.scrollTo(0,0);

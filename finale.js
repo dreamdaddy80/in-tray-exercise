@@ -66,8 +66,8 @@ function relationMap(){
 function safeSpark(){const h=(G.hist||[]).map(x=>x.안전).filter(v=>v!=null);const vals=[50].concat(h);const W=240,H=60;const X=i=>8+i*(W-16)/Math.max(1,vals.length-1),Y=v=>H-8-(v/100)*(H-16);
  return `<svg class="viz" viewBox="0 0 ${W} ${H}" style="max-width:260px" aria-label="심리적 안전의 분기별 변화"><polyline points="${vals.map((v,i)=>X(i)+","+Y(v)).join(" ")}" fill="none" stroke="currentColor" stroke-width="2"/>${vals.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="currentColor"/>`).join("")}</svg>`;}
 function SC_FINALE(s){
- let page=0,reveal=0;evalAch();const N=12;
- const nb=(t)=>`<div class="foot"><span class="note num">${page+1}/${N}</span>${BTN(()=>{page++;draw();},t||"다음","main")}</div>`;
+ let page=1,reveal=0;evalAch();const N=11;
+ const nb=(t)=>`<div class="foot"><span class="note num">${page}/${N}</span>${BTN(()=>{page++;draw();},t||"다음","main")}</div>`;
  const row=(a,b)=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b style="font-size:15px;text-align:right">${b}</b></div>`;
  const draw=()=>{paint("");window.scrollTo(0,0);const br=breaches(),ty=resultType(),ti=titleOf();
   if(reveal<2){revealPage(reveal,()=>{reveal++;draw();});return;}
