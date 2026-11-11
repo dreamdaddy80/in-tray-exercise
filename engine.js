@@ -33,7 +33,7 @@ function face(k,t){
 /* ---------- 상태 ---------- */
 function newGame(){return{
  idx:0,month:0,quarter:0,time:QUARTER_TIME[0],ot:0,burnout:0,
- trust:{rd:50,src:50,mfg:50,prc:50,mkt:50},score:{성과:50,재무:50,사람:50,안정:50},fsat:50,safe:50,
+ trust:{rd:50,src:50,mfg:50,prc:50,mkt:50},score:{성과:50,재무:50,사람:50,안정:50},fsat:50,fexp:50,fexpLog:[],safe:50,
  f:{},sig:[],rumors:0,big:0,over:0,bill:{},prom:{},rets:[],decisions:[],ach:[],written:{},diag:null,pledge:"",prio:[],story:{},seen:0,sound:true,
  tu:{exp:0,meet:0,all:0},tokSpent:[0,0,0,0],nextQ:0,
  token:null,tokenCap:null,cells:null,ends:{},unsent:[],toldAll:{full:0,none:0},wrote:{},concl:0,grades:{},nextMult:undefined,chain:[],
@@ -55,7 +55,7 @@ function applyFx(str,ctx={}){
  if(!str)return live;
  const re=/`([^`]+)`|([^\s·]+)/g;let m;
  while((m=re.exec(str))){
-  if(m[1]){if(m[1][0]==="~")delete G.f[m[1].slice(1)];else G.f[m[1]]=true;continue;}
+  if(m[1]){if(m[1][0]==="~")delete G.f[m[1].slice(1)];else{const nw=!G.f[m[1]];G.f[m[1]]=true;if(nw&&FEXP[m[1]]){const d=FEXP[m[1]][0];G.fexp=Math.max(0,Math.min(100,(G.fexp??50)+d));(G.fexpLog=G.fexpLog||[]).push({m:G.month,d,t:FEXP[m[1]][1]});live.F사기대=(live.F사기대||0)+d;}}continue;}
   const t=m[2].replace(/−/g,"-");let x;
   const sc=v=>{if(v>0&&ctx.pos)v=Math.round(v*ctx.pos);if(v<0&&ctx.neg)v=Math.round(v*ctx.neg);return v;};
   if((x=t.match(/^⏳([+-]\d+)$/)))G.time=Math.max(0,G.time+ +x[1]);
@@ -114,7 +114,7 @@ function drawSide(live){
  if(p.hidden)return;
  p.innerHTML=`<div><div class="label">모듈 리더</div><div class="leaders">${Object.keys(LD).map(k=>{const d=live&&live[k];
   return `<div class="ld">${face(k,G.trust[k])}<div><b>${LD[k].n} <span class="num" style="font-weight:400;color:var(--muted)">${G.trust[k]}</span></b><small>${LD[k].m}</small><div class="tb"><i style="width:${G.trust[k]}%"></i></div></div>${d?`<span class="delta ${d>0?"up":"down"}">${d>0?"+":""}${d}</span>`:""}</div>`}).join("")}</div></div>
- <div><div class="label">성적표</div><div class="cards">${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>F사 만족 ${G.fsat}</em>`:""}</div>`).join("")}</div></div>`;
+ <div><div class="label">성적표</div><div class="cards">${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>F사 만족 ${G.fsat}${live&&live.F사기대?"":""}</em><em title="F사가 기대하는 수준. 분기 말에 안정 점수와 비교합니다.">F사 기대 ${G.fexp??50}${live&&live.F사기대?` <span class="delta ${live.F사기대>0?"down":"up"}" style="position:static">${live.F사기대>0?"+":""}${live.F사기대}</span>`:""}</em>`:""}</div>`).join("")}</div></div>`;
 }
 function drawBar(clock){
  const s=CONTENT[G.idx]||{};
@@ -436,11 +436,11 @@ function settle(id,ok,member){
 }
 function endQuarter(){
  const lv=v=>Math.trunc((v-50)/10);
- const a=lv(G.score.사람)*2,b=lv(G.score.안정)*2,c=lv(G.fsat);
+ const ex=G.fexp??50,st0=G.score.안정;const a=lv(G.score.사람)*2,c=lv(G.fsat);const b=Math.max(-6,Math.min(6,Math.round((st0-ex)/4)));
  G.score.안정=Math.max(0,Math.min(100,G.score.안정+a));G.fsat=Math.max(0,Math.min(100,G.fsat+b));
  G.score.재무=Math.max(0,Math.min(100,G.score.재무+c*2));G.score.성과=Math.max(0,Math.min(100,G.score.성과+c));
- G.chain.push({q:G.quarter+1,사람_안정:a,안정_F사:b,F사_재무:c*2,F사_성과:c});const QS={q:G.quarter+1,chain:chainLine(G.chain[G.chain.length-1]),ot:G.ot,tokFx:G.tokenCap?(G.tokenCap>=140?2:G.tokenCap>=100?1:0):0};
- (G.hist=G.hist||[]).push({...G.score,F사:G.fsat,안전:G.safe});
+ G.chain.push({q:G.quarter+1,사람_안정:a,안정_F사:b,F사_재무:c*2,F사_성과:c,기대:ex,안정:st0});const QS={q:G.quarter+1,chain:chainLine(G.chain[G.chain.length-1]),ot:G.ot,tokFx:G.tokenCap?(G.tokenCap>=140?2:G.tokenCap>=100?1:0):0};
+ (G.hist=G.hist||[]).push({...G.score,F사:G.fsat,F사기대:G.fexp??50,안전:G.safe});
  const carry=Math.min(2,G.time),bonus=Math.min(2,G.delegWin),pen=G.ot?1:0;
  G.toldAll.full+=G.told.full;G.toldAll.none+=G.told.none;
  if(G.ot)applyFx("사람-"+G.ot);
@@ -509,7 +509,7 @@ function choiceText(id,ch){const map={"직접":"직접 처리","코칭":"방향�
  const s=sceneOf(id);const o=s&&Array.isArray(s.options)&&s.options.find(x=>x.k===ch);if(o){let t=String(val(o.t)).replace(/\s*⏳\d*/g,"");const cut=t.search(/[,.]/);if(cut>8&&cut<34)t=t.slice(0,cut);else if(t.length>34)t=t.slice(0,32)+"…";return t;}return ch;}
 function label(id,ch){return nm(id)+" — "+choiceText(id,ch);}
 function stripId(t){return String(t).replace(/^(M\d+(~M\d+)?|R-\d|\d+-\d+[a-z]?(_\d)?)\s+/,"");}
-function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`사람 점수 때문에 다음 분기 안정이 ${sg(c.사람_안정)}`);if(c.안정_F사)p.push(`안정 점수 때문에 F사 만족이 ${sg(c.안정_F사)}`);if(c.F사_재무)p.push(`F사 만족 때문에 재무가 ${sg(c.F사_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
+function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`사람 점수 때문에 다음 분기 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`F사 기대 ${c.기대} 대비 안정 ${c.안정} → F사 만족 ${sg(c.안정_F사)}`);else if(c.안정_F사)p.push(`안정 점수 때문에 F사 만족이 ${sg(c.안정_F사)}`);if(c.F사_재무)p.push(`F사 만족 때문에 재무가 ${sg(c.F사_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
 
 /* 받은편지함 시간 비용(초)과 마감 정산 */
 const IBT={reply:35,del:12,four:12};
@@ -575,3 +575,7 @@ const KNOW={know_kim:"김 사원은 주 세 번 대기를 섭니다. 다른 사�
 (function(){const q=new URLSearchParams(location.search);const sd=q.get("seed");if(sd==null)return;const base=[...String(sd)].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619)>>>0,2166136261);let st=base;const orig=Math.random;
  const mul=()=>{st|=0;st=st+0x6D2B79F5|0;let t=Math.imul(st^st>>>15,1|st);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
  window.SEEDED=String(sd);Math.random=()=>{try{const sc=CONTENT[G.idx];const key=(sc?sc.id:"")+":"+G.decisions.length;if(key!==window.__sk){window.__sk=key;st=[...key].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619)>>>0,base);}}catch(e){return orig();}return mul();};})();
+
+/* F사 기대: 약속을 키우면 오르고, 숫자를 바로잡거나 범위를 줄이면 내려간다. 분기 말 F사 만족 = (안정 − 기대) 차이 */
+const FEXP={prop_full:[8,"7월 제안을 요청 범위 그대로 받음"],prop_ai:[3,"7월 제안을 AI 분석으로 3주 안에 약속"],r2_more:[5,"4월 신규 과제를 더 받음"],ct_more:[6,"6월 계약에 신규 과제 2건을 넣음"],small_win:[3,"5월 소규모 수주를 받음"],f_140:[5,"\"주 140시간 절감\"이 F사에 그대로 감"],scope_full:[8,"10월 본계약을 전 품목·1월 착수로 받음"],ai9_accepted:[2,"F사 AI 재산정 수치를 받아들임"],
+ f_corrected:[-6,"140시간을 38시간(실측 중)으로 바로잡음"],prop_narrow:[-4,"7월 제안 범위를 한 품목으로 줄임"],scope_stage:[-4,"10월 본계약을 단계적으로 넓히기로 함"],ai9_fixed:[-3,"F사 재산정의 계획 정비 포함을 짚음"]};
