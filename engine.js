@@ -114,7 +114,7 @@ function drawSide(live){
  if(p.hidden)return;
  p.innerHTML=`<div><div class="label">모듈 리더</div><div class="leaders">${Object.keys(LD).map(k=>{const d=live&&live[k];
   return `<div class="ld">${face(k,G.trust[k])}<div><b>${LD[k].n} <span class="num" style="font-weight:400;color:var(--muted)">${G.trust[k]}</span></b><small>${LD[k].m}</small><div class="tb"><i style="width:${G.trust[k]}%"></i></div></div>${d?`<span class="delta ${d>0?"up":"down"}">${d>0?"+":""}${d}</span>`:""}</div>`}).join("")}</div></div>
- <div><div class="label">성적표</div><div class="cards">${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>F사 만족 ${G.fsat}${live&&live.F사기대?"":""}</em><em title="F사가 기대하는 수준. 분기 말에 안정 점수와 비교합니다.">F사 기대 ${G.fexp??50}${live&&live.F사기대?` <span class="delta ${live.F사기대>0?"down":"up"}" style="position:static">${live.F사기대>0?"+":""}${live.F사기대}</span>`:""}</em>`:""}</div>`).join("")}</div></div>`;
+ <div><div class="label">성적표</div><div class="cards">${(()=>{const l=(G.mon||[]).slice(-1)[0];return l?`<div class="card"><span>보고된 이슈·아차</span><b>${l.rep}</b><em>${l.m}월</em></div>`:"";})()}${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>F사 만족 ${G.fsat}${live&&live.F사기대?"":""}</em><em title="F사가 기대하는 수준. 분기 말에 안정 점수와 비교합니다.">F사 기대 ${G.fexp??50}${live&&live.F사기대?` <span class="delta ${live.F사기대>0?"down":"up"}" style="position:static">${live.F사기대>0?"+":""}${live.F사기대}</span>`:""}</em>`:""}</div>`).join("")}</div></div>`;
 }
 function drawBar(clock){
  const s=CONTENT[G.idx]||{};
@@ -204,7 +204,9 @@ const SCENES={
  alloc(s){SC_ALLOC(s);},write(s){SC_WRITE(s);},review(s){SC_REVIEW(s);},bills(s){SC_BILLS(s);},evalc(s){SC_EVAL(s);},appeal(s){SC_APPEAL(s);},finale(s){SC_FINALE(s);},
  monthEnd(s){
   if(s.onEnd&&!G.ent[s.id]){G.ent[s.id]=1;s.onEnd(G);if(s.quarter)endQuarter();save();}
-  shell(paint(`<div class="pane"><div class="eyebrow">${s.month}월</div><h2>${val(s.title)}</h2>${s.quarter&&G.lastQ?qSummary(G.lastQ):""}${agendaHtml(s.month)}<p class="note">💾 ${s.month}월까지 저장했습니다. 지금 창을 닫아도 다음에 첫 화면의 "이어 하기"로 ${s.month+1<=12?s.month+1+"월부터":"결산부터"} 계속할 수 있습니다.</p><div class="foot"><span></span><button class="btn main" ${A(next)}>${s.btn||"다음 달로"}</button></div></div>`));
+  if(!(G.monRec||{})[s.month]){recordMonth(s.month);save();}
+  const mr=(G.mon||[]).find(x=>x.m===s.month),mp=(G.mon||[]).find(x=>x.m===s.month-1);
+  shell(paint(`<div class="pane"><div class="eyebrow">${s.month}월</div><h2>${val(s.title)}</h2>${mr?`<div class="card" style="display:flex;justify-content:space-between;gap:12px;margin:8px 0"><span style="font-size:14px;color:var(--ink)">이번 달 보고된 이슈·아차 사례</span><b class="num">${mr.rep}건${mp?` <span class="note">(지난달 ${mp.rep}건)</span>`:""}</b></div>`:""}${s.quarter&&G.lastQ?qSummary(G.lastQ):""}${agendaHtml(s.month)}<p class="note">💾 ${s.month}월까지 저장했습니다. 지금 창을 닫아도 다음에 첫 화면의 "이어 하기"로 ${s.month+1<=12?s.month+1+"월부터":"결산부터"} 계속할 수 있습니다.</p><div class="foot"><span></span><button class="btn main" ${A(next)}>${s.btn||"다음 달로"}</button></div></div>`));
  },
  buildEnd(s){
   const sigs={1:{L:0,P:0},2:{L:0,P:0},3:{L:0,P:0},4:{L:0,P:0}};G.sig.forEach(x=>sigs[x.a][x.s]+=x.w);
@@ -594,3 +596,9 @@ function luckHtml(){const L=G.luck||[];if(!L.length)return `<p>올해는 위험�
  <div class="table">${top.slice(0,8).map(x=>`<div class="task"><b>${x.m}월 ${x.title} · 확률 ${x.p}%</b>${x.choice?`<span class="note">고른 안: ${x.choice}${x.choice.length>=40?"…":""}</span>`:""}<span class="note">일어나지 않은 일: ${x.t}</span></div>`).join("")}</div>
  ${top.length>8?`<details class="ref"><summary>나머지 ${top.length-8}건</summary><p class="note" style="margin-top:6px">${top.slice(8).map(x=>`${x.m}월 ${x.title} · ${x.p}% · ${x.t}`).join("<br>")}</p></details>`:""}
  <p class="note">결과가 좋았던 것과 결정이 좋았던 것은 다릅니다. 같은 선택을 다시 하면 이 일들은 일어날 수 있습니다.</p>`;}
+
+/* 숨은 값의 월별 기록. 실제 아차 사례(숨은 값) 가운데 보고되는 몫은 심리적 안전에 달려 있다 */
+function recordMonth(m){(G.monRec=G.monRec||{})[m]=1;const c=G.cells||{};
+ const hidden=6+Math.min(6,G.over||0)+((c.RUN??3)<=1?2:0)+((c.SEC??2)<=1?2:0)+(G.burnout>=3?1:0)+Math.floor(Math.random()*3);
+ const rate=Math.max(.05,Math.min(1,(G.safe-10)/70));const rep=Math.round(hidden*rate);
+ (G.mon=G.mon||[]).push({m,safe:G.safe,over:G.over||0,burnout:G.burnout||0,rumors:G.rumors||0,hidden,rep,fsat:G.fsat,성과:G.score.성과,안정:G.score.안정});}

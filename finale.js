@@ -31,7 +31,7 @@ function evalAch(){const a=x=>{if(!G.ach.includes(x))G.ach.push(x);};
  if((G.hist||[]).every(h=>h.사람>=50)&&G.score.사람>=50)a("연쇄를 끊다");
  const wp=G.wrotePieces||{};if(["6-2","9-6","12-6"].every(k=>wp[k]&&wp[k].every(n=>n>=2)))a("세 개의 목소리");
 }
-function exportBundle(){const w=G.written;return JSON.stringify({선임다짐:G.pledge,우선순위:G.prio,우선순위변경:!!G.f.prio_changed,핵심과제:w.tasks,공개한기준:w.kpi,공개수준:G.f.pub_full?"전체":G.f.pub_items?"항목":"리더만",공지문:w.notice,"세개의설명6월":w["6-2"],"세개의설명9월":w["9-6"],"세개의설명12월":w["12-6"],반기회고:w.again,약속장부:G.prom,연말등급:G.grades,일관성:consPct(),기준의질:G.quality,기준미달:breaches(),AI검증:typeof verStats==="function"?{지표:verStats(),기록:G.ver||[]}:null,확률의호의:{건수:(G.luck||[]).length,장애관련:(G.luck||[]).filter(x=>x.cat==="장애").length,목록:G.luck||[]},디브리핑:w.debrief,실행카드:w.action},null,2);}
+function exportBundle(){const w=G.written;return JSON.stringify({선임다짐:G.pledge,우선순위:G.prio,우선순위변경:!!G.f.prio_changed,핵심과제:w.tasks,공개한기준:w.kpi,공개수준:G.f.pub_full?"전체":G.f.pub_items?"항목":"리더만",공지문:w.notice,"세개의설명6월":w["6-2"],"세개의설명9월":w["9-6"],"세개의설명12월":w["12-6"],반기회고:w.again,약속장부:G.prom,연말등급:G.grades,일관성:consPct(),기준의질:G.quality,기준미달:breaches(),AI검증:typeof verStats==="function"?{지표:verStats(),기록:G.ver||[]}:null,숨은값:{월별:G.mon||[]},확률의호의:{건수:(G.luck||[]).length,장애관련:(G.luck||[]).filter(x=>x.cat==="장애").length,목록:G.luck||[]},디브리핑:w.debrief,실행카드:w.action},null,2);}
 
 /* 분기별 추이 차트: 네 성적표, 시작~4분기, 같은 축 0~100 */
 function trendChart(){
@@ -66,10 +66,11 @@ function relationMap(){
 function safeSpark(){const h=(G.hist||[]).map(x=>x.안전).filter(v=>v!=null);const vals=[50].concat(h);const W=240,H=60;const X=i=>8+i*(W-16)/Math.max(1,vals.length-1),Y=v=>H-8-(v/100)*(H-16);
  return `<svg class="viz" viewBox="0 0 ${W} ${H}" style="max-width:260px" aria-label="심리적 안전의 분기별 변화"><polyline points="${vals.map((v,i)=>X(i)+","+Y(v)).join(" ")}" fill="none" stroke="currentColor" stroke-width="2"/>${vals.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="currentColor"/>`).join("")}</svg>`;}
 function SC_FINALE(s){
- let page=0;evalAch();const N=12;
+ let page=0,reveal=0;evalAch();const N=12;
  const nb=(t)=>`<div class="foot"><span class="note num">${page+1}/${N}</span>${BTN(()=>{page++;draw();},t||"다음","main")}</div>`;
  const row=(a,b)=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b style="font-size:15px;text-align:right">${b}</b></div>`;
  const draw=()=>{paint("");window.scrollTo(0,0);const br=breaches(),ty=resultType(),ti=titleOf();
+  if(reveal<2){revealPage(reveal,()=>{reveal++;draw();});return;}
   if(page===0)shell(`<div class="pane"><div class="eyebrow">📘 온보딩 노트④</div><h2>원인과 결과 사이의 시간</h2><div class="prose"><p>Sterman(1989)은 사람들이 결정과 결과 사이의 시간이 길어질수록 피드백을 잘못 읽는다는 것을 실험으로 보였습니다. 결과가 늦게 오면 사람들은 지금의 결과를 지금의 결정 탓으로 돌립니다. 어제의 결정은 잊습니다.</p><p>올해 받은 청구서를 떠올려 보세요. 도착한 달에 무엇을 하고 있었습니까. 그 청구서의 원인은 언제 생겼습니까.</p><p><b>마지막 질문: 올해의 일 가운데, 잘했다고 믿고 있지만 아직 청구서가 오지 않은 것은 무엇입니까?</b></p></div>${nb()}</div>`);
   else if(page===1)shell(`<div class="pane"><div class="eyebrow">결산</div><h2 style="font-size:28px">${br.length?"기준 미달":"기준 통과"}</h2><div class="prose">${br.length?`<p>다른 점수와 관계없이, 아래의 선택은 넘어서는 안 되는 선을 넘었습니다.</p>${br.map(x=>`<p>${x}</p>`).join("")}`:"<p>올해 장애 절차와 보안 기준을 벗어난 선택이 없었습니다.</p>"}</div>${nb()}</div>`);
   else if(page===2){const h=[...(G.hist||[])];const ch=trendChart();shell(`<div class="pane"><div class="eyebrow">칭호</div><h2>${ti}</h2><p class="voice">${TITLE_L[ti]}</p>${ch.html}
@@ -115,3 +116,29 @@ function SC_FINALE(s){
  };
  draw();
 }
+
+/* 결산 첫 장면: 겉으로 보인 숫자 → 숫자가 말하지 않은 것 */
+function miniLine(title,series,max,unit){const W=300,H=110,L=26,R=8,T=10,B=20,iw=W-L-R,ih=H-T-B;const n=Math.max(...series.map(x=>x.v.length),1);
+ const X=i=>L+(n>1?i*iw/(n-1):0),Y=v=>T+ih-(Math.max(0,Math.min(max,v))/max)*ih;
+ let g=`<svg class="viz" viewBox="0 0 ${W} ${H}" style="max-width:340px" role="img" aria-label="${title}">`;[0,max/2,max].forEach(v=>{g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-4}" y="${Y(v)+4}" text-anchor="end">${Math.round(v)}</text>`;});
+ [0,n-1].forEach(i=>{g+=`<text x="${X(i)}" y="${H-5}" text-anchor="middle">${i+1}월</text>`;});
+ series.forEach(sr=>{g+=`<path d="${sr.v.map((v,i)=>`${i?"L":"M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join("")}" fill="none" stroke="${sr.c}" stroke-width="2" ${sr.dash?'stroke-dasharray="5 4"':""}/>`;const lv=sr.v[sr.v.length-1];g+=`<circle cx="${X(sr.v.length-1)}" cy="${Y(lv)}" r="3.5" fill="${sr.c}"/>`;});
+ g+=`</svg>`;return `<div class="task"><b>${title}</b>${g}<span class="note">${series.map(sr=>`<span style="color:${sr.c}">${sr.dash?"- -":"—"}</span> ${sr.n} ${sr.v[sr.v.length-1]}${unit||""}`).join(" · ")}</span></div>`;}
+function revealPage(step,go){const M=G.mon||[];const sum=k=>M.reduce((a,x)=>a+(x[k]||0),0);const h=(G.hist||[]).slice(-1)[0]||{};
+ const repY=sum("rep"),hidY=sum("hidden");const first=M.slice(0,3).reduce((a,x)=>a+x.rep,0),last=M.slice(-3).reduce((a,x)=>a+x.rep,0);
+ if(step===0){shell(`<div class="pane"><div class="eyebrow">결산 · 12월</div><h2>올해의 숫자</h2><div class="table">
+  ${[["성과",G.score.성과],["F사 만족",G.fsat],["재무",G.score.재무],["안정·보안",G.score.안정],["올해 보고된 이슈·아차 사례",repY+"건"],["청구서",G.bills.length+"장"]].map(([a,b])=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b class="num" style="font-size:16px">${b}</b></div>`).join("")}</div>
+  <p class="voice">${last<first?`보고된 이슈는 1분기 ${first}건에서 4분기 ${last}건으로 줄었습니다.`:`보고된 이슈는 1분기 ${first}건, 4분기 ${last}건이었습니다.`}</p>
+  <div class="foot"><span></span>${BTN(go,"다음","main")}</div></div>`);return;}
+ const v=k=>M.map(x=>x[k]||0);
+ shell(`<div class="pane"><div class="eyebrow">결산 · 12월</div><h2>그런데 숫자가 말하지 않은 것이 있습니다.</h2><div class="prose"><p>보고된 이슈를 뺀 나머지는 올해 처음 보여 드리는 값입니다. 성적표에는 한 번도 나오지 않았습니다.</p></div>
+ <div class="grid2" style="gap:10px">
+ ${miniLine("심리적 안전",[{n:"안전",v:v("safe"),c:"var(--s3)"}],100)}
+ ${miniLine("보고된 이슈 vs 실제로 있었던 아차 사례",[{n:"실제",v:v("hidden"),c:"var(--s2)",dash:true},{n:"보고",v:v("rep"),c:"var(--s1)"}],Math.max(14,...v("hidden")),"건")}
+ ${miniLine("야간·초과 부하 (누적)",[{n:"초과 부하",v:v("over"),c:"var(--s2)"}],Math.max(5,...v("over")),"회")}
+ ${miniLine("번아웃 신호 (누적)",[{n:"번아웃",v:v("burnout"),c:"var(--s4)"},{n:"소문",v:v("rumors"),c:"var(--s1)",dash:true}],Math.max(5,...v("burnout"),...v("rumors")),"")}
+ </div>
+ <p>올해 실제로 있었던 아차 사례는 약 <b>${hidY}건</b>, 보고된 것은 <b>${repY}건</b>입니다. 보고율 ${hidY?Math.round(repY/hidY*100):0}%.</p>
+ <p class="voice">보고가 줄었을 때, 팀은 안전해진 것입니까, 입을 닫은 것입니까?</p>
+ <p class="note">보고되는 몫은 심리적 안전이 높을수록 커집니다. 안전이 낮은 팀은 아차 사례가 많아도 보고 숫자가 작게 나옵니다.</p>
+ <div class="foot"><span></span>${BTN(go,"결산 계속","main")}</div></div>`);}
