@@ -124,8 +124,8 @@ function drawBar(clock){
  $("months").innerHTML=Array.from({length:12},(_,i)=>`<i class="${i+1<G.month?"past":i+1===G.month?"now":""}"></i>`).join("");
  const c=clock==null?"":`<div class="clock ${clock<=30?"hot":""}" aria-label="남은 시간">${Math.floor(clock/60)}:${String(clock%60).padStart(2,"0")}</div>`;
  const n=Object.keys(G.prom).length;
- H.__led=openLedger;H.__snd=()=>{G.sound=!G.sound;drawBar(clock);};
- $("res").innerHTML=`<div class="r ${G.ot?"over":""}">팀장 시간 <b>${G.time}</b>${G.ot?` 야근 ${G.ot}`:""}</div><div class="r">토큰 <b>${G.token==null?"—":G.token}</b></div><div class="r">여력 <b>${G.cells?"배분됨":"4월"}</b></div>${c}<button class="tool" data-a="__led">장부 ${n}</button><button class="tool" data-a="__snd">소리 ${G.sound?"켜짐":"꺼짐"}</button>`;
+ H.__led=openLedger;H.__snd=()=>{G.sound=!G.sound;drawBar(clock);};H.__exit=()=>confirmBox("저장하고 나갈까요?",exitText(),"저장 후 나가기",saveExit);H.__restart=()=>confirmBox("처음부터 다시 시작할까요?","지금까지의 진행과 저장 기록이 모두 지워집니다. 되돌릴 수 없습니다.","처음부터 다시",restartGame,true);
+ $("res").innerHTML=`<div class="r ${G.ot?"over":""}">팀장 시간 <b>${G.time}</b>${G.ot?` 야근 ${G.ot}`:""}</div><div class="r">토큰 <b>${G.token==null?"—":G.token}</b></div><div class="r">여력 <b>${G.cells?"배분됨":"4월"}</b></div>${c}<button class="tool" data-a="__led">장부 ${n}</button><button class="tool" data-a="__snd">소리 ${G.sound?"켜짐":"꺼짐"}</button>${G.review?"":`<button class="tool" data-a="__exit">저장 후 나가기</button><button class="tool" data-a="__restart">처음부터 다시</button>`}`;
 }
 function openLedger(){
  const m=$("modal");const ps=Object.values(G.prom);
@@ -163,7 +163,7 @@ const SCENES={
   const old=load();
   shell(paint(`<div class="title-card"><div class="eyebrow">신임 팀장 In-Tray 시뮬레이션</div><h1>${s.title}</h1><div class="prose">${para(s.body)}</div>
   ${old&&old.h2_focus&&old.idx>0?`<div class="happen"><span class="label">지난번에 고른 바꿀 습관</span>${["","① 일 맡기기","② 평가하기","③ 자원 나누기","④ 설명하기"][old.h2_focus]}<br><span class="label">다시 한다면</span>${old.written&&old.written.again?old.written.again.행동:""}</div>`:""}
-  <div class="btns"><button class="btn main" ${A(()=>{G=newGame();clearSave();next();beep(520,.1);})}>처음부터 시작</button>${old&&old.idx>0?`<button class="btn" ${A(()=>{G=old;render();})}>이어서 하기${old.month?` (${old.month}월)`:""}</button>`:""}</div>
+  <div class="btns"><button class="btn main" ${A(()=>{const go=()=>{G=newGame();clearSave();next();beep(520,.1);};if(old&&old.idx>0)confirmBox("처음부터 시작할까요?",`저장된 진행(${old.month||1}월)이 지워집니다. 되돌릴 수 없습니다.`,"처음부터 시작",go,true);else go();})}>처음부터 시작</button>${old&&old.idx>0?`<button class="btn" ${A(()=>{G=old;render();})}>이어서 하기${old.month?` (${old.month}월)`:""}</button>`:""}</div>
 </div><details class="opmenu"><summary>운영자 검토용</summary><div class="oppop" role="menu"><p class="note">게임을 끝까지 하지 않아도 장면과 월을 자유롭게 넘겨 볼 수 있습니다. 검토 중 진행은 저장하지 않습니다.</p><button class="opitem" role="menuitem" ${A(()=>startReview("P1"))}>프롤로그부터 검토</button><button class="opitem" role="menuitem" ${A(()=>startReview("1-1"))}>1월부터 검토</button></div></details>`));
  },
  doc(s){
@@ -630,3 +630,10 @@ function reviewBar(){let el=document.getElementById("rv");if(!G||!G.review){if(e
  el.querySelector('[data-rv="month"]').onchange=e=>reviewJump(monthStart(+e.target.value));
  el.querySelector('[data-rv="time"]').onclick=()=>{G.time=Math.max(G.time,QUARTER_TIME[G.quarter]||16);G.ot=0;drawBar();toast("팀장 시간을 채웠습니다.");};
  el.querySelector('[data-rv="exit"]').onclick=()=>{clearInterval(CLOCK);CLOCK=null;G=load()||newGame();if(G.review)G=newGame();G.idx=0;render();window.scrollTo(0,0);};}
+
+/* 저장 후 나가기 · 처음부터 다시 */
+function confirmBox(title,body,okText,onOk,danger){const m=$("modal");H.__cbok=()=>{m.hidden=true;onOk();};H.__cbno=()=>{m.hidden=true;};
+ m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cbt" style="max-width:420px"><h2 id="cbt" style="font-size:19px">${title}</h2><p>${body}</p><div class="btns" style="justify-content:flex-end"><button class="btn" data-a="__cbno">취소</button><button class="btn main" ${danger?'style="background:var(--bad);color:#fff"':""} data-a="__cbok">${okText}</button></div></div>`;m.hidden=false;const b=m.querySelector('[data-a="__cbno"]');if(b)b.focus();}
+function exitText(){const s=CONTENT[G.idx]||{};const t=(typeof cleanTitle==="function"?cleanTitle(s.title):s.title)||s.tag||"";return `다음에 첫 화면의 "이어서 하기"로 <b>${G.month||1}월${t?` 「${t}」`:""}</b>부터 이어집니다. 이 장면에서 아직 확정하지 않은 선택은 저장되지 않고, 이 장면을 처음부터 다시 진행합니다.`;}
+function saveExit(){clearInterval(CLOCK);CLOCK=null;G=newGame();G.idx=0;render();window.scrollTo(0,0);toast("저장했습니다. 다음에 이어서 할 수 있습니다.");}
+function restartGame(){clearInterval(CLOCK);CLOCK=null;clearSave();G=newGame();G.idx=0;next();toast("처음부터 다시 시작합니다.");}
