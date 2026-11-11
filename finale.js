@@ -110,7 +110,7 @@ function SC_FINALE(s){
    <h2 style="font-size:18px">채점용 응답 묶음</h2><p class="note">선임 다짐, 핵심 과제와 근거, 공개한 기준, 공지문, 세 개의 설명 9편, 반기 회고, 약속 장부, 디브리핑 답변이 들어 있습니다. 자가진단 답은 포함하지 않습니다. 복사해서 담당자에게 보내 주세요.</p>
    <div class="btns">${BTN(()=>{G.written.debrief=qs.map((q,i)=>({질문:q,답:$("db"+(i+1))?$("db"+(i+1)).value:""})).concat($("db"+(qs.length+1))?[{질문:"3월 배 책임 다시 보기",답:$("db"+(qs.length+1)).value}]:[]);G.written.action=[1,2,3,4].map(i=>$("ac"+i).value);const t=exportBundle();$("exp").value=t;$("exp").hidden=false;$("exp").select();if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("복사했습니다."),()=>toast("아래 칸을 선택해 복사해 주세요."));else toast("아래 칸을 선택해 복사해 주세요.");},"응답 묶음 복사","main")}${BTN(()=>{clearSave();G=newGame();G.idx=0;render();window.scrollTo(0,0);},"다른 경로로 다시 하기")}</div>
    <p class="note">같은 1년을 다르게 살아 볼 수 있습니다. 다른 사람이 다른 메시지를 보내올 것입니다.</p>
-   <textarea id="exp" hidden style="min-height:160px;font-family:var(--mono);font-size:12px" aria-label="채점용 응답 묶음"></textarea>
+   <textarea id="exp" hidden style="min-height:160px;font-size:12px" aria-label="채점용 응답 묶음"></textarea>
    <p class="voice">내일 아침 8시 40분, 당신의 받은편지함에는 몇 통이 와 있을까요. 몇 통이 오지 않았을까요.</p></div>`);
   }
  };

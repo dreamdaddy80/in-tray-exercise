@@ -6,7 +6,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
 /* 레이아웃: 사내 그룹웨어 셸. 회사 시스템은 산세리프로, 사람이 하는 말은 명조로 쓴다. */
 /* 톤앤매너: 연한 회색 위의 반투명 흰 카드, 큰 반경, 그림자로 나눈 면, 라임 주 버튼, 민트 상태 알약, 사선 빗금 */
@@ -20,9 +20,9 @@
   --shadow:0 1px 2px rgba(20,22,20,.04),0 10px 30px rgba(20,22,20,.07);
   --r-lg:28px; --r-md:20px; --r-sm:14px;
   --hatch:repeating-linear-gradient(135deg,rgba(0,0,0,.07) 0 2px,transparent 2px 7px);
-  --sans:"Inter","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --voice:"Gowun Batang","Apple SD Gothic Neo","Batang",serif;
-  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --sans:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --voice:var(--sans);
+  --mono:var(--sans);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0F110F; --bg2:#161816; --panel:#1B1D1B; --glass:rgba(30,33,30,.78); --sunk:#202320; --ink:#EFF1EC; --muted:#9A9F98; --line:#2B2E2A;
@@ -228,6 +228,17 @@ textarea:focus,select:focus{box-shadow:inset 0 0 0 1.5px var(--accent-ink);outli
 .rawrow{border:0;border-radius:12px;background:var(--panel)}.rawrow[aria-pressed="true"]{background:var(--accent-soft);box-shadow:0 0 0 1.5px var(--accent-press)}
 .say svg,.person svg,.ld svg,.pick button svg{border-radius:999px;background:var(--panel)}
 pre.dev{border-radius:var(--r-sm)}
+
+/* ===== 글꼴 통일: 한 산세리프 계열, 위계는 크기·굵기·색으로 ===== */
+body{font-family:var(--sans);font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased}
+.voice{font-family:var(--sans);font-size:16.5px;line-height:1.7;font-weight:400;color:var(--ink)}
+.say span,.say .voice{font-family:var(--sans)}
+.prose{font-size:16px;line-height:1.75}
+.num,.r b,.card b,.clock,.cost,.opt .k,.tag,.delta,.attach,.viz text,.months,textarea,select,input{font-family:var(--sans);font-variant-numeric:tabular-nums}
+.attach{font-size:13px}
+.viz text{font-size:11px;font-weight:500}
+pre.dev{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+h1,h2,h3,.rhead h2,.pane h2,.title-card h1{font-family:var(--sans)}
 
 @media (max-width:860px){
   .shell{grid-template-columns:minmax(0,1fr)}
