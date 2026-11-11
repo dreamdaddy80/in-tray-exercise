@@ -618,13 +618,15 @@ function monthStart(m){if(m===0)return CONTENT.findIndex(x=>x.id==="P1");if(m===
 function reviewBar(){let el=document.getElementById("rv");if(!G||!G.review){if(el)el.remove();return;}
  if(!el){el=document.createElement("div");el.id="rv";el.className="rvbar";document.body.appendChild(el);}
  const s=CONTENT[G.idx]||{};const TN={review:"반기 회고",finale:"결산",bills:"청구서",returns:"되돌아온 일",monthEnd:"월말",kpi:"KPI 합의",pulse:"펄스 서베이",interview:"면담",alloc:"자원 배분",write:"세 개의 설명",appeal:"이의 면담",evalc:"연말 평가"};const c0=s.type==="branch"&&Array.isArray(s.cases)&&s.cases[0];const t=(typeof cleanTitle==="function"?cleanTitle(s.title):s.title)||(c0&&(cleanTitle(c0.title)||c0.tag))||s.tag||TN[s.type]||s.type;const m=s.month||0;
- el.innerHTML=`<div class="rvlab" title="${s.id} · ${t}"><span class="rvid">${s.id}</span><span class="rvt">${t}</span></div><div class="rvbtns">
- <button data-rv="prev" aria-label="이전 장면">◀ 이전</button><button data-rv="next" aria-label="다음 장면">다음 ▶</button><button data-rv="nextm">다음 달 ▶▶</button>
- <select data-rv="month" aria-label="월로 이동">${[["프롤로그",0]].concat([1,2,3,4,5,6,7,8,9,10,11,12].map(x=>[x+"월",x])).concat([["결산",13]]).map(([l,v])=>`<option value="${v}" ${(s.id==="FINALE"?13:m)===v?"selected":""}>${l}</option>`).join("")}</select>
- <button data-rv="time" title="팀장 시간을 분기 기본값으로 채웁니다">⏳ 채우기</button><button data-rv="exit">검토 끝내기</button></div>`;
+ const cm=s.id==="FINALE"?13:m;
+ el.innerHTML=`<div class="rvlab" title="${s.id} · ${t}"><span class="rvid">${s.id}</span><span class="rvt">${t}</span></div>
+ <div class="rvdeck" role="group" aria-label="장면 이동">
+ <button data-rv="prevm" aria-label="이전 달" ${cm<=0?"disabled":""}><b>⏮</b><small>이전 달</small></button><button data-rv="prev" aria-label="이전 장면" ${G.idx<=0?"disabled":""}><b>◀</b><small>이전</small></button><button data-rv="next" aria-label="다음 장면" ${G.idx>=CONTENT.length-1?"disabled":""}><b>▶</b><small>다음</small></button><button data-rv="nextm" aria-label="다음 달" ${cm>=13?"disabled":""}><b>⏭</b><small>다음 달</small></button></div>
+ <div class="rvtools"><select data-rv="month" aria-label="월로 이동">${[["프롤로그",0]].concat([1,2,3,4,5,6,7,8,9,10,11,12].map(x=>[x+"월",x])).concat([["결산",13]]).map(([l,v])=>`<option value="${v}" ${cm===v?"selected":""}>${l}</option>`).join("")}</select><button data-rv="time" title="팀장 시간을 분기 기본값으로 채웁니다">⏳ 채우기</button><button data-rv="exit">끝내기</button></div>`;
+ el.querySelector('[data-rv="prevm"]').onclick=()=>reviewJump(monthStart(Math.max(0,cm-1)));
  el.querySelector('[data-rv="prev"]').onclick=()=>reviewJump(G.idx-1);
  el.querySelector('[data-rv="next"]').onclick=()=>reviewJump(G.idx+1);
- el.querySelector('[data-rv="nextm"]').onclick=()=>{const cur=(CONTENT[G.idx]||{}).month||0;let j=cur>=12?monthStart(13):monthStart(cur+1);reviewJump(j);};
+ el.querySelector('[data-rv="nextm"]').onclick=()=>reviewJump(monthStart(Math.min(13,cm+1)));
  el.querySelector('[data-rv="month"]').onchange=e=>reviewJump(monthStart(+e.target.value));
  el.querySelector('[data-rv="time"]').onclick=()=>{G.time=Math.max(G.time,QUARTER_TIME[G.quarter]||16);G.ot=0;drawBar();toast("팀장 시간을 채웠습니다.");};
  el.querySelector('[data-rv="exit"]').onclick=()=>{clearInterval(CLOCK);CLOCK=null;G=load()||newGame();if(G.review)G=newGame();G.idx=0;render();window.scrollTo(0,0);};}
