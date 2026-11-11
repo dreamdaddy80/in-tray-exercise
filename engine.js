@@ -642,8 +642,8 @@ function restartGame(){clearInterval(CLOCK);CLOCK=null;clearSave();G=newGame();G
 const NOTES=[
  {n:"①",at:"P4",when:"시작 전"},
  {n:"②",at:"3-0",when:"3월"},
- {n:"③",at:"REVIEW",when:"6월 반기 회고",title:"틀을 고칠 것인가, 틀을 물을 것인가",body:["5월의 점검표를 떠올려 보세요. 3년 전 19개였던 항목은 장애가 날 때마다 늘어 47개가 됐습니다. 그때마다 틀린 곳을 찾아 고쳤습니다. Argyris는 정해진 틀 안에서 고치는 방식을 단일 고리 학습이라고 불렀습니다. 틀 자체를 묻는 것은 이중 고리 학습입니다. \"항목을 하나 더 넣을까\"가 아니라 \"한 사람이 47개를 다 확인한다는 전제가 맞는가\"를 묻는 일입니다.","지금부터 처음으로 당신의 기록을 보여 드립니다. 잘하고 못한 것을 가리려는 것이 아닙니다. 어떤 전제로 움직였는지 보려는 것입니다."],q:"이번에 생각해 볼 질문: 상반기에 한 번도 의심하지 않은 전제는 무엇이었습니까?"},
- {n:"④",at:"FINALE",when:"결산",title:"원인과 결과 사이의 시간",body:["Sterman(1989)은 사람들이 결정과 결과 사이의 시간이 길어질수록 피드백을 잘못 읽는다는 것을 실험으로 보였습니다. 결과가 늦게 오면 사람들은 지금의 결과를 지금의 결정 탓으로 돌립니다. 어제의 결정은 잊습니다.","올해 받은 청구서를 떠올려 보세요. 도착한 달에 무엇을 하고 있었습니까. 그 청구서의 원인은 언제 생겼습니까."],q:"마지막 질문: 올해의 일 가운데, 잘했다고 믿고 있지만 아직 청구서가 오지 않은 것은 무엇입니까?"}
+ {n:"③",at:"REVIEW",when:"6월 반기 회고",title:"고장 난 곳만 고칠 것인가, 방식 자체를 다시 볼 것인가",body:["5월의 점검표를 떠올려 보세요. 3년 전에 19개였던 점검 항목이 장애가 날 때마다 하나씩 늘어 47개가 되었습니다. 문제가 생길 때마다 빠진 항목을 찾아 더한 결과입니다.", "조직이 어떻게 배우는지 연구한 Argyris는 이런 방식을 \"단일 고리 학습\"이라고 불렀습니다. 정해진 방식은 그대로 두고 틀린 곳만 고치는 것입니다. 반면 그 방식 자체가 맞는지를 묻는 것은 \"이중 고리 학습\"이라고 했습니다.", "예를 들면 이렇습니다.<br>· 단일 고리: \"항목을 하나 더 넣을까?\"<br>· 이중 고리: \"한 사람이 47개를 다 확인할 수 있다는 생각부터 맞나?\"", "이제 처음으로 상반기 기록을 보여 드립니다. 잘했는지 못했는지를 따지려는 것이 아닙니다. 내가 무엇을 당연하게 여기며 움직였는지 돌아보려는 것입니다."],q:"생각해 볼 질문: 상반기 동안 한 번도 의심해 보지 않은 \"당연한 생각\"은 무엇이었습니까?"},
+ {n:"④",at:"FINALE",when:"결산",title:"결과는 늦게 도착한다",body:["결정을 내린 때와 그 결과가 나타나는 때 사이에는 시간 차이가 있습니다. Sterman(1989)은 실험을 통해, 이 차이가 길수록 사람들이 결과를 잘못 해석한다는 것을 보여 주었습니다.", "결과가 늦게 오면 사람들은 지금 눈앞의 결과를 지금 내린 결정 탓으로 돌립니다. 몇 달 전에 내린 결정은 잊어버립니다.", "올해 받은 청구서를 떠올려 보세요. 청구서가 도착한 달에 나는 무엇을 하고 있었나요? 그 청구서의 원인이 된 결정은 언제 내렸나요?"],q:"마지막 질문: 올해 한 일 가운데, 잘했다고 생각하지만 아직 결과(청구서)가 오지 않은 일은 무엇입니까?"}
 ];
 function noteData(x){if(x.title)return x;const s=CONTENT.find(c=>c.id===x.at)||{};return{...x,title:s.title,body:s.body||[],q:s.q};}
 function noteOpen(x){const i=CONTENT.findIndex(c=>c.id===x.at);return G.review||(i>=0&&G.idx>=i);}
@@ -652,3 +652,5 @@ function notesHtml(){return `<div class="notesbox"><div class="label">온보딩 
 function openNote(k){const d=noteData(NOTES[k]);const m=$("modal");H.__noteclose=()=>{m.hidden=true;};
  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ntt"><div class="eyebrow">📘 온보딩 노트${NOTES[k].n} · ${NOTES[k].when}</div><h2 id="ntt" style="font-size:21px">${d.title}</h2><div class="prose" style="font-size:15.5px">${(d.body||[]).map(p=>`<p>${val(p)}</p>`).join("")}${d.q?`<p><b>${val(d.q)}</b></p>`:""}</div><div class="btns" style="justify-content:flex-end"><button class="btn main" data-a="__noteclose">닫기</button></div></div>`;
  m.hidden=false;const b=m.querySelector('[data-a="__noteclose"]');if(b)b.focus();}
+
+function noteInline(k){const d=noteData(NOTES[k]);return `<h2>${d.title}</h2><div class="prose">${(d.body||[]).map(p=>`<p>${val(p)}</p>`).join("")}<p><b>${val(d.q)}</b></p></div>`;}
