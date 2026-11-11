@@ -246,7 +246,21 @@ h1,h2,h3,.rhead h2,.pane h2,.title-card h1{font-family:var(--sans)}
 .rvbar button:hover{background:rgba(255,255,255,.24)}.rvbar .rvlab{padding:0 6px;font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body:has(.rvbar) .shell{padding-bottom:110px}
 
+.view{position:relative}
+.opmenu{position:absolute;top:16px;right:16px;z-index:5}
+.opmenu summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--chip);font-size:13px;font-weight:600;color:var(--ink);user-select:none}
+.opmenu summary::-webkit-details-marker{display:none}
+.opmenu summary::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.opmenu[open] summary{background:var(--ink);color:var(--panel)}
+.opmenu[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
+.opmenu summary:hover{background:var(--line)}.opmenu[open] summary:hover{background:var(--ink)}
+.oppop{position:absolute;right:0;top:calc(100% + 8px);width:min(280px,calc(100vw - 48px));background:var(--panel);border-radius:var(--r-md);box-shadow:var(--shadow),0 0 0 1px var(--line);padding:12px;display:grid;gap:6px}
+.oppop .note{padding:2px 4px 6px}
+.opitem{text-align:left;padding:10px 12px;border-radius:var(--r-sm);background:var(--sunk);font-weight:600;font-size:14px}
+.opitem:hover{background:var(--accent-soft)}
+
 @media (max-width:860px){
+  .opmenu{top:12px;right:12px}.title-card{padding-top:64px}
   .rvbar{border-radius:18px;font-size:12px;gap:4px}.rvbar .rvlab{flex-basis:100%;max-width:none}
   .shell{grid-template-columns:minmax(0,1fr)}
   .people{grid-template-columns:minmax(0,1fr);padding:8px 10px;gap:6px;position:static}

@@ -164,7 +164,7 @@ const SCENES={
   shell(paint(`<div class="title-card"><div class="eyebrow">신임 팀장 In-Tray 시뮬레이션</div><h1>${s.title}</h1><div class="prose">${para(s.body)}</div>
   ${old&&old.h2_focus&&old.idx>0?`<div class="happen"><span class="label">지난번에 고른 바꿀 습관</span>${["","① 일 맡기기","② 평가하기","③ 자원 나누기","④ 설명하기"][old.h2_focus]}<br><span class="label">다시 한다면</span>${old.written&&old.written.again?old.written.again.행동:""}</div>`:""}
   <div class="btns"><button class="btn main" ${A(()=>{G=newGame();clearSave();next();beep(520,.1);})}>처음부터 시작</button>${old&&old.idx>0?`<button class="btn" ${A(()=>{G=old;render();})}>이어서 하기${old.month?` (${old.month}월)`:""}</button>`:""}</div>
-  <div class="happen" style="display:grid;gap:8px"><span class="label">운영자 검토용</span><span class="note">게임을 끝까지 하지 않아도 장면과 월을 자유롭게 넘겨 볼 수 있습니다. 검토 중 진행은 저장하지 않습니다.</span><div class="btns"><button class="btn" ${A(()=>startReview("P1"))}>프롤로그부터 검토</button><button class="btn" ${A(()=>startReview("1-1"))}>1월부터 검토</button></div></div></div>`));
+</div><details class="opmenu"><summary>운영자 검토용</summary><div class="oppop" role="menu"><p class="note">게임을 끝까지 하지 않아도 장면과 월을 자유롭게 넘겨 볼 수 있습니다. 검토 중 진행은 저장하지 않습니다.</p><button class="opitem" role="menuitem" ${A(()=>startReview("P1"))}>프롤로그부터 검토</button><button class="opitem" role="menuitem" ${A(()=>startReview("1-1"))}>1월부터 검토</button></div></details>`));
  },
  doc(s){
   shell(paint(`<div class="pane">${head(s)}<div class="prose">${val(s.html)}</div><div class="foot"><span class="note">${s.page||""}</span><button class="btn main" ${A(next)}>${s.btn||"다음"}</button></div></div>`));
