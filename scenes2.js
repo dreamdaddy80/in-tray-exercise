@@ -10,7 +10,7 @@ function SC_ALLOC(s){
  const total=()=>c.RUN+c.AI+c.GROW+c.SEC;
  const d1=()=>{paint("");
   shell(`<div class="pane"><div class="eyebrow">4월 · 여력 배분</div><h2>팀 여력 10칸 나누기</h2><div class="prose"><p>AI 전환으로 생긴 여력을 처음으로 나눕니다.</p></div>
-  <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">March(1991), 탐색과 활용. 지금 하던 일을 더 잘하는 것과 새로운 것을 시도하는 일은 같은 자원을 놓고 경쟁한다. 이번 분기에 무엇을 하지 않기로 했는가?</p></details>
+  <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px"><b>March(1991), 탐색과 활용</b><br>지금 하던 일을 더 잘하는 것과 새로운 일을 시도하는 것은 같은 사람, 같은 시간을 두고 다툽니다. 무엇을 하기로 했는지만큼, 무엇을 하지 않기로 했는지가 중요합니다.<br><b>생각해 볼 질문:</b> 이번 분기에 하지 않기로 한 일은 무엇입니까?</p></details>
   <div class="cond"><span>선임 때 고른 우선순위: ${G.prio.join(", ")}</span>${has("f_pilot")?"<span>F사 시범 과제로 GROW 1칸이 이미 잡혀 있습니다.</span>":""}${has("saw_gap")?"<span>재무팀 집계: 실제 확인된 절감은 주 38시간.</span>":""}${has("token_audit")?"<span>1분기 토큰 사용은 R&D와 마케팅이 전체의 81%.</span>":""}${has("night_wait")?"<span>2월에 야간 대기를 4월로 미뤘습니다.</span>":""}</div>
   <div class="table">${Object.keys(c).map(k=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><span style="font-size:14.5px;color:var(--ink)">${L0[k]}</span><span class="btns" style="align-items:center">${BTN(()=>{if(c[k]>0){c[k]--;d1();}},"−")}<b>${c[k]}</b>${BTN(()=>{if(total()<10){c[k]++;d1();}},"+")}</span></div>`).join("")}</div>
   <div class="foot"><span class="note num">${total()}/10칸</span><button class="btn main" ${total()===10?"":"disabled"} ${A(done1)}>배분 확정</button></div></div>`);
@@ -236,7 +236,7 @@ function SC_EVAL(s){
  const draw=()=>{paint("");const e=people[i],c=st[e.k],rs=recs(e);
   const allG=Object.values(st).every(x=>x.g);const ok=allG&&["S","A","B","C"].every(g=>cnt(g)===quota[g]);
   shell(`<div class="pane"><div class="eyebrow">연말 평가 · ${i+1}/${people.length}</div><h2>${name(e.k)}</h2>
-  <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">Folger, Konovsky & Cropanzano(1992), 평가의 정당한 절차. 미리 알린 기준, 들어 볼 기회, 증거에 근거한 판단이 갖춰질 때 평가는 정당해진다. 이 등급의 근거는 당사자가 미리 알 수 있었던 것인가?</p></details>
+  <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px"><b>Folger, Konovsky &amp; Cropanzano(1992), 정당한 평가 절차</b><br>평가가 정당하다고 받아들여지려면 세 가지가 필요합니다. 기준을 미리 알려 주었는가, 당사자의 이야기를 들을 기회가 있었는가, 실제 기록과 증거로 판단했는가.<br><b>생각해 볼 질문:</b> 이 등급의 근거는 당사자가 미리 알 수 있었던 것입니까?</p></details>
   ${has("rule_kept")?'<p class="note">올해 우리 팀은 인사팀 지침 적용 유예 팀입니다.</p>':""}
   <p class="note">배분 가이드: S ${quota.S} · A ${quota.A} · B ${quota.B} · C ${quota.C} · 현재 S ${cnt("S")} A ${cnt("A")} B ${cnt("B")} C ${cnt("C")}</p>
   <p>KPI: <b>${val(e.kpi)}</b></p>
