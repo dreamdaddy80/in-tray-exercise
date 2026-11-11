@@ -114,7 +114,7 @@ function drawSide(live){
  if(p.hidden)return;
  p.innerHTML=`<div><div class="label">모듈 리더</div><div class="leaders">${Object.keys(LD).map(k=>{const d=live&&live[k];
   return `<div class="ld">${face(k,G.trust[k])}<div><b>${LD[k].n} <span class="num" style="font-weight:400;color:var(--muted)">${G.trust[k]}</span></b><small>${LD[k].m}</small><div class="tb"><i style="width:${G.trust[k]}%"></i></div></div>${d?`<span class="delta ${d>0?"up":"down"}">${d>0?"+":""}${d}</span>`:""}</div>`}).join("")}</div></div>
- <div><div class="label">성적표</div><div class="cards">${(()=>{const l=(G.mon||[]).slice(-1)[0];return l?`<div class="card"><span>보고된 이슈·아차</span><b>${l.rep}</b><em>${l.m}월</em></div>`:"";})()}${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>F사 만족 ${G.fsat}${live&&live.F사기대?"":""}</em><em title="F사가 기대하는 수준. 분기 말에 안정 점수와 비교합니다.">F사 기대 ${G.fexp??50}${live&&live.F사기대?` <span class="delta ${live.F사기대>0?"down":"up"}" style="position:static">${live.F사기대>0?"+":""}${live.F사기대}</span>`:""}</em>`:""}</div>`).join("")}</div></div>`;
+ <div><div class="label">성적표</div><div class="cards">${(()=>{const l=(G.mon||[]).slice(-1)[0];return l?`<div class="card"><span>보고된 이슈·아차</span><b>${l.rep}</b><em>${l.m}월</em></div>`:"";})()}${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>F사 만족 ${G.fsat}${live&&live.F사기대?"":""}</em><em title="F사가 기대하는 수준. 분기 말에 안정 점수와 비교합니다.">F사 기대 ${G.fexp??50}${live&&live.F사기대?` <span class="delta ${live.F사기대>0?"down":"up"}" style="position:static">${live.F사기대>0?"+":""}${live.F사기대}</span>`:""}</em>`:""}</div>`).join("")}</div></div>${notesHtml()}`;
 }
 function drawBar(clock){
  const s=CONTENT[G.idx]||{};
@@ -637,3 +637,18 @@ function confirmBox(title,body,okText,onOk,danger){const m=$("modal");H.__cbok=(
 function exitText(){const s=CONTENT[G.idx]||{};const t=(typeof cleanTitle==="function"?cleanTitle(s.title):s.title)||s.tag||"";return `다음에 첫 화면의 "이어서 하기"로 <b>${G.month||1}월${t?` 「${t}」`:""}</b>부터 이어집니다. 이 장면에서 아직 확정하지 않은 선택은 저장되지 않고, 이 장면을 처음부터 다시 진행합니다.`;}
 function saveExit(){clearInterval(CLOCK);CLOCK=null;G=newGame();G.idx=0;render();window.scrollTo(0,0);toast("저장했습니다. 다음에 이어서 할 수 있습니다.");}
 function restartGame(){clearInterval(CLOCK);CLOCK=null;clearSave();G=newGame();G.idx=0;next();toast("처음부터 다시 시작합니다.");}
+
+/* ===== 온보딩 노트 다시 보기: 사이드바 메뉴, 지나온 노트만 열린다 ===== */
+const NOTES=[
+ {n:"①",at:"P4",when:"시작 전"},
+ {n:"②",at:"3-0",when:"3월"},
+ {n:"③",at:"REVIEW",when:"6월 반기 회고",title:"틀을 고칠 것인가, 틀을 물을 것인가",body:["5월의 점검표를 떠올려 보세요. 3년 전 19개였던 항목은 장애가 날 때마다 늘어 47개가 됐습니다. 그때마다 틀린 곳을 찾아 고쳤습니다. Argyris는 정해진 틀 안에서 고치는 방식을 단일 고리 학습이라고 불렀습니다. 틀 자체를 묻는 것은 이중 고리 학습입니다. \"항목을 하나 더 넣을까\"가 아니라 \"한 사람이 47개를 다 확인한다는 전제가 맞는가\"를 묻는 일입니다.","지금부터 처음으로 당신의 기록을 보여 드립니다. 잘하고 못한 것을 가리려는 것이 아닙니다. 어떤 전제로 움직였는지 보려는 것입니다."],q:"이번에 생각해 볼 질문: 상반기에 한 번도 의심하지 않은 전제는 무엇이었습니까?"},
+ {n:"④",at:"FINALE",when:"결산",title:"원인과 결과 사이의 시간",body:["Sterman(1989)은 사람들이 결정과 결과 사이의 시간이 길어질수록 피드백을 잘못 읽는다는 것을 실험으로 보였습니다. 결과가 늦게 오면 사람들은 지금의 결과를 지금의 결정 탓으로 돌립니다. 어제의 결정은 잊습니다.","올해 받은 청구서를 떠올려 보세요. 도착한 달에 무엇을 하고 있었습니까. 그 청구서의 원인은 언제 생겼습니까."],q:"마지막 질문: 올해의 일 가운데, 잘했다고 믿고 있지만 아직 청구서가 오지 않은 것은 무엇입니까?"}
+];
+function noteData(x){if(x.title)return x;const s=CONTENT.find(c=>c.id===x.at)||{};return{...x,title:s.title,body:s.body||[],q:s.q};}
+function noteOpen(x){const i=CONTENT.findIndex(c=>c.id===x.at);return G.review||(i>=0&&G.idx>=i);}
+function notesHtml(){return `<div class="notesbox"><div class="label">온보딩 노트</div><div class="notes">${NOTES.map((x,k)=>{const d=noteData(x),open=noteOpen(x);H["__note"+k]=()=>openNote(k);
+ return `<button class="noteitem" ${open?`data-a="__note${k}"`:"disabled"} title="${open?d.title:x.when+"에 열립니다"}"><span class="nn">${x.n}</span><span class="nt">${open?d.title:`${x.when}에 열립니다`}</span></button>`;}).join("")}</div></div>`;}
+function openNote(k){const d=noteData(NOTES[k]);const m=$("modal");H.__noteclose=()=>{m.hidden=true;};
+ m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ntt"><div class="eyebrow">📘 온보딩 노트${NOTES[k].n} · ${NOTES[k].when}</div><h2 id="ntt" style="font-size:21px">${d.title}</h2><div class="prose" style="font-size:15.5px">${(d.body||[]).map(p=>`<p>${val(p)}</p>`).join("")}${d.q?`<p><b>${val(d.q)}</b></p>`:""}</div><div class="btns" style="justify-content:flex-end"><button class="btn main" data-a="__noteclose">닫기</button></div></div>`;
+ m.hidden=false;const b=m.querySelector('[data-a="__noteclose"]');if(b)b.focus();}
