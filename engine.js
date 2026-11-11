@@ -326,7 +326,7 @@ function SC_CHOICE(s,opt={}){
   if(o.ending)G.ends[ENDKEY[base]||base]=o.ending;
   const r=Math.random()*100;let acc=0,hit=null;
   (o.tw||[]).forEach((t,i)=>{if(hit)return;let p=typeof t.p==="function"?t.p(G):t.p;(s.mods||[]).forEach(m=>{if(m.o.includes(o.k)&&(m.i||0)===i&&m.c(G))p+=m.d;});acc+=Math.max(0,p);if(r<acc)hit=t;});
-  const hits2=(o.tw2||[]).filter(t=>Math.random()*100<val(t.p));hits2.forEach(t=>applyFx(val(t.fx),{live,rel:s.rel}));
+  const hits2=(o.tw2||[]).filter(t=>Math.random()*100<val(t.p));luckLog(s,o,hit,hits2);hits2.forEach(t=>applyFx(val(t.fx),{live,rel:s.rel}));
   if(hit){applyFx(val(hit.fx),{live,rel:s.rel,mult,...ex,neg:neg!==1?neg:undefined});if(hit.ending)G.ends[ENDKEY[base]||base]=hit.ending;if(hit.settle)settle(hit.settle[0],hit.settle[1]==="이행",PROM_MEMBER[hit.settle[0]]);}
   G.nextMult=hit&&hit.nextMult!=null?hit.nextMult:o.nextMult;
   if(o.onDone)o.onDone(G,hit);
@@ -579,3 +579,18 @@ const KNOW={know_kim:"김 사원은 주 세 번 대기를 섭니다. 다른 사�
 /* F사 기대: 약속을 키우면 오르고, 숫자를 바로잡거나 범위를 줄이면 내려간다. 분기 말 F사 만족 = (안정 − 기대) 차이 */
 const FEXP={prop_full:[8,"7월 제안을 요청 범위 그대로 받음"],prop_ai:[3,"7월 제안을 AI 분석으로 3주 안에 약속"],r2_more:[5,"4월 신규 과제를 더 받음"],ct_more:[6,"6월 계약에 신규 과제 2건을 넣음"],small_win:[3,"5월 소규모 수주를 받음"],f_140:[5,"\"주 140시간 절감\"이 F사에 그대로 감"],scope_full:[8,"10월 본계약을 전 품목·1월 착수로 받음"],ai9_accepted:[2,"F사 AI 재산정 수치를 받아들임"],
  f_corrected:[-6,"140시간을 38시간(실측 중)으로 바로잡음"],prop_narrow:[-4,"7월 제안 범위를 한 품목으로 줄임"],scope_stage:[-4,"10월 본계약을 단계적으로 넓히기로 함"],ai9_fixed:[-3,"F사 재산정의 계획 정비 포함을 짚음"]};
+
+/* 확률의 호의 장부: 위험한 선택 뒤에 나쁜 결과가 굴러오지 않은 경우 */
+function twBad(t){if(t.mult&&t.mult>1.4)return true;let f="";try{f=String(val(t.fx)||"");}catch(e){}let sev=0;f.replace(/(성과|재무|사람|안정|F사만족|안전)[−-](\d+)/g,(_,k,n)=>{sev+=+n;});f.replace(/(rd|src|mfg|prc|mkt)[−-](\d+)/g,(_,k,n)=>{sev+=(+n)/2;});if(/소문|초과부하/.test(f))sev+=2;if(/`(sec_found|inc_found|sec_data_found|cha_end_gone|tae_end_left|token_drain|prop_gap|night_clash|run_thin|kim_fragile)`/.test(f))sev+=3;return sev>=3;}
+function luckCat(s,t){const x=(cleanTitle(s.title)||"")+" "+(val(t.t)||"");return /장애|복구|배치|야간|라인|경고|E-417|오류|오분류|오탐|접속|권한|패치|절차/.test(x)?"장애":/보안|외부 AI|외부 서비스|외부로|신고|정보보안|개인 계정|유출/.test(x)?"보안":/떠나|사직|이직|병가|소진|위축|무서|지쳤/.test(x)?"사람":/F사|임원|유 과장|고객|계약|납기/.test(x)?"고객":"기타";}
+function luckLog(s,o,hit,hits2){if(!o)return;const P=t=>{try{return +val(typeof t.p==="function"?t.p(G):t.p)||0;}catch(e){return 0;}};
+ const add=t=>{const p=P(t);if(p<25||!twBad(t))return;(G.luck=G.luck||[]).push({m:G.month,scene:s.id,title:cleanTitle(s.title)||"",choice:String(val(o.t)||"").slice(0,40),t:String(val(t.t)||""),p,cat:luckCat(s,t)});};
+ (o.tw||[]).forEach(t=>{if(t!==hit)add(t);});(o.tw2||[]).forEach(t=>{if(!hits2.includes(t))add(t);});}
+function luckBill(b,p){if(p<30||(G.luck||[]).some(x=>x.scene==="bill"&&x.b===b))return;(G.luck=G.luck||[]).push({b,m:G.month,scene:"bill",title:"청구서",choice:"",t:`청구서 "${BILL[b].t}"`,p,cat:BILL[b].ax===1||/장애|안정|가공/.test(BILL[b].t)?"장애":"청구서"});}
+function luckHtml(){const L=G.luck||[];if(!L.length)return `<p>올해는 위험한 선택 뒤에 운 좋게 피해 간 나쁜 결과가 없었습니다. 결과가 결정을 그대로 보여 준 해였습니다.</p>`;
+ const cats={};L.forEach(x=>cats[x.cat]=(cats[x.cat]||0)+1);const inc=cats.장애||0;const top=[...L].sort((a,b)=>b.p-a.p);
+ return `<p><b>피해 간 나쁜 결과 ${L.length}건${inc?`, 그중 장애 관련 ${inc}건`:""}.</b> 무사했던 달을 실력이라고 할 수 있습니까?</p>
+ <p class="note">${Object.entries(cats).map(([k,v])=>`${k} ${v}건`).join(" · ")}</p>
+ <div class="table">${top.slice(0,8).map(x=>`<div class="task"><b>${x.m}월 ${x.title} · 확률 ${x.p}%</b>${x.choice?`<span class="note">고른 안: ${x.choice}${x.choice.length>=40?"…":""}</span>`:""}<span class="note">일어나지 않은 일: ${x.t}</span></div>`).join("")}</div>
+ ${top.length>8?`<details class="ref"><summary>나머지 ${top.length-8}건</summary><p class="note" style="margin-top:6px">${top.slice(8).map(x=>`${x.m}월 ${x.title} · ${x.p}% · ${x.t}`).join("<br>")}</p></details>`:""}
+ <p class="note">결과가 좋았던 것과 결정이 좋았던 것은 다릅니다. 같은 선택을 다시 하면 이 일들은 일어날 수 있습니다.</p>`;}

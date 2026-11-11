@@ -193,6 +193,7 @@ function SC_BILLS(s){
  const arrive=[];pool.forEach(x=>{if(arrive.length<s.max&&Math.random()*100<x.p)arrive.push({b:x.b,wow:false});});
  if(s.wow){const ax=[1,2,3,4].map(a=>({a,r:axScore(a)})).filter(x=>x.r.v!=null&&x.r.v<50).sort((p,q)=>p.r.v-q.r.v)[0];
   if(ax&&!G.bills.concat(arrive.map(x=>x.b)).some(b=>BILL[b].ax===ax.a)){const ids=Object.keys(BILL).filter(b=>BILL[b].ax===ax.a).sort((a,b)=>billP(b)-billP(a));arrive.push({b:ids[0],wow:true});G.wowGot=ids[0];}}
+ pool.forEach(x=>{if(!arrive.some(a=>a.b===x.b))luckBill(x.b,x.p);});
  if(!arrive.length){next();return;}
  const step=i=>{if(i>=arrive.length){next();return;}
   const {b,wow}=arrive[i],c=BILL[b];G.bills.push(b);(G.billAt=G.billAt||{})[b]=G.month;(G.billWhy=G.billWhy||{})[b]=wow?"wow":billCauses(b).length?"cause":"chance";
