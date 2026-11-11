@@ -244,17 +244,18 @@ function SC_INBOX(s){
   draw(live);
  };
  const draw=live=>{
+  {const ol=document.querySelector("#view .list");if(ol&&ol.offsetParent)st.lt0=ol.scrollTop;}
   paint("");
   const m=s.mail.find(x=>x.id===st.sel),nd=Object.keys(st.done).length,all=nd===s.mail.length;
   const items=s.mail.map(x=>{const d=st.done[x.id];
-   return `<button class="item ${x.id===st.sel?"on":""} ${st.opened[x.id]?"read":""} ${d?"done":""}" ${A(()=>{st.sel=x.id;st.opened[x.id]=true;G.f["opened_"+x.id]=true;st.mode=null;st.to=null;st.four=false;startClock();draw();})}><span class="top"><span class="tag ${x.t}">${x.t}</span>${x.from}<span class="num" style="margin-left:auto">${x.at}</span></span><span class="sub">${x.sub}</span>${d?`<span class="what">${d}</span>`:""}</button>`}).join("");
+   return `<button class="item ${x.id===st.sel?"on":""} ${st.opened[x.id]?"read":""} ${d?"done":""}" ${A(()=>{if(inboxNarrow()){st.wy=window.scrollY;st.scrollTo=Math.max(0,($("view").getBoundingClientRect().top+window.scrollY)-70);}st.sel=x.id;st.opened[x.id]=true;G.f["opened_"+x.id]=true;st.mode=null;st.to=null;st.four=false;startClock();draw();})}><span class="top"><span class="tag ${x.t}">${x.t}</span>${x.from}<span class="num" style="margin-left:auto">${x.at}</span></span><span class="sub">${x.sub}</span>${d?`<span class="what">${d}</span>`:""}</button>`}).join("");
   let r;
   if(!m){
    if(st.over||all){const bill=inboxSettle(st);r=`<div class="rhead"><h2>${st.over?"10시입니다. 스탠드업이 시작됐습니다.":s.quiet&&s.quiet(G)?"10시 전에 받은편지함이 비었습니다.":"10시 전에 모두 처리했습니다."}</h2><p>${st.over?"처리하지 못한 메시지는 보류로 남았습니다.":""}</p>${bill}</div><div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
    else r=`<div class="rhead"><h2>${s.title}</h2><p>${s.lead}</p></div>`;
   }else{
    const d=st.done[m.id],person=m.t==="DM";
-   r=`<button class="back" ${A(()=>{st.sel=null;draw();})}>← 목록</button><div class="rhead"><h2>${m.sub}</h2><p>${m.from} · <span class="num">${m.at}</span></p></div><div class="body"><p class="${person?"voice":""}">${m.body}</p>${m.attach?`<p class="attach">${m.attach}</p>`:""}</div>`;
+   r=`<button class="back" ${A(()=>{st.sel=null;if(inboxNarrow()&&st.wy!=null)st.scrollTo=st.wy;draw();})}>← 목록</button><div class="rhead"><h2>${m.sub}</h2><p>${m.from} · <span class="num">${m.at}</span></p></div><div class="body"><p class="${person?"voice":""}">${m.body}</p>${m.attach?`<p class="attach">${m.attach}</p>`:""}</div>`;
    if(d){r+=`<div class="happen"><span class="label">일어난 일</span>${d}</div>`;
     if(st.over||all)r+=`${inboxSettle(st)}<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
    else if(!st.over&&typeof AIREP!=="undefined"&&AIREP[m.id]&&!(st.vdone||{})[m.id]){r+=aiInbox(m,st,()=>draw());}
@@ -273,6 +274,8 @@ function SC_INBOX(s){
   }
   shell(`<div class="mail ${m?"open":""}"><div class="list"><div class="listhead"><span>받은편지함</span><span class="num">${nd}/${s.mail.length} 처리</span></div>${items}</div><div class="reader">${r}</div></div>`,live,st.left);
   const f=$("four");if(f)f.onchange=e=>{st.four=e.target.checked;};
+  {const nl=document.querySelector("#view .list");if(nl&&st.lt0!=null)nl.scrollTop=st.lt0;}
+  if(st.scrollTo!=null){window.scrollTo(0,st.scrollTo);st.scrollTo=null;}
  };
  draw();
 }
@@ -602,3 +605,5 @@ function recordMonth(m){(G.monRec=G.monRec||{})[m]=1;const c=G.cells||{};
  const hidden=6+Math.min(6,G.over||0)+((c.RUN??3)<=1?2:0)+((c.SEC??2)<=1?2:0)+(G.burnout>=3?1:0)+Math.floor(Math.random()*3);
  const rate=Math.max(.05,Math.min(1,(G.safe-10)/70));const rep=Math.round(hidden*rate);
  (G.mon=G.mon||[]).push({m,safe:G.safe,over:G.over||0,burnout:G.burnout||0,rumors:G.rumors||0,hidden,rep,fsat:G.fsat,성과:G.score.성과,안정:G.score.안정});}
+
+function inboxNarrow(){return window.matchMedia("(max-width:860px)").matches;}
