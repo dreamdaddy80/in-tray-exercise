@@ -56,8 +56,8 @@ function relationMap(){
  keys.forEach((k,i)=>{const a=-Math.PI/2+i*2*Math.PI/5;pos[k]=[cx+r*Math.cos(a),cy+r*Math.sin(a)];});
  const line=(a,b,st)=>`<line x1="${pos[a][0]}" y1="${pos[a][1]}" x2="${pos[b][0]}" y2="${pos[b][1]}" ${st}/>`;
  let svg=`<svg class="viz" viewBox="0 0 ${W} ${H}" role="img" aria-label="리더 관계도" style="max-width:380px">`;
- svg+=line("rd","mkt",'stroke="var(--accent)" stroke-width="2.5"');
- svg+=G.f.ally_broken?line("mfg","src",'stroke="var(--muted)" stroke-width="2" stroke-dasharray="2 5"'):line("mfg","src",'stroke="var(--accent)" stroke-width="2.5"');
+ svg+=line("rd","mkt",'stroke="var(--accent-ink)" stroke-width="2.5"');
+ svg+=G.f.ally_broken?line("mfg","src",'stroke="var(--muted)" stroke-width="2" stroke-dasharray="2 5"'):line("mfg","src",'stroke="var(--accent-ink)" stroke-width="2.5"');
  [["mfg","prc"],["mkt","prc"],["rd","src"]].forEach(([a,b])=>{svg+=line(a,b,'stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="6 5"');});
  keys.forEach(k=>{const [x,y]=pos[k];svg+=face(k,G.trust[k]).replace("<svg ",`<svg x="${x-22}" y="${y-30}" width="44" height="44" `);svg+=`<text class="lbl" x="${x}" y="${y+28}" text-anchor="middle">${LD[k].n} ${G.trust[k]}</text>`;});
  svg+=`</svg>`;
