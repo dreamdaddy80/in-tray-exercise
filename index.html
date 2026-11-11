@@ -240,7 +240,14 @@ body{font-family:var(--sans);font-feature-settings:"tnum" 1;-webkit-font-smoothi
 pre.dev{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
 h1,h2,h3,.rhead h2,.pane h2,.title-card h1{font-family:var(--sans)}
 
+.rvbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:calc(100vw - 24px);padding:8px 10px;border-radius:22px;background:var(--ink);color:var(--panel);box-shadow:var(--shadow);font-size:13px}
+.rvbar button,.rvbar select{border:0;border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.14);color:inherit;font:inherit;width:auto;box-shadow:none}
+.rvbar select option{color:#151615}
+.rvbar button:hover{background:rgba(255,255,255,.24)}.rvbar .rvlab{padding:0 6px;font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body:has(.rvbar) .shell{padding-bottom:110px}
+
 @media (max-width:860px){
+  .rvbar{border-radius:18px;font-size:12px;gap:4px}.rvbar .rvlab{flex-basis:100%;max-width:none}
   .shell{grid-template-columns:minmax(0,1fr)}
   .people{grid-template-columns:minmax(0,1fr);padding:8px 10px;gap:6px;position:static}
   .people .label{display:none}

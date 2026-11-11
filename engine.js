@@ -44,7 +44,7 @@ const addContent=list=>CONTENT.push(...list);
 const has=f=>!!G.f[f];
 const val=(v,...a)=>typeof v==="function"?v(G,...a):v;
 
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G));}catch(e){}}
+function save(){if(G&&G.review)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(G));}catch(e){}}
 function load(){try{const s=localStorage.getItem(SAVE_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 
@@ -150,6 +150,7 @@ function render(){
  if(s.skip&&s.skip(G)){next();return;}
  paint("");
  SCENES[s.type](s);
+ reviewBar();
 }
 const sayHtml=(who,t)=>`<div class="say">${face(who,LD[who]?G.trust[who]:null)}<div><b>${name(who)}</b><p class="voice">${t}</p></div></div>`;
 const head=(s)=>`<div class="eyebrow">${[s.tag,val(s.when)].filter(Boolean).join(" · ")}</div><h2>${val(s.title)}</h2>`;
@@ -163,7 +164,7 @@ const SCENES={
   shell(paint(`<div class="title-card"><div class="eyebrow">신임 팀장 In-Tray 시뮬레이션</div><h1>${s.title}</h1><div class="prose">${para(s.body)}</div>
   ${old&&old.h2_focus&&old.idx>0?`<div class="happen"><span class="label">지난번에 고른 바꿀 습관</span>${["","① 일 맡기기","② 평가하기","③ 자원 나누기","④ 설명하기"][old.h2_focus]}<br><span class="label">다시 한다면</span>${old.written&&old.written.again?old.written.again.행동:""}</div>`:""}
   <div class="btns"><button class="btn main" ${A(()=>{G=newGame();clearSave();next();beep(520,.1);})}>처음부터 시작</button>${old&&old.idx>0?`<button class="btn" ${A(()=>{G=old;render();})}>이어서 하기${old.month?` (${old.month}월)`:""}</button>`:""}</div>
-  <button class="tool" style="justify-self:start" ${A(()=>{G=newGame();G.idx=CONTENT.findIndex(x=>x.id==="1-1")-1;G.pledge="(검토용 건너뛰기)";G.prio=["성과","사람"];next();})}>프롤로그 건너뛰기 (검토용)</button></div>`));
+  <div class="happen" style="display:grid;gap:8px"><span class="label">운영자 검토용</span><span class="note">게임을 끝까지 하지 않아도 장면과 월을 자유롭게 넘겨 볼 수 있습니다. 검토 중 진행은 저장하지 않습니다.</span><div class="btns"><button class="btn" ${A(()=>startReview("P1"))}>프롤로그부터 검토</button><button class="btn" ${A(()=>startReview("1-1"))}>1월부터 검토</button></div></div></div>`));
  },
  doc(s){
   shell(paint(`<div class="pane">${head(s)}<div class="prose">${val(s.html)}</div><div class="foot"><span class="note">${s.page||""}</span><button class="btn main" ${A(next)}>${s.btn||"다음"}</button></div></div>`));
@@ -607,3 +608,23 @@ function recordMonth(m){(G.monRec=G.monRec||{})[m]=1;const c=G.cells||{};
  (G.mon=G.mon||[]).push({m,safe:G.safe,over:G.over||0,burnout:G.burnout||0,rumors:G.rumors||0,hidden,rep,fsat:G.fsat,성과:G.score.성과,안정:G.score.안정});}
 
 function inboxNarrow(){return window.matchMedia("(max-width:860px)").matches;}
+
+/* ===== 운영자 검토 모드: 장면·월을 끝내지 않아도 넘어갈 수 있다 ===== */
+function startReview(id){clearInterval(CLOCK);CLOCK=null;G=newGame();G.review=true;G.pledge="(운영자 검토용)";G.prio=["성과","사람"];G.diag={1:50,2:50,3:50,4:50};reviewJump(CONTENT.findIndex(x=>x.id===id));}
+function reviewJump(i){if(i<0)return;clearInterval(CLOCK);CLOCK=null;i=Math.max(0,Math.min(CONTENT.length-1,i));const s=CONTENT[i];const m=s.month||G.month||1;
+ if(s.month){const q=Math.floor((m-1)/3);if(q!==G.quarter){G.quarter=q;G.time=QUARTER_TIME[q];}G.month=m;}
+ G.idx=i;delete G.ent[s.id];const sk=s.skip;if(sk){s.skip=null;}try{render();}finally{if(sk)s.skip=sk;}window.scrollTo(0,0);}
+function monthStart(m){if(m===0)return CONTENT.findIndex(x=>x.id==="P1");if(m===13)return CONTENT.findIndex(x=>x.id==="FINALE");return CONTENT.findIndex(x=>x.month===m&&!x.bare);}
+function reviewBar(){let el=document.getElementById("rv");if(!G||!G.review){if(el)el.remove();return;}
+ if(!el){el=document.createElement("div");el.id="rv";el.className="rvbar";document.body.appendChild(el);}
+ const s=CONTENT[G.idx]||{};const t=(typeof cleanTitle==="function"?cleanTitle(s.title):s.title)||s.tag||s.type;const m=s.month||0;
+ el.innerHTML=`<span class="rvlab">검토 · ${s.id} · ${t}</span>
+ <button data-rv="prev" aria-label="이전 장면">◀ 이전</button><button data-rv="next" aria-label="다음 장면">다음 ▶</button><button data-rv="nextm">다음 달 ▶▶</button>
+ <select data-rv="month" aria-label="월로 이동">${[["프롤로그",0]].concat([1,2,3,4,5,6,7,8,9,10,11,12].map(x=>[x+"월",x])).concat([["결산",13]]).map(([l,v])=>`<option value="${v}" ${(s.id==="FINALE"?13:m)===v?"selected":""}>${l}</option>`).join("")}</select>
+ <button data-rv="time" title="팀장 시간을 분기 기본값으로 채웁니다">⏳ 채우기</button><button data-rv="exit">검토 끝내기</button>`;
+ el.querySelector('[data-rv="prev"]').onclick=()=>reviewJump(G.idx-1);
+ el.querySelector('[data-rv="next"]').onclick=()=>reviewJump(G.idx+1);
+ el.querySelector('[data-rv="nextm"]').onclick=()=>{const cur=(CONTENT[G.idx]||{}).month||0;let j=cur>=12?monthStart(13):monthStart(cur+1);reviewJump(j);};
+ el.querySelector('[data-rv="month"]').onchange=e=>reviewJump(monthStart(+e.target.value));
+ el.querySelector('[data-rv="time"]').onclick=()=>{G.time=Math.max(G.time,QUARTER_TIME[G.quarter]||16);G.ot=0;drawBar();toast("팀장 시간을 채웠습니다.");};
+ el.querySelector('[data-rv="exit"]').onclick=()=>{clearInterval(CLOCK);CLOCK=null;G=load()||newGame();if(G.review)G=newGame();G.idx=0;render();window.scrollTo(0,0);};}
