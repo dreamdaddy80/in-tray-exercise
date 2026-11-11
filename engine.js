@@ -125,7 +125,7 @@ function drawBar(clock){
  const c=clock==null?"":`<div class="clock ${clock<=30?"hot":""}" aria-label="남은 시간">${Math.floor(clock/60)}:${String(clock%60).padStart(2,"0")}</div>`;
  const n=Object.keys(G.prom).length;
  H.__led=openLedger;H.__snd=()=>{G.sound=!G.sound;drawBar(clock);};H.__exit=()=>confirmBox("저장하고 나갈까요?",exitText(),"저장 후 나가기",saveExit);H.__restart=()=>confirmBox("처음부터 다시 시작할까요?","지금까지의 진행과 저장 기록이 모두 지워집니다. 되돌릴 수 없습니다.","처음부터 다시",restartGame,true);
- $("res").innerHTML=`<div class="r ${G.ot?"over":""}">팀장 시간 <b>${G.time}</b>${G.ot?` 야근 ${G.ot}`:""}</div><div class="r">토큰 <b>${G.token==null?"—":G.token}</b></div><div class="r">여력 <b>${G.cells?"배분됨":"4월"}</b></div>${c}<button class="tool" data-a="__led">장부 ${n}</button><button class="tool" data-a="__snd">소리 ${G.sound?"켜짐":"꺼짐"}</button>${G.review?"":`<button class="tool" data-a="__exit">저장 후 나가기</button><button class="tool" data-a="__restart">처음부터 다시</button>`}`;
+ $("res").innerHTML=`<div class="r ${G.ot?"over":""}">팀장 시간 <b>${G.time}</b>${G.ot?` 야근 ${G.ot}`:""}</div><div class="r">토큰 <b>${G.token==null?"—":G.token}</b></div><div class="r rcap" title="${G.cells?"4월에 나눈 팀의 여유 10칸. 운영(RUN) · AI 전환(AI) · 추가 제안(GROW) · 예방·보안(SEC)":"AI로 생긴 팀의 여유 10칸. 4월에 운영 · AI 전환 · 추가 제안 · 예방·보안으로 나눕니다."}">여력 ${G.cells?["RUN","AI","GROW","SEC"].map(k=>`<span class="cap">${k} <b>${G.cells[k]??0}</b></span>`).join(""):`<b style="font-size:13px;font-weight:600">4월에 배분</b>`}</div>${c}<button class="tool" data-a="__led">장부 ${n}</button><button class="tool" data-a="__snd">소리 ${G.sound?"켜짐":"꺼짐"}</button>${G.review?"":`<button class="tool" data-a="__exit">저장 후 나가기</button><button class="tool" data-a="__restart">처음부터 다시</button>`}`;
 }
 function openLedger(){
  const m=$("modal");const ps=Object.values(G.prom);
