@@ -38,6 +38,7 @@
   --time:#E9B05E; --time-soft:#3A2D17; --bad:#F08A7A; --bad-soft:#40221D; --good:#7ED08F; --tile:#2A2D29;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35); --hatch:repeating-linear-gradient(135deg,rgba(255,255,255,.08) 0 2px,transparent 2px 7px);
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}
+html{scrollbar-gutter:stable}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;word-break:keep-all}
@@ -240,11 +241,16 @@ body{font-family:var(--sans);font-feature-settings:"tnum" 1;-webkit-font-smoothi
 pre.dev{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
 h1,h2,h3,.rhead h2,.pane h2,.title-card h1{font-family:var(--sans)}
 
-.rvbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:calc(100vw - 24px);padding:8px 10px;border-radius:22px;background:var(--ink);color:var(--panel);box-shadow:var(--shadow);font-size:13px}
-.rvbar button,.rvbar select{border:0;border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.14);color:inherit;font:inherit;width:auto;box-shadow:none}
+.rvbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;width:min(640px,calc(100vw - 24px));display:grid;gap:6px;padding:8px 10px 10px;border-radius:22px;background:var(--ink);color:var(--panel);box-shadow:var(--shadow);font-size:13px}
+.rvbar .rvlab{display:flex;gap:8px;align-items:baseline;min-width:0;padding:0 6px;height:20px;overflow:hidden;white-space:nowrap}
+.rvbar .rvid{flex:none;font-weight:700;font-variant-numeric:tabular-nums;opacity:.7}
+.rvbar .rvt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.rvbar .rvbtns{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.rvbar button,.rvbar select{border:0;border-radius:999px;padding:7px 6px;background:rgba(255,255,255,.14);color:inherit;font:inherit;width:100%;min-width:0;box-shadow:none;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis}
+.rvbar select{text-align-last:center;cursor:pointer}
 .rvbar select option{color:#151615}
-.rvbar button:hover{background:rgba(255,255,255,.24)}.rvbar .rvlab{padding:0 6px;font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-body:has(.rvbar) .shell{padding-bottom:110px}
+.rvbar button:hover,.rvbar select:hover{background:rgba(255,255,255,.24)}
+body:has(.rvbar) .shell{padding-bottom:120px}
 
 .view{position:relative}
 .opmenu{position:absolute;top:16px;right:16px;z-index:5}
@@ -261,7 +267,8 @@ body:has(.rvbar) .shell{padding-bottom:110px}
 
 @media (max-width:860px){
   .opmenu{top:12px;right:12px}.title-card{padding-top:64px}
-  .rvbar{border-radius:18px;font-size:12px;gap:4px}.rvbar .rvlab{flex-basis:100%;max-width:none}
+  body:has(.rvbar) .shell{padding-bottom:170px}
+  .rvbar{border-radius:18px;font-size:12px}.rvbar .rvbtns{grid-template-columns:repeat(3,minmax(0,1fr))}
   .shell{grid-template-columns:minmax(0,1fr)}
   .people{grid-template-columns:minmax(0,1fr);padding:8px 10px;gap:6px;position:static}
   .people .label{display:none}
