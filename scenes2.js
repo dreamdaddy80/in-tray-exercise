@@ -51,7 +51,7 @@ function SC_ALLOC(s){
   G.written.notice={기준:[...crit],글:m==="none"?"미공지":txt,방식:m};G.goal3={three,sent:m==="full"};
   const live={};let line="",forcedA=false;
   if(m==="full"){G.time-=2;G.tu.all+=2;G.tu.exp+=2;applyFx("안전+2 `alloc_notice`"+(three?" 사람+1":""),{live});applySig("④L",1,"4-2","공지");if(three)applySig("③L",1,"4-2","세 기준");
-   if(Math.random()<.25){const min=Object.keys(c).sort((a,b)=>c[a]-c[b])[0],who={RUN:"mfg",AI:"rd",GROW:"mkt",SEC:"prc"}[min];applyFx(who+"-2",{live});line=`"왜 우리 모듈은 ${c[min]}칸이에요?"`;}}
+   if(Math.random()<.25){const min=Object.keys(c).sort((a,b)=>c[a]-c[b])[0],who={RUN:"mfg",AI:"rd",GROW:"mkt",SEC:"prc"}[min];applyFx(who+"-2",{live});line=`${name(who)}: "왜 ${({RUN:"운영(RUN)",AI:"AI 전환(AI)",GROW:"추가 제안(GROW)",SEC:"예방·보안(SEC)"})[min]} 칸은 ${c[min]}칸뿐이에요?"`;}}
   else if(m==="num"){G.time-=1;G.tu.all+=1;G.f.alloc_num=true;applyFx("B5+15");}
   else if(G.time<1){G.f.alloc_none=true;(G.forcedF=G.forcedF||{}).alloc_none="4-2";G.forcedTell=(G.forcedTell||0)+1;applyFx("안전-2",{live});applySig("③P ④P",1,"4-2","미공지",true);forcedA=true;}
   else{G.f.alloc_none=true;applyFx("안전-2 B5+30 소문규칙",{live,rel:"rd"});applySig("③P ④P",1,"4-2","미공지");}

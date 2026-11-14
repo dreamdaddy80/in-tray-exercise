@@ -419,3 +419,56 @@ const REF_TEXT={"1-3": "<b>Charan 외(2011), 리더십 파이프라인</b><br>�
  const all=CONTENT.flatMap(x=>[x,...(Array.isArray(x.cases)?x.cases:[])]);
  for(const id in FITFIX){const s=all.find(x=>x.id===id);if(!s){console.warn("근거 보완: 장면 없음",id);continue;}s.common=s.common||{};const fit=s.common.fit=s.common.fit||{};
   for(const k in FITFIX[id])fit[k]=(fit[k]||[]).concat(FITFIX[id][k].filter(x=>!(fit[k]||[]).includes(x)));}}
+
+/* ===== 앞의 결정과 뒤 장면 대사 맞추기 ===== */
+/* 1. 김 사원②: 원고(03-6)는 합이 0 이상이면 회복, -1 이하면 번아웃이다. 변환 때 두 경우가 뒤바뀌어 있었다 */
+{const s=S("6-3");const p0=s.pick;s.pick=g=>p0(g)===0?1:0;
+ const b=S("6-3_1");
+ b.intro=[g=>g.f.night_open?"근태 시스템의 자동 알림: \"김 사원, 대기표에 없는 날 새벽 2시 이후 접속 최근 3주 11회. 잔여 연차 14일.\"":"근태 시스템의 자동 알림: \"김 사원, 최근 3주 새벽 2시 이후 접속 11회. 잔여 연차 14일.\"","김 사원의 DM."];
+ b.say=g=>[["kim",g.f.night_open?"괜찮습니다. 대기표에서는 빠졌는데요, 경고가 오면 집에서 봐요. 모르는 분이 당번이면 마음이 안 놓여서요.":g.f.night_changed?"괜찮습니다. 표는 바뀌었는데요, 이번 달은 제가 더 설게요.":"괜찮습니다. 이번 달 대기도 제가 설게요."]];
+ const a=OP("6-3_1","A");a.t=g=>g.f.night_open?"경고 알림을 이번 달은 김 사원에게 가지 않게 하고, 빈자리는 내가 강태식과 메우기로 한다.":"이번 달 대기에서 바로 빼 주고, 빈자리는 내가 강태식과 메우기로 한다.";
+ a.done=g=>g.f.night_open?"이번 달은 경고 알림이 김 사원에게 가지 않게 했습니다.":"김 사원을 이번 달 대기에서 뺐습니다.";}
+/* 2. 5월 포상 결과에 따라 7월 이수진, 9월 강태식의 말이 달라진다 */
+{const s=S("7-5");const say0=s.say;s.say=g=>say0.map(x=>x[0]!=="prc"?x:["prc","6개월 동안 납품 오류 막은 건 저희예요. 그런데 페이지에 이름이 없어요. "+(g.f.award_both?"5월 포상 때는 같이 적어 주셨잖아요.":g.f.award_fix?"5월이랑 똑같네요.":"5월에도 정해진 게 없었고요.")]);
+ const c2=s.conds2.find(c=>/다른 모듈로 갔습니다/.test(c.t));if(c2)c2.t="5월 포상은 생산 모듈로 갔습니다.";
+ const s9=S("9-2");const f9=s9.say;s9.say=g=>f9(g).map(x=>x[0]!=="mfg"?x:["mfg",x[1].replace("올해는 좀 받읍시다.",g.f.award_fix?"5월에 이어 이번에도 현장이 받아야죠.":g.f.award_both?"5월에는 같이 받았으니, 이번 복구는 따로 봐 주시죠.":"올해는 좀 받읍시다.")]);
+ s9.intro=[g=>"본사 3분기 포상 후보 마감. "+(g.f.award_form?"5월에 만든 양식이 있지만 같은 이야기가 다시 나온다.":"5월, 7월에 이어 세 번째 같은 싸움이다.")];}
+/* 3. 강태식②: 운영 칸을 AI 칸 이상으로 줬다면 "AI에 줄 사람은 있고"라고 말하지 않는다 */
+{const s=S("4-3");const c=s.conds.find(x=>/AI에 줄 사람은 있고/.test(x.t));
+ if(c){c.c=g=>cell(g,"RUN")>=3&&cell(g,"AI")>cell(g,"RUN");s.conds.splice(s.conds.indexOf(c)+1,0,C(g=>cell(g,"RUN")>=3&&cell(g,"AI")<=cell(g,"RUN"),"\"숫자로는 운영에 줬다는 거죠. 그 칸의 사람이 밤에 나오는지는 다른 얘기입니다.\""));}}
+/* 4. 7월 범위 재협상의 결과를 보여 주고, 10월 본계약 초안에 잇는다 */
+{const a=OP("7-2a","A");const f=a.onDone;
+ a.onDone=(g,hit)=>{if(hit&&/다른 업체는 전 품목/.test(val(hit.t)))g.f.prop_narrow_no=true;else g.f.prop_narrow_ok=true;if(f)f(g,hit);};
+ a.done=g=>g.f.prop_narrow_no?"한 품목으로 줄이자고 임원과 다시 협상했습니다. F사는 받아들이지 않았습니다. 한 품목 제안서를 내되, 전 품목 일정표를 붙이기로 했습니다.":"한 품목으로 줄이자고 임원과 다시 협상했습니다. F사가 받아들였습니다. 제안은 한 품목으로 내고, 본계약 범위는 10월에 다시 정하기로 했습니다.";
+ const s1=S("10-1");const i1=s1.intro[0];s1.intro=[g=>val(i1)+(g.f.prop_narrow_no?" 메일 끝줄: \"7월에 말씀드린 대로 범위는 전 품목입니다.\"":g.f.prop_narrow?" 메일 끝줄: \"7월의 한 품목 제안을 잘 봤습니다. 본계약은 전 품목으로 넓히고 싶습니다.\"":"")];
+ S("10-2").intro=[g=>g.f.prop_narrow_no?"계약서 초안이 왔다. 7월에 F사가 물러서지 않은 그대로다. 전 품목, 일 단위, 1월 착수.":g.f.prop_narrow?"계약서 초안이 왔다. 7월에 한 품목으로 줄였던 범위가 본계약에서는 전 품목으로 넓어져 있다. 일 단위, 1월 착수.":"계약서 초안이 왔다. 전 품목, 일 단위, 1월 착수."];}
+/* 5. 10월 AI 검토에서 "50%는 저희 숫자가 아니다"를 들었다면 서하준이 "절반"이라고 말하지 않는다 */
+{const s=S("10-2");const f=s.say;const heard=g=>g.f.ai10_hold||((g.ver||[]).find(x=>x.id==="AI10")||{}).asked;
+ s.say=g=>f(g).map(x=>x[0]==="rd"&&heard(g)?["rd",x[1].replace("데이터 정리는 아직 절반이에요.","데이터 정리가 어디까지 됐는지 아직 못 셌어요. 절반이라는 숫자는 저희가 낸 게 아니고요.")]:x);}
+/* 6. 8월에 자동화 확대를 10월로 미뤘다면 9월 중재는 "미뤄 둔 자동화를 지금 넣을지"를 다룬다 */
+{const s=S("9-5");const say0=s.say;
+ s.say=g=>g.f.auto_defer?[["rd","사람이 분류해서 틀린 게 5%예요. 8월에 넓혔으면 3%였을 거고요. 그 표는 아무도 안 보죠."],["src","자동화였으면 그 긴급 건을 누가 다시 봤을까요. 몇 %인지보다 어디에서 틀리는지가 문제예요."]]:say0;
+ const D=(k,t,done)=>{const o=OP("9-5",k),t0=o.t,d0=o.done;o.t=g=>g.f.auto_defer?t:t0;o.done=g=>g.f.auto_defer?done:val(d0);};
+ D("A","미뤄 둔 발주 분류 자동화를 지금 넣고, 임계값 조정과 오류 책임을 서하준 팀이 지게 한다.","발주 분류 자동화를 넣었습니다. 조정과 오류 책임은 서하준 팀이 맡습니다.");
+ D("B","자동화를 넣되 긴급 발주 구간은 사람이 검수하고, 오류가 줄어드는 대로 단계를 뺀다.","자동화를 넣고 긴급 발주 구간에 사람 검수를 두었습니다.");
+ D("C","8월에 정한 대로 10월까지 기다리고, 그동안 수작업 분류의 원인과 위험을 전부 확인한다.","8월에 정한 대로 10월까지 기다리기로 했습니다.");
+ {const t=OP("9-5","A").tw[1],t0=t.t;t.t=g=>g.f.auto_defer?"분류 오류가 1%로 떨어졌습니다.":t0;}
+ {const t=OP("9-5","C").tw[0],t0=t.t;t.t=g=>g.f.auto_defer?"기다리는 사이 수작업 분류가 밀려 F사 납품 리포트가 늦어졌습니다.":t0;}
+ s.title2=g=>g.f.auto_defer?"미뤄 둔 자동화를 어떻게 할까요?":"자동화를 어떻게 할까요?";
+ /* 9월에 이미 넣기로 했다면 10월에 "다시 보자고 하셨죠"가 나오지 않는다 */
+ S("10S").pick=g=>g.f.auto_defer&&!(g.f.fp_keep||g.f.fp_gate)?0:g.f.fp_stop&&!g.f.auto_defer?1:2;}
+/* 8. F사 클레임: 직전 도장 장면의 쟁점은 계획 정비를 중단 시간에 넣느냐(정의 차이)였다. 우리 오류를 전제하지 않는 선택지를 둔다 */
+{const s=S("9-4");const stamp=g=>((g.ver||[]).find(x=>x.id==="AI9")||{}).stamp;
+ s.options.push({k:"D",cost:1,t:"계획 정비를 중단 시간에 넣을지, 계약 부속서의 산식 정의부터 양쪽이 맞추자고 한다.",sig:"④L",fx:"`claim_define` F사만족-1 안정+1",done:"산식 정의부터 맞추기로 했습니다. 조건 논의는 그 뒤에 합니다.",
+  tagText:g=>stamp(g)==="unv"?"검증 불가로 찍은 쟁점":"",dis:g=>g.f.ai9_accepted?"재산정 수치를 받아들인다고 이미 회신해서 고를 수 없습니다.":"",
+  tw:[T(g=>g.f.ai9_fixed||g.f.know_metric?55:35,"부속서대로 계획 정비를 빼니 99.4%였습니다. F사가 재산정을 거둬들였습니다.","F사만족+3 재무+1"),T(25,"F사 임원: \"정의 얘기로 시간을 끄시는군요.\"","F사만족-2")]});
+ s.conds.push(C(g=>stamp(g)==="unv","AI 재산정에 '검증 불가' 도장을 찍었다. 무엇을 중단 시간으로 세는지부터 정해지지 않았다."),C(g=>stamp(g)==="ok"&&!g.f.ai9_accepted,"AI 재산정에 '확인' 도장을 찍었다."));
+ s.common=s.common||{};s.common.fit=s.common.fit||{};s.common.fit.D=["고객과의 약속","절차와 보안 준수"];
+ const m=S("10-5");if(m&&m.conds)m.conds.push(C(g=>g.f.claim_define,"9월에 F사와 가용성 산식 정의를 다시 맞췄습니다."));}
+/* 9. 문지원이 입원한 달에는 면담할 수 없다. 원고의 "경우 2" 표기가 대사에 섞여 있던 것도 나눈다 */
+{const r=IV("7-6","src");r.off=g=>g.cases&&g.cases["7-4"]===0?"입원 중이라 이번 달은 만날 수 없습니다":"";
+ r.line=g=>g.cases&&g.cases["7-4"]===0?(g.f.mfg_acting?"제 결재선이 바뀌어 있던데요.":"자리 비운 동안 고맙습니다."):"본사가 사람을 달라고 할 겁니다.";}
+/* 장면 순서: 9월 새벽 장애의 원인은 복구 뒤 결과 화면에서 알게 된다 */
+{const s=S("9-1");const cause=s.intro[0];s.intro=[];s.options.forEach(o=>{const d0=o.done;o.done=g=>val(d0)+" 복구 뒤에 확인한 내용입니다. "+val(cause);});}
+/* 전체 점검에서 찾은 것: 4월 공지를 보내지 않았다면 강태식②에서 "이미 알린 안"이라고 하지 않는다 */
+{const o=OP("4-3","C"),t0=o.t;o.t=g=>g.f.alloc_none?t0.replace("이미 알린 안이니","이미 정한 안이니"):t0;}

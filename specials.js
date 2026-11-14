@@ -33,7 +33,7 @@ const SPEC={
  "REVIEW":{id:"REVIEW",type:"review",month:6,bare:false,when:"반기 회고"},
  "9-6":{id:"9-6",type:"write",month:9,when:"9월",title:"새벽 장애를 세 사람에게",
   fit:g=>g.f.inc_proc?["장애 복구 기여","장애 예방 활동"]:g.f.inc_direct?["장애 복구 기여"]:[],
-  conds:[{c:g=>g.f.inc_breach,t:"승인 없이 올린 패치가 있었습니다. 쓸지 말지는 당신이 정합니다."},{c:g=>g.f.inc_big,t:"복구 시간이 평소의 2배였습니다."},{c:g=>g.f.claim_verify||g.f.claim_refund||g.f.claim_delay,t:"F사는 지금 가용성 수치를 다시 따지고 있습니다."}],
+  conds:[{c:g=>g.f.inc_breach,t:"승인 없이 올린 패치가 있었습니다. 쓸지 말지는 당신이 정합니다."},{c:g=>g.f.inc_big,t:"복구 시간이 평소의 2배였습니다."},{c:g=>g.f.claim_verify||g.f.claim_refund||g.f.claim_delay||g.f.claim_define,t:"F사는 지금 가용성 수치를 다시 따지고 있습니다."}],
   draft:()=>"이번 장애로 불편을 드려 죄송합니다. 원인을 철저히 분석하고 있습니다. 재발 방지에 최선을 다하겠습니다. 앞으로도 많은 관심 부탁드립니다.",
   after:(g,t,live,lines)=>{if(g.f.inc_breach){if(/패치|승인/.test(t.t)){applyFx("mfg-3 src+2 안전+3",{live});lines.push("팀 공지에 승인 없는 변경을 썼습니다.");}else g.f.inc_breach_nowrite=true;}},
   targets:[
