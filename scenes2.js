@@ -66,7 +66,31 @@ function SC_ALLOC(s){
 }
 
 /* 세 개의 설명 (원고 03-6 6-2, 03-9 9-6, 03-12 12-6) */
-const KW={crit:["실측","절감","비용","위험","효과","기준","원칙","근거"],next:/\d+일|\d+월|기한|까지|다음 회의|다음 달|내년|다음 주/};
+const KW={crit:["실측","절감","비용","위험","효과","기준","원칙","근거"],why:/때문|이유는|위해|에 따라|규정|절차대로/};
+/* 자동 참고 채점: 낱말을 늘어놓은 글에 속지 않게 문장 형식부터 본다 */
+const WR_PAST=/[았었였했됐냈웠렸졌쳤겼갔왔]습니다|[았었였했됐]어요|[았었였했]다(?=[\s.!?]|$)|말씀드린|드렸|공개한|했던|한 대로|지난/g;
+const WR_TIME=/\d+월\s*\d+일까지|\d+월\s*\d+일|\d+월 말까지|\d+월까지|\d+월|\d+일까지|\d+일|[가-힣0-9]+까지|기한|다음 주|다음 달|다음 회의|다음 분기|내년|이번 주|이번 달|매주|매월|매달|분기마다|오늘|내일/;
+const WR_ASK=/(적어|기록해|알려|말해|올려|남겨|신청해|확인해|제출해)\s*주(세요|시기|십시오)/;
+function wrSentences(x){return String(x).split(/(?<=[.!?。…])\s+|\n+/).map(v=>v.trim()).filter(Boolean);}
+/* 문장 수, 서술어로 끝난 문장 비율, 같은 낱말 반복, 평균 문장 길이 */
+function wrForm(x){const ss=wrSentences(x),pred=ss.filter(v=>/(다|요|죠|까|오)["'”’)\]]*[.!?。…]*$/.test(v)).length;
+ const tk=x.match(/[가-힣A-Za-z0-9%]{2,}/g)||[],fq={};tk.forEach(w=>fq[w]=(fq[w]||0)+1);const top=Object.entries(fq).sort((a,b)=>b[1]-a[1])[0]||["",0];
+ const triple=/([가-힣A-Za-z0-9]{2,})(\s+\1){2}/.test(x.replace(/[.,!?]/g," ").replace(/\s+/g," "));const avg=ss.length?tk.length/ss.length:0;
+ const bad=[];if(pred<3)bad.push(`3~5문장이 필요한데 서술어로 끝난 문장이 ${pred}개입니다`);else if(pred/ss.length<.6)bad.push("서술어로 끝나지 않은 줄이 많습니다");
+ if(triple||(top[1]>=4&&top[1]/tk.length>=.2))bad.push(`같은 낱말 "${top[0]}"${jo(top[0],"을","를")} 되풀이했습니다`);if(ss.length&&avg<3)bad.push("문장이 너무 짧습니다");
+ return{n:ss.length,pred,avg,bad,long:pred>5};}
+/* 다음 단계: 과거 표현 뒤에 남은 부분에 때를 나타내는 말이나 요청이 있을 때만 인정한다 */
+function wrNext(x){for(const v of wrSentences(x)){let rest=v,m;WR_PAST.lastIndex=0;while((m=WR_PAST.exec(v)))rest=v.slice(m.index+m[0].length);const t=rest.match(WR_TIME)||rest.match(WR_ASK);if(t)return t[0];}return null;}
+/* AI 초안과 겹치는 문장의 비율 */
+function wrDraftOverlap(x,d){const ss=wrSentences(x),ds=wrSentences(d);if(!ss.length||!ds.length)return 0;const hit=ss.filter(v=>ds.some(w=>jacc(v,w)>=.8)).length;return Math.max(hit/ss.length,jacc(x,d)>=.7?1:0);}
+function wrScore(x,t,why,d){const m=[],hitw=[];let n=0;
+ const cw=[...KW.crit,...(why?[why]:[]),...principleList()].find(w=>x.includes(w))||(x.match(KW.why)||[])[0];if(cw){n++;hitw.push(`기준 "${cw}"`);}else m.push("무엇을 기준으로 정했는지");
+ const qw=(val(t.ans)||[]).find(w=>x.includes(w));if(qw){n++;hitw.push(`질문에 답한 말 "${qw}"`);}else m.push(`이 사람의 질문("${val(t.q)}")에 대한 답`);
+ const nx=wrNext(x);if(nx){n++;hitw.push(`다음 단계 "${nx}"`);}else m.push("앞으로 언제 무엇을 하는지");
+ const form=wrForm(x),ov=wrDraftOverlap(x,d),flags=[];
+ if(form.bad.length){n=0;flags.push("문장으로 쓰지 않았습니다 ("+form.bad.join(", ")+"). 0점으로 기록합니다");}
+ else{if(ov>=.6){n=Math.max(0,n-1);flags.push("초안을 거의 그대로 보냈습니다 (1점 감점)");}if(form.long)flags.push("3~5문장보다 깁니다");}
+ return{n,hitw,m,flags,ov:Math.round(ov*100),form};}
 function jacc(a,b){const g=t=>{const s=new Set();t=t.replace(/\s/g,"");for(let i=0;i<t.length-1;i++)s.add(t.slice(i,i+2));return s;};const x=g(a),y=g(b);if(!x.size||!y.size)return 0;let n=0;x.forEach(v=>{if(y.has(v))n++;});return n/(x.size+y.size-n);}
 function SC_WRITE(s){
  let why=null,draftUsed=false;const texts={};s.targets.forEach(t=>texts[t.k]="");
@@ -85,15 +109,15 @@ function SC_WRITE(s){
  let warn="";
  const send=()=>{grab();
   const badT=s.targets.filter(t=>texts[t.k].trim()&&!readable(texts[t.k],12).ok);if(badT.length){warn=badT.map(t=>`${val(t.n)}에게 쓴 글: ${readable(texts[t.k],12).why}`).join("<br>");d2();return;}warn="";
-  const d=val(s.draft),res={},live={};let sum=0,missing=0,miss={};
+  const d=val(s.draft),res={},live={},flag={},over={};let sum=0,missing=0,miss={};
   s.targets.forEach(t=>{const x=texts[t.k].trim();if(!x){missing++;res[t.k]=-1;return;}
-   let n=0;const m=[],hitw=[];const cw=[...KW.crit,...(why?[why]:[]),...principleList()].find(w=>x.includes(w));if(cw){n++;hitw.push(`기준 "${cw}"`);}else m.push("무엇을 기준으로 정했는지");const qw=t.words.concat(qStems(val(t.q))).find(w=>x.includes(w));if(qw){n++;hitw.push(`질문에 답한 말 "${qw}"`);}else m.push(`이 사람의 질문("${val(t.q)}")에 대한 답`);const nx=x.match(KW.next);if(nx){n++;hitw.push(`다음 단계 "${nx[0]}"`);}else m.push("언제 무엇을 하는지");miss[t.k]=m;(G.wroteHit=G.wroteHit||{})[s.id+t.k]=hitw;res[t.k]=n;sum+=n;});
+   const r=wrScore(x,t,why,d);miss[t.k]=r.m;flag[t.k]=r.flags;over[val(t.n)]=r.ov;(G.wroteHit=G.wroteHit||{})[s.id+t.k]=r.hitw;res[t.k]=r.n;sum+=r.n;});
   const v=s.targets.filter(t=>texts[t.k].trim());let copy=false;for(let i=0;i<v.length;i++)for(let j=i+1;j<v.length;j++)if(jacc(texts[v[i].k],texts[v[j].k])>=.7)copy=true;
-  G.written[s.id]={근거:why,글:{...texts},자동참고:res,초안미수정:s.targets.filter(t=>texts[t.k].trim()===d).map(t=>val(t.n))};
+  G.written[s.id]={근거:why,글:{...texts},자동참고:res,초안미수정:s.targets.filter(t=>texts[t.k].trim()===d).map(t=>val(t.n)),초안겹침:over,형식:Object.fromEntries(s.targets.filter(t=>(flag[t.k]||[]).length).map(t=>[val(t.n),flag[t.k]]))};
   if(!missing&&sum>=6)applySig("④L",1,s.id,"세 편");if(missing){applySig("④P",1,s.id,"미공지");applyFx("안전-2 소문규칙",{live,rel:"rd"});}
   G.wrote[s.id]=sum;(G.wrotePieces=G.wrotePieces||{})[s.id]=Object.values(res);
   const lines=[];
-  s.targets.forEach(t=>{const n=res[t.k];if(n<0){lines.push(`${val(t.n)}: 미공지로 기록했습니다.`);return;}const i=n>=3?0:n===2?1:2;lines.push(`${val(t.n)}${/^[^"“:]{1,12}: /.test(t.reply[i][0])?" · ":": "}${t.reply[i][0]}`);{const h=(G.wroteHit||{})[s.id+t.k]||[];lines.push(`<span class="note">└ 자동 참고 채점 ${n}/3${h.length?" · 찾은 것: "+h.join(", "):""}${miss[t.k]&&miss[t.k].length?" · 없던 것: "+miss[t.k].join(", "):""}. 낱말을 찾는 참고 점수이며, 최종 평가는 사람이 합니다.</span>`);}applyFx(t.reply[i][1],{live});});
+  s.targets.forEach(t=>{const n=res[t.k];if(n<0){lines.push(`${val(t.n)}: 미공지로 기록했습니다.`);return;}const i=n>=3?0:n===2?1:2;lines.push(`${val(t.n)}${/^[^"“:]{1,12}: /.test(t.reply[i][0])?" · ":": "}${t.reply[i][0]}`);{const h=(G.wroteHit||{})[s.id+t.k]||[];lines.push(`<span class="note">└ 자동 참고 채점 ${n}/3${h.length?" · 찾은 것: "+h.join(", "):""}${miss[t.k]&&miss[t.k].length?" · 없던 것: "+miss[t.k].join(", "):""}${(flag[t.k]||[]).length?" · "+flag[t.k].join(" · "):""}. 낱말을 찾는 참고 점수이며, 최종 평가는 사람이 합니다.</span>`);}applyFx(t.reply[i][1],{live});});
   if(s.bad6&&texts.f.trim()===d&&d.includes("140"))applyFx("B6+10");
   if(copy){G.f.copy_voice=true;applyFx("F사만족-2 안전-2",{live});lines.push("유 과장: \"사내 공지가 잘못 온 줄 알았습니다.\"");lines.push("게시판: \"고객한테 보낸 메일이네.\"");}
   let leak=false;const bk=s.targets.find(t=>t.k==="b"),tk=s.targets.find(t=>t.k==="t");
