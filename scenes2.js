@@ -230,7 +230,7 @@ const EVAL=[
 ];
 function SC_EVAL(s){
  const people=EVAL.filter(e=>!isGone(e.k));const left=EVAL.length-people.length;
- const quota={S:1,A:3,B:Math.max(0,6-left),C:1};
+ const quota=Object.assign({},GRADE_GUIDE,{B:Math.max(0,GRADE_GUIDE.B-left)});
  const st={};people.forEach(e=>st[e.k]={g:null,picks:{}});let i=0,used=false,warned=false;
  G.f.win_any=G.f.win_mkt||G.f.win_check||G.f.win_credit;G.f.case_src=G.cases&&G.cases["7-4"]===0;G.f.talks_kim2=(G.f.talks_kim||0)>=2;G.f.talks_bae2=(G.f.talks_bae||0)>=2;G.f.han_rec41=G.f.han_talked||G.f.han_end_record;
  const INPUT=["야간에 가장 오래 있었음","야간 대기 11회","41시간"];
@@ -244,6 +244,14 @@ function SC_EVAL(s){
  const KPIORD={"초과":0,"달성 (전 항목)":1,"달성":2,"미달":3};
  const draw=()=>{paint("");const e=people[i],c=st[e.k],rs=recs(e);
   const allG=Object.values(st).every(x=>x.g);const ok=allG&&["S","A","B","C"].every(g=>cnt(g)===quota[g]);
+  /* 확정 버튼이 꺼져 있는 이유 */
+  const whyOff=[];{const un=Object.values(st).filter(x=>!x.g).length;if(un)whyOff.push(`등급을 정하지 않은 사람이 ${un}명 있습니다`);["S","A","B","C"].forEach(g=>{const d=cnt(g)-quota[g];if(d>0)whyOff.push(`${g}${jo(g,"이","가")} ${d}명 많습니다`);else if(d<0&&!un)whyOff.push(`${g}${jo(g,"이","가")} ${-d}명 모자랍니다`);});}
+  /* 기록 한 줄의 안내: 공개하지 않은 기준에만 맞는 기록, 연결이 맞지 않는 기록을 그 자리에서 알린다 */
+  const q=w=>`'${w}'`;
+  const recNote=(r,v)=>{const fits=r[3]?[]:(r[2]||[]),pubFit=fits.filter(x=>G.pub.includes(x));const lst=fits.map(x=>x+(G.pub.includes(x)?"":"(올해 공개하지 않음)")).join(", ");
+   if(v){if(has("pub_leaders"))return "기준을 구성원에게 공개한 적이 없어, 연결해도 근거로 인정되지 않습니다.";if(fits.includes(v))return "이어지는 연결입니다.";
+    return `이 기록은 ${q(v)}${jo(v,"과","와")} 이어지지 않습니다. ${fits.length?"맞는 기준: "+lst:"이 기록에 맞는 공개 기준은 없습니다."}`;}
+   if(fits.length&&!pubFit.length)return `맞는 기준 ${fits.map(q).join(", ")}${jo(fits[fits.length-1],"은","는")} 3월에 공개하지 않은 기준이라 쓸 수 없습니다.`;return "";};
   shell(`<div class="pane"><div class="eyebrow">연말 평가 · ${i+1}/${people.length}</div><h2>${name(e.k)}</h2>
   <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px"><b>Folger, Konovsky &amp; Cropanzano(1992), 정당한 평가 절차</b><br>평가가 정당하다고 받아들여지려면 세 가지가 필요합니다. 기준을 미리 알려 주었는가, 당사자의 이야기를 들을 기회가 있었는가, 실제 기록과 증거로 판단했는가.<br><b>생각해 볼 질문:</b> 이 등급의 근거는 당사자가 미리 알 수 있었던 것입니까?</p></details>
   ${has("rule_kept")?'<p class="note">올해 우리 팀은 인사팀 지침 적용 유예 팀입니다.</p>':""}
@@ -253,9 +261,9 @@ function SC_EVAL(s){
   <div class="btns">${["S","A","B","C"].map(g=>BTN(()=>{save();c.g=g;draw();},g,c.g===g?"main":"")).join("")}</div>
   <p><b>연중 관찰 기록</b> <span class="note">2개 이상 고르고, 공개한 기준에 연결하세요.</span></p>
   ${rs.length<2?'<p class="note">기록 부족</p>':""}
-  <div class="opts">${rs.map((r,n2)=>{const on=c.picks[n2]!==undefined;return `<div class="task" style="padding:8px 12px"><label class="chk"><input type="checkbox" id="rc${n2}" ${on?"checked":""}><span>${r[0]}</span></label>${on?`<select id="ln${n2}"><option value="">기준 연결</option>${G.pub.map(p=>`<option ${c.picks[n2]===p?"selected":""}>${p}</option>`).join("")}</select>`:""}</div>`}).join("")}</div>
-  <div class="foot"><span class="btns">${i>0?BTN(()=>{save();i--;draw();},"이전"):""}${i<people.length-1?BTN(()=>{save();i++;draw();},"다음 사람"):""}${BTN(()=>{save();used=true;const ord=[...people].sort((a,b)=>KPIORD[val(a.kpi)]-KPIORD[val(b.kpi)]);let idx=0;["S","A","B","C"].forEach(g=>{for(let k=0;k<quota[g];k++){if(ord[idx])st[ord[idx].k].g=g;idx++;}});draw();},"KPI 순서로 채우기")}</span><button class="btn main" ${ok?"":"disabled"} ${A(()=>{save();const miss=people.filter(e=>!evidOK(e));if(miss.length&&!warned){warned=true;draw();return;}finish();})}>${warned?"근거 없이 확정":"평가 확정"}</button></div>${warned?`<div class="happen"><span class="label">확정 전에</span>근거가 연결되지 않은 사람이 ${people.filter(e=>!evidOK(e)).length}명입니다: ${people.filter(e=>!evidOK(e)).map(e=>name(e.k)).join(", ")}. 이대로 확정하면 이 사람들은 등급의 이유를 물을 수 있고, 답할 기록이 없습니다.</div>`:""}</div>`);
-  rs.forEach((r,n2)=>{$("rc"+n2).onchange=ev=>{save();if(ev.target.checked)c.picks[n2]="";else delete c.picks[n2];draw();};});
+  <div class="opts">${rs.map((r,n2)=>{const on=c.picks[n2]!==undefined;return `<div class="task" style="padding:8px 12px"><label class="chk"><input type="checkbox" id="rc${n2}" ${on?"checked":""}><span>${r[0]}</span></label>${on?`<select id="ln${n2}"><option value="">기준 연결</option>${G.pub.map(p=>`<option ${c.picks[n2]===p?"selected":""}>${p}</option>`).join("")}</select>`:""}${(()=>{const t=recNote(r,on?c.picks[n2]:"");return t?`<span class="note" style="display:block;margin-top:4px">${t}</span>`:"";})()}</div>`}).join("")}</div>
+  <div class="foot"><span class="btns">${i>0?BTN(()=>{save();i--;draw();},"이전"):""}${i<people.length-1?BTN(()=>{save();i++;draw();},"다음 사람"):""}${BTN(()=>{save();used=true;const ord=[...people].sort((a,b)=>KPIORD[val(a.kpi)]-KPIORD[val(b.kpi)]);let idx=0;["S","A","B","C"].forEach(g=>{for(let k=0;k<quota[g];k++){if(ord[idx])st[ord[idx].k].g=g;idx++;}});draw();},"KPI 순서로 채우기")}</span><button class="btn main" ${ok?"":"disabled"} ${A(()=>{save();const miss=people.filter(e=>!evidOK(e));if(miss.length&&!warned){warned=true;draw();return;}finish();})}>${warned?"근거 없이 확정":"평가 확정"}</button></div>${!ok&&whyOff.length?`<p class="note">평가 확정을 누를 수 없는 이유: ${whyOff.join(" · ")}.</p>`:""}${warned?`<div class="happen"><span class="label">확정 전에</span>근거가 연결되지 않은 사람이 ${people.filter(e=>!evidOK(e)).length}명입니다: ${people.filter(e=>!evidOK(e)).map(e=>name(e.k)).join(", ")}. 이대로 확정하면 이 사람들은 등급의 이유를 물을 수 있고, 답할 기록이 없습니다.</div>`:""}</div>`);
+  rs.forEach((r,n2)=>{$("rc"+n2).onchange=ev=>{save();if(ev.target.checked)c.picks[n2]="";else delete c.picks[n2];draw();};const ln=$("ln"+n2);if(ln)ln.onchange=()=>{const y=window.scrollY;save();draw();window.scrollTo(0,y);};});
  };
  function evidOK(e){const c=st[e.k],rs=recs(e);let n=0;Object.entries(c.picks).forEach(([k,v])=>{const r=rs[+k];if(r&&!r[3]&&v&&r[2].includes(v))n++;});return n>=2&&!has("pub_leaders");}
  const finish=()=>{const live={};let good=0;const bad=[];
@@ -268,6 +276,10 @@ function SC_EVAL(s){
    G.grades[e.k].근거=rs.map((r,x)=>c.picks[x]!==undefined?r[0]+"→"+c.picks[x]:null).filter(Boolean);
   });
   G.badEvid=bad;G.evalGood=good;G.evalN=people.length;G.goal6a=good===people.length;
+  /* 3월 기준 선택 때문에 증빙이 막힌 사람: 쓸 수 있는 기록은 2개 이상인데, 공개한 기준과 이어지는 기록이 2개가 안 되는 경우 */
+  G.evalBlocked=people.map(e=>{const rs=recs(e).filter(r=>!r[3]&&(r[2]||[]).length);const usable=rs.filter(r=>r[2].some(x=>G.pub.includes(x))).length;
+   if(rs.length<2||(usable>=2&&!has("pub_leaders")))return null;const need=[];rs.filter(r=>!r[2].some(x=>G.pub.includes(x))).forEach(r=>r[2].forEach(x=>{if(!need.includes(x))need.push(x);}));
+   return{k:e.k,need:has("pub_leaders")?[]:need};}).filter(Boolean);
   if(good>=8)applySig("②L",1,"12-3","근거 충족");if(good<5)applySig("②P",1,"12-3","근거 부족");if(used){applySig("②P",1,"12-3","KPI 순서로 채우기");G.f.kpi_fill=true;}
   {const rk={S:0,A:1,B:2,C:3};const ord=[...people].sort((a,b)=>KPIORD[val(a.kpi)]-KPIORD[val(b.kpi)]);let same=true;for(let x=1;x<ord.length;x++){if(rk[st[ord[x].k].g]<rk[st[ord[x-1].k].g])same=false;}if(same&&good<5){applySig("②P",1,"12-3","KPI 순서대로");G.f.kpi_order=true;}}
   record("12-3",JSON.stringify(G.grades));

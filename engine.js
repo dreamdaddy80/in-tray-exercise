@@ -323,11 +323,12 @@ function SC_CHOICE(s,opt={}){
     return `<button class="opt" aria-pressed="${sel===o.k&&!partial}" ${short||dis?"disabled":""} ${A(()=>{sel=o.k;partial=false;draw();})}><span class="k">${L}</span><span>${o.t}</span><span class="cost">${tag}</span>${dis?`<span class="why">${dis}</span>`:short?`<span class="why">${lackText(lack)}</span>`:""}</button>${short&&!dis?borrowLink(lack,draw)+partialLink(o,L,c):""}`}).join("")}</div>${KEY&&shown.some(o=>val(o.cost))?RSV_NOTE:""}
    <div class="foot"><span class="note">결정한 뒤에는 고칠 수 없습니다.</span><button class="btn main" ${sel?"":"disabled"} ${A(()=>{const c=s.common;if(!c){finish();return;}const nolist=false;if(nolist&&!c.noWhy){G.judge=(G.judge||0)+1;}step=c.noWhy||nolist?((c.noTell||O().noTell)?null:"tell"):"why";if(!step){finish();return;}draw();})}>결정</button></div></div>`);
   }else if(step==="why"){
-   const GL=gradeList(),PL=principleList(),pk=Array.isArray(why)?why:[];
+   const GL=gradeList(),PL=principleList(),TR=teamRules(),pk=Array.isArray(why)?why:[];
    const btn=(w,i,grp)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${pk.includes(w)}" ${A(()=>{const a=Array.isArray(why)?[...why]:[];const j=a.indexOf(w);if(j>=0)a.splice(j,1);else{if(a.length>=2)a.shift();a.push(w);}why=a;draw();})}><span class="k">${i+1}</span><span>${w}</span></button>`;
    shell(`<div class="pane"><div class="eyebrow">근거</div><h2>이 결정의 근거는 무엇입니까?</h2><p class="note">공개된 기준 가운데 최대 2개를 고르세요. 공개하지 않은 기준은 근거로 쓸 수 없습니다.</p>
-   <p><b>팀 운영 원칙</b> <span class="note">회사가 정한 원칙${G.written.notice&&G.written.notice.방식!=="none"?"과 4월 공지에 쓴 배분 기준":""}</span></p><div class="opts">${PL.map((w,i)=>btn(w,i,"운"))}</div>
-   ${GL.length?`<p><b>등급 기준</b> <span class="note">3월에 공개한 평가 기준</span></p><div class="opts">${GL.map((w,i)=>btn(w,i,"등"))}</div>`:`<p class="note">${has("pub_leaders")?"등급 기준은 리더들과만 맞춰서 근거로 쓸 수 없습니다.":"공개한 등급 기준이 아직 없습니다."}</p>`}
+   <p><b>팀 운영 원칙</b> <span class="note">회사가 정한 원칙${G.written.notice&&G.written.notice.방식!=="none"?"과 4월 공지에 쓴 배분 기준":""}</span></p><div class="opts">${PL.map((w,i)=>btn(w,i,"운")).join("")}</div>
+   ${TR.length?`<p><b>팀 규칙</b> <span class="note">올해 결정으로 만든 규칙</span></p><div class="opts">${TR.map((w,i)=>btn(w,i,"팀")).join("")}</div>`:""}
+   ${GL.length?`<p><b>등급 기준</b> <span class="note">3월에 공개한 평가 기준</span></p><div class="opts">${GL.map((w,i)=>btn(w,i,"등")).join("")}</div>`:`<p class="note">${has("pub_leaders")?"등급 기준은 리더들과만 맞춰서 근거로 쓸 수 없습니다.":"공개한 등급 기준이 아직 없습니다."}</p>`}
    <div class="foot"><span class="note num">${pk.length}/2</span><button class="btn main" ${pk.length?"":"disabled"} ${A(()=>{const r=judgeWhy(s,sel,pk);G.cons.push({scene:s.id,choice:sel,why:pk.join(" · "),fit:r.fit,half:has("rule_silent")&&pk.includes("AI 활용 효과")});consNote=r.note;if(has("rule_silent")&&pk.includes("AI 활용 효과")&&s.rel)applyFx(s.rel+"-1");if(s.common.noTell||O().noTell){finish();}else{step="tell";draw();}})}>다음</button></div></div>`);
   }else if(step==="tell"){
    const left=tellLeft();
@@ -584,13 +585,20 @@ function agendaHtml(m){const qEnd=m%3===0;const from=m+1,to=qEnd?m+3:Math.ceil(m
  return `<details class="ref" open><summary>${qEnd?q+"분기 안건 미리 보기":"이번 분기 남은 안건"}</summary><p class="note" style="margin-top:6px">${rows.join("<br>")}</p>${qEnd?"":`<p class="note">지금 남은 팀장 시간 ⏳${Math.max(0,G.time)}</p>`}</details>`;}
 
 /* 근거 체계: 운영 결정의 근거(팀 운영 원칙)와 사람 평가의 근거(등급 기준)를 나눈다 */
-const PRINCIPLE_BASE=["장애 없는 운영","절차와 보안 준수","고객과의 약속"];
-const G2P={"장애 예방 활동":["장애 없는 운영","장애·보안 위험"],"보안 준수":["절차와 보안 준수","장애·보안 위험"],"장애 복구 기여":["장애 없는 운영"],"AI 활용 효과":["효과"],"추가 과제 매출 기여":["효과","비용"],"고객 칭찬":["고객과의 약속"],"리더 종합 판단":["팀장 재량"],"동료 지원과 온보딩":[],"책임감 있는 근무":[]};
+const PRINCIPLE_BASE=["장애 없는 운영","절차와 보안 준수","고객과의 약속","사람 지속가능성","비용 책임"];
+/* 연말 등급 배분 가이드. 평가 화면과 AI 추천 카드가 모두 이 숫자를 쓴다 */
+const GRADE_GUIDE={S:1,A:3,B:6,C:1};
+/* 결정으로 만든 팀 규칙. 만들어진 뒤에는 근거 목록에 들어간다 */
+const TEAM_RULES=[{f:"credit_rule",n:"표지에 작성자와 기여자 적기"},{f:"rd_drafts_rule",n:"외부 AI에 넣기 전 마스킹하기"},{f:"award_form",n:"포상에 예방과 복구를 함께 적기"}];
+function teamRules(){return TEAM_RULES.filter(r=>G.f[r.f]).map(r=>r.n);}
+const G2P={"장애 예방 활동":["장애 없는 운영","장애·보안 위험"],"보안 준수":["절차와 보안 준수","장애·보안 위험"],"장애 복구 기여":["장애 없는 운영"],"AI 활용 효과":["효과"],"추가 과제 매출 기여":["효과","비용"],"고객 칭찬":["고객과의 약속"],"리더 종합 판단":["팀장 재량"],"동료 지원과 온보딩":["사람 지속가능성"],"책임감 있는 근무":[]};
 function gradeList(){return has("pub_leaders")?[]:(G.pub||[]);}
 function principleList(){const n=G.written.notice;const add=n&&n.방식!=="none"?(n.기준||[]):[];return PRINCIPLE_BASE.concat(add.filter(x=>!PRINCIPLE_BASE.includes(x)));}
 function fitSet(fitArr){const any=(fitArr||[]).some(x=>/^어느 공개/.test(x));const g=(fitArr||[]).filter(x=>!/^어느 공개/.test(x));const p=new Set();g.forEach(x=>(G2P[x]||[]).forEach(y=>p.add(y)));return{any,grade:g,prin:[...p]};}
-function judgeWhy(s,sel,pk){const f=fitSet(s.common.fit&&s.common.fit[sel]);const ok=pk.filter(w=>f.any||f.grade.includes(w)||f.prin.includes(w));const fit=ok.length>0;
- const avail=gradeList().concat(principleList());const link=f.grade.concat(f.prin).filter((x,i,a)=>a.indexOf(x)===i&&avail.includes(x));
+/* 같은 뜻의 기준은 서로 인정한다: 공지에 쓴 "비용"과 회사 원칙 "비용 책임", 공지에 쓴 "장애·보안 위험"과 운영·보안 원칙 */
+function fitHas(f,w){const all=f.grade.concat(f.prin);if(all.includes(w))return true;if(w==="비용")return all.includes("비용 책임");if(w==="비용 책임")return all.includes("비용");if(w==="장애·보안 위험")return all.includes("장애 없는 운영")||all.includes("절차와 보안 준수");return false;}
+function judgeWhy(s,sel,pk){const f=fitSet(s.common.fit&&s.common.fit[sel]);const ok=pk.filter(w=>f.any||fitHas(f,w));const fit=ok.length>0;
+ const avail=gradeList().concat(principleList(),teamRules());const link=avail.filter((x,i,a)=>a.indexOf(x)===i&&fitHas(f,x));
  const q=w=>`"${w}"`;const note=fit?`근거로 고른 ${ok.map(q).join(", ")}${jo(ok[ok.length-1],"과","와")} 맞는 결정으로 기록됐습니다.`+(ok.length<pk.length?` ${pk.filter(w=>!ok.includes(w)).map(q).join(", ")}${jo(pk.filter(w=>!ok.includes(w)).slice(-1)[0],"은","는")} 이 결정과 이어지지 않습니다.`:"")
   :`근거로 고른 ${pk.map(q).join(", ")}${jo(pk[pk.length-1],"으로","로","ro")}는 이 결정을 설명하기 어렵다고 기록됐습니다. `+(link.length?`이 결정과 이어지는 공개 기준: ${link.join(", ")}.`:f.any?"":`이 결정은 지금 공개된 어떤 기준과도 이어지지 않습니다.`);
  return{fit,note};}

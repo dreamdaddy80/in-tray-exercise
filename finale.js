@@ -99,6 +99,7 @@ function SC_FINALE(s){
    ${row("③ 결정",(n3?"세 기준 포함":"세 기준 미포함")+" · 공지문 사람 채점 대기"+(G.f.sec_breach_data||G.f.sec_hidden?" · 승인되지 않은 데이터 사용":""))}
    ${row("④ 판단",`일관성 ${pct==null?"-":pct+"%"} · 기준의 질 ${G.quality==null?"-":G.quality}${(pct||0)>=75&&(G.quality||0)<60?" · 일관성은 높지만 기준의 질은 낮음":""}${br.length?" · 절차·보안 기준 미달":""}`)}
    ${row("⑤ 조율",[["6-2","6월"],["9-6","9월"],["12-6","12월"]].map(([k,m])=>m+" 설명 "+(G.wrote[k]!=null?G.wrote[k]+"/9":"-")).join(" · ")+" · 사람 채점 대기")}
+   ${G.evalBlocked?row("3월 기준 선택 때문에 증빙이 막힌 사람",G.evalBlocked.length?(G.f.pub_leaders?`${G.evalBlocked.length}명 전원 · 기준을 구성원에게 공개하지 않음`:G.evalBlocked.map(x=>`${name(x.k)}${x.need.length?` (공개하지 않은 기준: ${x.need.join(", ")})`:""}`).join(" · ")):"없음"):""}
    ${row("⑥ 평가",`근거 충족 ${G.evalGood||0}/${G.evalN||11} · ${G.appeal0?("이의제기 0건 ("+(G.appeal0==="침묵"?"말하지 않은 사람이 있었음":"근거가 충족됨")+")"):"이의 면담 "+(G.appealOK?"기록 제시":"기록 미제시")}${G.f.kpi_order?" · KPI 순서대로":""}`)}
    </div>
    ${typeof verHtml==="function"?verHtml():""}
