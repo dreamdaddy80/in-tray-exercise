@@ -143,7 +143,7 @@ OP("8-1a","C").done=g=>g.f.hq_loan?"6개월 파견으로 바뀌었습니다. 복
 const cutCells=(g,a,b)=>{const n=g.f.hq_one?1:2;const seq=[a,b];for(let i=0;i<n;i++){let k=seq[i]||a;if(!g.cells[k])k=Object.keys(g.cells).sort((x,y)=>g.cells[y]-g.cells[x])[0];g.cells[k]=Math.max(0,g.cells[k]-1);}};
 const b81=S("8-1b");b81.rel="mfg";
 b81.ask="어느 칸에서 줄일까요?";b81.intro=[g=>(g.f.hq_one?"1칸":"2칸")+"이 줄어듭니다. 고른 칸이 비어 있으면 다음으로 많은 칸에서 줄입니다."];
-b81.skip=g=>{if(g.f.planb_alloc){const o=Object.keys(g.cells).sort((x,y)=>g.cells[y]-g.cells[x]);cutCells(g,o[0],o[1]);applyFx("안전+1");toast("4월에 정한 순서대로 칸을 줄였습니다.");return true;}return false;};
+b81.skip=g=>{if(g.f.planb_alloc){const o=(g.cutOrder&&g.cutOrder.length?g.cutOrder:Object.keys(g.cells).sort((x,y)=>g.cells[y]-g.cells[x]));cutCells(g,o[0],o[1]);applyFx("안전+1");toast("4월에 적어 둔 순서("+o.slice(0,2).join(", ")+"부터)대로 칸을 줄였습니다.");return true;}return false;};
 b81.ctxFn=g=>g.f.planb_alloc?{}:{addNeg:1,foe2:true};
 b81.xfx=[{c:g=>g.f.run_agenda,o:"A",fx:"mfg+1"},{c:g=>g.f.run_agenda,o:"B",fx:"mfg-2"}];
 OP("8-1b","A").onDone=g=>cutCells(g,"GROW","AI");OP("8-1b","B").onDone=g=>cutCells(g,"RUN","SEC");
@@ -483,3 +483,31 @@ const REF_TEXT={"1-3": "<b>Charan 외(2011), 리더십 파이프라인</b><br>�
  /* 대사에 이미 정보가 들어 있던 면담 */
  const info=(id,k,f)=>{const s=all.find(x=>x.id===id);const r=s&&(s.leaders.find(x=>x.k===k)||s.members.find(x=>x.k===k));if(r&&!r.fxInfo)r.fxInfo=f;};
  info("4-7","src","`know_mfg_mood`");info("4-7","prc","`know_oh_risk`");info("11-8","rd","`know_eval_rd`");info("11-8","prc","`know_eval_prc`");info("11-8","src",g=>g.f.tae_end_left?"":"`know_rift`");}
+
+/* ===== 제목의 내부 번호, 화자, 되풀이되는 문장 정리 ===== */
+{const all=CONTENT.flatMap(x=>[x,...(Array.isArray(x.cases)?x.cases:[])]);const F=id=>all.find(x=>x.id===id);
+ /* 익명 게시글 장면의 제목에 글쓴이 이름이 나오지 않게 한다 */
+ {const s=F("4-4");s.tag="익명 게시판";s.title="표지에는 다른 이름";}
+ const T2={"4-3":"강태식의 공개 반대","5-3":"오 사원의 금요일 저녁","5-5":"차 선임을 둘러싼 소문","6-3_1":"김 사원의 새벽 접속","6-3_2":"김 사원의 제안","6-5_1":"윤 책임과 교육","6-5_2":"윤 책임이 찾은 오류","7-3_1":"오 사원의 배포 순번","7-3_2":"오 사원이 찾은 원인",
+  "8-3_1":"차 선임의 고민","8-3_2":"차 선임의 결심","8-6_1":"한 선임의 발표","8-6_2":"한 선임의 지원서","9-1":"새벽 3시","9-3":"배 책임의 이동 신청","10-3_1":"윤 책임의 새 자리","10-3_2":"윤 책임의 상담","10-6_1":"오 사원의 부탁","10-6_2":"오 사원의 이동 신청",
+  "11-3_1":"한 선임의 다음 자리","11-3_2":"한 선임의 기록","11-4_1":"옥상의 강태식","11-4_2":"강태식의 빈자리","11-5_1":"김 사원의 초안","11-5_2":"김 사원의 휴직","11-7_1":"차 선임의 내년","11-7_2":"차 선임이 떠난 뒤","5-1a":"2분기 우선순위","5-1b":"2분기 우선순위","8-1a":"본사 차출","8-1b":"본사 차출","8-1c":"본사 차출","11-1a":"내년 계획","11-1b":"내년 계획"};
+ for(const id in T2){const s=F(id);if(s&&typeof s.title!=="function")s.title=T2[id];}
+ /* 화자 없는 대사에 화자를 붙인다 */
+ const toSay=(id,who,idx)=>{const s=F(id);if(!s||!Array.isArray(s.intro))return;const t=s.intro[idx];if(typeof t!=="string")return;s.intro.splice(idx,1);const line=[who,t.replace(/^["“]|["”]$/g,"")];const s0=s.say;s.say=typeof s0==="function"?g=>[line].concat(s0(g)||[]):[line].concat(s0||[]);};
+ toSay("5-5","rd",0);toSay("5-3","oh",1);toSay("7-3_1","prc",0);toSay("7-3_2","oh",1);toSay("11-4_1","mfg",1);
+ {const s=F("4-5");if(s&&typeof s.intro[1]==="string")s.intro[1]="임원: "+s.intro[1];}
+ /* 네 사람이 앉는 중재 */
+ F("10-4").n=4;
+ /* 분기 설문 뒤의 결과 문장을 분기마다 다르게 */
+ const PA=["고칠 항목에서 빠진 쪽이 \"저희는요?\"라고 묻습니다.","\"그 한 가지는 누가 골랐나요\"라는 댓글이 달렸습니다.","고르지 않은 문항을 낮게 준 사람들이 조용해졌습니다.","\"작년에도 한 가지만 고친다고 했죠\"라는 말이 나왔습니다."];
+ const PB=["모듈마다 대응이 달라지고 있습니다.","한 모듈은 회의를 열었고, 다른 모듈은 결과를 돌리지도 않았습니다.","리더마다 설문을 읽는 눈이 달랐습니다.","모듈별 대응 계획 다섯 장이 서로 맞지 않습니다."];
+ ["3-9","6-7","9-7","12-1"].forEach((id,i)=>{const s=F(id);if(!s)return;const a=s.options.find(o=>(o.tw||[]).some(t=>/저희는요/.test(String(t.t))));if(a)a.tw.find(t=>/저희는요/.test(String(t.t))).t=PA[i];const b=s.options.find(o=>(o.tw||[]).some(t=>/대응이 달라지고/.test(String(t.t))));if(b)b.tw.find(t=>/대응이 달라지고/.test(String(t.t))).t=PB[i];});
+ /* 다른 장면과 같은 문장 */
+ {const o=OP("7-4_1","B");const t=o&&(o.tw||[]).find(x=>/본인 대기를 늘렸/.test(String(x.t)));if(t)t.t="강태식이 2주 동안 야간을 직접 섰습니다.";
+  const c=OP("9-1","C");const t2=c&&(c.tw||[]).find(x=>/아무도 묻지 않았/.test(String(x.t)));if(t2)t2.t="아침 승인은 조용히 처리됐습니다. 더 묻는 사람은 없었습니다.";}
+ /* 6. 6월에 적어 둔 협상선의 값을 9월 클레임에서 쓴다 */
+ {const s=S("9-4");const c=s.conds.find(x=>/협상선이 있습니다/.test(String(x.t)));if(c)c.t=g=>"6월에 적어 둔 협상선이 있습니다. 운영비 인하는 "+(g.planbFloor==null?"정한 범위":g.planbFloor+"%")+"까지입니다."+(g.planbFloor===0?" 운영비를 깎아 주는 안은 이 선을 넘습니다.":"");
+  const b=OP("9-4","B");b.tagText=g=>g.f.planb_contract&&g.planbFloor===0?"적어 둔 협상선 밖":"";
+  s.xfx=(s.xfx||[]).concat([{c:g=>g.f.planb_contract&&g.planbFloor===0,o:"B",fx:"재무-1 안전-1"},{c:g=>g.f.planb_contract&&g.planbFloor>=3,o:"B",fx:"F사만족+1"}]);
+  const e0=s.enter;s.enter=g=>val(e0)+(g.f.planb_contract&&g.planbFloor===5?" F사만족+1":"");}
+}

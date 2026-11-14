@@ -8,17 +8,18 @@ function evid(a,side){const seen=[];G.sig.filter(s=>s.a===a&&s.s===side&&!s.forc
 /* 4-2 여력·토큰 배분과 공지문 (원고 03-4) */
 function SC_ALLOC(s){
  const c={RUN:3,AI:3,GROW:2,SEC:2};const L0={RUN:"RUN 기존 운영",AI:"AI 전환",GROW:"GROW 추가 제안",SEC:"SEC 예방·보안"};
- const total=()=>c.RUN+c.AI+c.GROW+c.SEC;
+ let hold=0;const total=()=>c.RUN+c.AI+c.GROW+c.SEC+hold;
  const d1=()=>{paint("");
   shell(`<div class="pane"><div class="eyebrow">4월 · 여력 배분</div><h2>팀 여력 10칸 나누기</h2><div class="prose"><p>AI 전환으로 생긴 여력을 처음으로 나눕니다.</p></div>
   <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px"><b>March(1991), 탐색과 활용</b><br>지금 하던 일을 더 잘하는 것과 새로운 일을 시도하는 것은 같은 사람, 같은 시간을 두고 다툽니다. 무엇을 하기로 했는지만큼, 무엇을 하지 않기로 했는지가 중요합니다.<br><b>생각해 볼 질문:</b> 이번 분기에 하지 않기로 한 일은 무엇입니까?</p></details>
   <div class="cond"><span>선임 때 고른 우선순위: ${G.prio.join(", ")}</span>${has("f_pilot")?"<span>F사 시범 과제로 GROW 1칸이 이미 잡혀 있습니다.</span>":""}${has("saw_gap")?"<span>재무팀 집계: 실제 확인된 절감은 주 38시간.</span>":""}${has("token_audit")?"<span>1분기 토큰 사용은 R&D와 마케팅이 전체의 81%.</span>":""}${has("night_wait")?"<span>2월에 야간 대기를 4월로 미뤘습니다.</span>":""}</div>
-  <div class="table">${Object.keys(c).map(k=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><span style="font-size:14.5px;color:var(--ink)">${L0[k]}</span><span class="btns" style="align-items:center">${BTN(()=>{if(c[k]>0){c[k]--;d1();}},"−")}<b>${c[k]}</b>${BTN(()=>{if(total()<10){c[k]++;d1();}},"+")}</span></div>`).join("")}</div>
-  <div class="foot"><span class="note num">${total()}/10칸</span><button class="btn main" ${total()===10?"":"disabled"} ${A(done1)}>배분 확정</button></div></div>`);
+  <div class="table">${Object.keys(c).map(k=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><span style="font-size:14.5px;color:var(--ink)">${L0[k]}</span><span class="btns" style="align-items:center">${BTN(()=>{if(c[k]>0){c[k]--;d1();}},"−")}<b>${c[k]}</b>${BTN(()=>{if(total()<10){c[k]++;d1();}},"+")}</span></div>`).join("")}<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><span style="font-size:14.5px;color:var(--ink)">보류 <span class="note">지금은 나누지 않고 남겨 둡니다. 6월 재배분 때 나눌 수 있습니다.</span></span><span class="btns" style="align-items:center">${BTN(()=>{if(hold>0){hold--;d1();}},"−")}<b>${hold}</b>${BTN(()=>{if(total()<10&&hold<4){hold++;d1();}},"+")}</span></div></div>
+  <div class="foot"><span class="note num">${total()}/10칸${hold?` · 보류 ${hold}칸`:""}</span><button class="btn main" ${total()===10?"":"disabled"} ${A(done1)}>배분 확정</button></div></div>`);
  };
  const done1=()=>{
   const live={};const hi={RUN:"mfg+2 src+1",AI:"rd+2",GROW:"mkt+2",SEC:"prc+2 src+1"},lo={RUN:"mfg-4 src-2",AI:"rd-4",GROW:"mkt-3",SEC:"prc-3"};
   Object.keys(c).forEach(k=>{if(c[k]>=3)applyFx(hi[k],{live});else if(c[k]<=1)applyFx(lo[k],{live});});
+  G.hold=hold;if(hold){applySig("③L",1,"4-2","확인된 만큼만 나눔");applyFx("재무+1 rd-1 mkt-1",{live});}
   G.cells={...c};if(has("f_pilot"))G.cells.GROW=Math.max(0,G.cells.GROW-1);
   if(has("night_wait")&&c.RUN<3)applyFx("안전-3");
   if(c.GROW>=5)applySig("③P",1,"4-2","GROW 5칸 이상");
@@ -46,6 +47,12 @@ function SC_ALLOC(s){
   <button class="opt" ${G.time<1?"disabled":""} ${A(()=>send("num"))}><span class="k">·</span><span>배분 숫자만 알린다</span><span class="cost">⏳1</span>${G.time<1?`<span class="why">${lackText(1-G.time)}</span>`:""}</button>${G.time<1?borrowLink(1-G.time,()=>{txt=$("nt").value;d3();}):""}
   <button class="opt" ${A(()=>send("none"))}><span class="k">·</span><span>보내지 않는다</span><span class="cost">0</span></button></div>${nwarn?`<div class="happen"><span class="label">보내기 전에</span>${nwarn}</div>`:""}</div>`);
  };
+ /* 줄일 칸의 순서를 실제로 고른다. 8월 본사 차출 때 이 순서대로 줄인다 */
+ const CELLN={RUN:"운영(RUN)",AI:"AI 전환(AI)",GROW:"추가 제안(GROW)",SEC:"예방·보안(SEC)"};
+ const dOrder=ord=>{paint("");
+  shell(`<div class="pane"><div class="eyebrow">4월 · 재검토 조건</div><h2>여력이 줄면 어느 칸부터 줄일까요?</h2><p class="note">먼저 줄일 칸부터 차례로 누르세요. 8월에 실제로 여력이 줄면 이 순서를 씁니다.</p>
+  <div class="opts">${Object.keys(CELLN).map(k=>{const i=ord.indexOf(k);return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${i>=0}" ${A(()=>{const o=ord.slice();if(i>=0)o.splice(i,1);else o.push(k);dOrder(o);})}><span class="k">${i>=0?i+1:""}</span><span>${CELLN[k]} · 지금 ${G.cells[k]}칸</span></button>`;}).join("")}</div>
+  <div class="foot"><span class="note num">${ord.length}/4</span><span class="btns"><button class="btn main" ${ord.length===4?"":"disabled"} ${A(()=>{G.time-=.5;G.tu.all+=.5;G.cutOrder=ord.slice();applyFx("`planb_alloc`");record("4-2순서",ord.join(">"));next();})}>이 순서로 적어 둔다</button>${BTN(next,"정하지 않는다")}</span></div></div>`);};
  const send=m=>{
   txt=$("nt").value;const three=["효과","비용","장애·보안 위험"].every(x=>crit.includes(x));
   G.written.notice={기준:[...crit],글:m==="none"?"미공지":txt,방식:m};G.goal3={three,sent:m==="full"};
@@ -60,7 +67,7 @@ function SC_ALLOC(s){
    if(m!=="none"&&crit.length&&tb.length&&!tb.some(x=>crit.includes(x))){G.f.notice_gap=true;G.cons.push({scene:"4-2",choice:"공지",why:crit.join("·"),fit:false});line=(line?line+"</p><p>":"")+`공지에는 "${crit.join(", ")}"(으)로 나눴다고 썼습니다. 토큰은 ${tn} 나눴습니다. 두 내용이 함께 팀에 남았습니다.`;}}
   paint("");
   shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>배분을 마쳤습니다</h2><div class="prose"><p>${m==="full"?"공지문을 팀 전체에 보냈습니다.":m==="num"?"배분 숫자를 알렸습니다.":"따로 알리지 않았습니다."}</p>${line?`<p>${line}</p>`:""}</div>
-  <div class="ask"><p>팀 여력이 갑자기 줄면 어느 칸부터 줄일지, 순서를 미리 정해 둘까요?</p><div class="btns"><button class="btn" ${G.time<.5?"disabled":""} ${A(()=>{G.time-=.5;G.tu.all+=.5;applyFx("`planb_alloc`");next();})}>순서를 정한다 ⏳0.5</button>${BTN(next,"정하지 않는다")}</div></div></div>`,live);
+  <div class="ask"><p>팀 여력이 갑자기 줄면 어느 칸부터 줄일지, 순서를 미리 정해 둘까요?</p><div class="btns"><button class="btn" ${G.time<.5?"disabled":""} ${A(()=>dOrder([]))}>순서를 정한다 ⏳0.5</button>${BTN(next,"정하지 않는다")}</div></div></div>`,live);
  };
  d1();
 }
@@ -83,13 +90,13 @@ function wrForm(x){const ss=wrSentences(x),pred=ss.filter(v=>/(다|요|죠|까|�
 function wrNext(x){for(const v of wrSentences(x)){let rest=v,m;WR_PAST.lastIndex=0;while((m=WR_PAST.exec(v)))rest=v.slice(m.index+m[0].length);const t=rest.match(WR_TIME)||rest.match(WR_ASK);if(t)return t[0];}return null;}
 /* AI 초안과 겹치는 문장의 비율 */
 function wrDraftOverlap(x,d){const ss=wrSentences(x),ds=wrSentences(d);if(!ss.length||!ds.length)return 0;const hit=ss.filter(v=>ds.some(w=>jacc(v,w)>=.8)).length;return Math.max(hit/ss.length,jacc(x,d)>=.7?1:0);}
-function wrScore(x,t,why,d){const m=[],hitw=[];let n=0;
+function wrScore(x,t,why,d,noOv){const m=[],hitw=[];let n=0;
  const cw=[...KW.crit,...(why?[why]:[]),...principleList()].find(w=>x.includes(w))||(x.match(KW.why)||[])[0];if(cw){n++;hitw.push(`기준 "${cw}"`);}else m.push("무엇을 기준으로 정했는지");
  const qw=(val(t.ans)||[]).find(w=>x.includes(w));if(qw){n++;hitw.push(`질문에 답한 말 "${qw}"`);}else m.push(`이 사람의 질문("${val(t.q)}")에 대한 답`);
  const nx=wrNext(x);if(nx){n++;hitw.push(`다음 단계 "${nx}"`);}else m.push("앞으로 언제 무엇을 하는지");
  const form=wrForm(x),ov=wrDraftOverlap(x,d),flags=[];
  if(form.bad.length){n=0;flags.push("문장으로 쓰지 않았습니다 ("+form.bad.join(", ")+"). 0점으로 기록합니다");}
- else{if(ov>=.6){n=Math.max(0,n-1);flags.push("초안을 거의 그대로 보냈습니다 (1점 감점)");}if(form.long)flags.push("3~5문장보다 깁니다");}
+ else{if(ov>=.6&&!noOv){n=Math.max(0,n-1);flags.push("초안을 거의 그대로 보냈습니다 (1점 감점)");}if(form.long)flags.push("3~5문장보다 깁니다");}
  return{n,hitw,m,flags,ov:Math.round(ov*100),form};}
 function jacc(a,b){const g=t=>{const s=new Set();t=t.replace(/\s/g,"");for(let i=0;i<t.length-1;i++)s.add(t.slice(i,i+2));return s;};const x=g(a),y=g(b);if(!x.size||!y.size)return 0;let n=0;x.forEach(v=>{if(y.has(v))n++;});return n/(x.size+y.size-n);}
 function SC_WRITE(s){
@@ -98,28 +105,32 @@ function SC_WRITE(s){
  const d1=()=>{paint("");
   shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>${val(s.title)}</h2><div class="prose">${para(s.intro||[])}</div><p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}<div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const f=fitSet(val(s.fit)||[]);const fit=f.any||f.grade.includes(why)||f.prin.includes(why);G.cons.push({scene:s.id,choice:"글",why,fit});}d2();})}>쓰기 시작</button></div></div>`);
  };
+ /* AI 초안은 받는 사람마다 다르고, 그럴듯하지만 고쳐야 할 곳이 하나씩 섞여 있다 */
+ const dOf=t=>{const ds=val(s.drafts);return (ds&&ds[t.k]&&ds[t.k].t)||val(s.draft);};
+ const trapLeft=t=>{const ds=val(s.drafts);const tr=ds&&ds[t.k]&&ds[t.k].trap;return !!(tr&&tr.test(texts[t.k]));};
  const grab=()=>s.targets.forEach(t=>{const e=$("w"+t.k);if(e)texts[t.k]=e.value;});
  const d2=()=>{paint("");
   const cl=(s.conds||[]).filter(c=>c.c(G)).map(c=>`<span>${c.t}</span>`).join("");
   const can=(G.token||0)>=5&&!draftUsed;
   shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>세 사람에게 각각 3~5문장으로 쓰세요</h2><p class="note">⏳은 들지 않습니다. 보낸 뒤에는 고칠 수 없습니다.</p>${cl?`<div class="cond">${cl}</div>`:""}
   ${s.targets.map(t=>`<div class="task"><b>${val(t.n)}</b><span class="voice" style="font-size:15px">${val(t.q)}</span><label class="label" for="w${t.k}">${t.form}</label><textarea id="w${t.k}" style="min-height:110px">${texts[t.k]}</textarea></div>`).join("")}
-  <div class="foot"><button class="btn" ${can?"":"disabled"} ${A(()=>{grab();draftUsed=true;G.token-=5;G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+5;G.f.ai_draft=true;const d=val(s.draft);s.targets.forEach(t=>texts[t.k]=d);d2();})}>승인 도구로 초안 받기 💳5</button><button class="btn main" ${A(send)}>세 편 보내기</button></div>${warn?`<div class="happen"><span class="label">보내기 전에</span>${warn}</div>`:""}</div>`);
+  <div class="foot"><button class="btn" ${can?"":"disabled"} ${A(()=>{grab();draftUsed=true;G.token-=5;G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+5;G.f.ai_draft=true;s.targets.forEach(t=>texts[t.k]=dOf(t));d2();})}>승인 도구로 초안 받기 💳5</button><button class="btn main" ${A(send)}>세 편 보내기</button></div>${warn?`<div class="happen"><span class="label">보내기 전에</span>${warn}</div>`:""}</div>`);
  };
  let warn="";
  const send=()=>{grab();
   const badT=s.targets.filter(t=>texts[t.k].trim()&&!readable(texts[t.k],12).ok);if(badT.length){warn=badT.map(t=>`${val(t.n)}에게 쓴 글: ${readable(texts[t.k],12).why}`).join("<br>");d2();return;}warn="";
   const d=val(s.draft),res={},live={},flag={},over={};let sum=0,missing=0,miss={};
   s.targets.forEach(t=>{const x=texts[t.k].trim();if(!x){missing++;res[t.k]=-1;return;}
-   const r=wrScore(x,t,why,d);miss[t.k]=r.m;flag[t.k]=r.flags;over[val(t.n)]=r.ov;(G.wroteHit=G.wroteHit||{})[s.id+t.k]=r.hitw;res[t.k]=r.n;sum+=r.n;});
+   const r=wrScore(x,t,why,dOf(t),draftUsed&&!!val(s.drafts));if(draftUsed&&val(s.drafts)&&!r.form.bad.length){if(trapLeft(t)){r.n=Math.max(0,r.n-1);r.flags.push("AI 초안의 틀린 내용이 그대로 남았습니다: "+val(s.drafts)[t.k].why+" (1점 감점)");}else if(r.ov>=60)r.flags.push("AI 초안에서 틀린 곳을 고쳐 보냈습니다");}miss[t.k]=r.m;flag[t.k]=r.flags;over[val(t.n)]=r.ov;(G.wroteHit=G.wroteHit||{})[s.id+t.k]=r.hitw;res[t.k]=r.n;sum+=r.n;});
   const v=s.targets.filter(t=>texts[t.k].trim());let copy=false;for(let i=0;i<v.length;i++)for(let j=i+1;j<v.length;j++)if(jacc(texts[v[i].k],texts[v[j].k])>=.7)copy=true;
-  G.written[s.id]={근거:why,글:{...texts},자동참고:res,초안미수정:s.targets.filter(t=>texts[t.k].trim()===d).map(t=>val(t.n)),초안겹침:over,형식:Object.fromEntries(s.targets.filter(t=>(flag[t.k]||[]).length).map(t=>[val(t.n),flag[t.k]]))};
+  G.written[s.id]={근거:why,글:{...texts},자동참고:res,초안미수정:s.targets.filter(t=>texts[t.k].trim()===dOf(t)).map(t=>val(t.n)),초안받음:draftUsed,초안오류남음:draftUsed?s.targets.filter(t=>trapLeft(t)).map(t=>val(t.n)):[],초안겹침:over,형식:Object.fromEntries(s.targets.filter(t=>(flag[t.k]||[]).length).map(t=>[val(t.n),flag[t.k]]))};
   if(!missing&&sum>=6)applySig("④L",1,s.id,"세 편");if(missing){applySig("④P",1,s.id,"미공지");applyFx("안전-2 소문규칙",{live,rel:"rd"});}
   G.wrote[s.id]=sum;(G.wrotePieces=G.wrotePieces||{})[s.id]=Object.values(res);
   const lines=[];
   s.targets.forEach(t=>{const n=res[t.k];if(n<0){lines.push(`${val(t.n)}: 미공지로 기록했습니다.`);return;}const i=n>=3?0:n===2?1:2;lines.push(`${val(t.n)}${/^[^"“:]{1,12}: /.test(t.reply[i][0])?" · ":": "}${t.reply[i][0]}`);{const h=(G.wroteHit||{})[s.id+t.k]||[];lines.push(`<span class="note">└ 자동 참고 채점 ${n}/3${h.length?" · 찾은 것: "+h.join(", "):""}${miss[t.k]&&miss[t.k].length?" · 없던 것: "+miss[t.k].join(", "):""}${(flag[t.k]||[]).length?" · "+flag[t.k].join(" · "):""}. 낱말을 찾는 참고 점수이며, 최종 평가는 사람이 합니다.</span>`);}applyFx(t.reply[i][1],{live});});
-  if(s.bad6&&texts.f.trim()===d&&d.includes("140"))applyFx("B6+10");
-  if(copy){G.f.copy_voice=true;applyFx("F사만족-2 안전-2",{live});lines.push("유 과장: \"사내 공지가 잘못 온 줄 알았습니다.\"");lines.push("게시판: \"고객한테 보낸 메일이네.\"");}
+  if(draftUsed){const tg=s.targets.filter(t=>texts[t.k].trim());(G.draftLog=G.draftLog||{})[s.id]={n:tg.length,left:tg.filter(t=>trapLeft(t)).length};}
+  if(s.bad6&&texts.f.includes("140시간")&&draftUsed)applyFx("B6+10");
+  if(copy){G.f.copy_voice=true;applyFx("F사만족-2 안전-2",{live});lines.push("유 과장: \""+vary("copyF",["사내 공지가 잘못 온 줄 알았습니다.","저희한테 온 메일이 맞나요? 팀 공지 같아서요.","받는 사람 이름만 바꾸신 것 같습니다."])+"\"");lines.push("게시판: \""+vary("copyT",["고객한테 보낸 메일이네.","위에 낸 보고서를 그대로 붙였네요.","이 글, 우리한테 쓴 게 아닌데요."])+"\"");}
   let leak=false;const bk=s.targets.find(t=>t.k==="b"),tk=s.targets.find(t=>t.k==="t");
   if(s.id==="6-2"&&Math.random()<.25&&texts.b.trim()){leak=true;G.written[s.id].유출="사업부장 글이 팀 메신저에 돌았음";}
   if(s.after)s.after(G,texts,live,lines);
@@ -147,14 +158,14 @@ function SC_REVIEW(s){
    ${[["a","그때 내가 맞다고 믿은 것"],["b","지금 다시 보니 달라 보이는 것"],["c","하반기에 실제로 바꿀 행동 하나"]].map(([k,t])=>`<label class="label" for="ag${k}">${t} (20자 이상)</label><textarea id="ag${k}"></textarea>`).join("")}
    <div class="foot"><span></span><button class="btn main" id="ago" disabled ${A(()=>{G.written.again={결정:$("agp").value,믿음:$("aga").value,달라짐:$("agb").value,행동:$("agc").value};page++;draw();})}>다음</button></div></div>`);
    const up=()=>{$("ago").disabled=!ok();};["a","b","c"].forEach(k=>$("ag"+k).oninput=up);$("agp").onchange=up;}
-  else if(page===5){const sum=add.RUN+add.AI+add.GROW+add.SEC;const free=2+moves-sum;
+  else if(page===5){const sum=add.RUN+add.AI+add.GROW+add.SEC;const free=2+(G.hold||0)+moves-sum;
    shell(`<div class="pane"><div class="eyebrow">반기 회고</div><h2>하반기 전략</h2><p><b>성적표 우선순위</b> <span class="note">바꾸면 결산에 "6월에 우선순위를 바꿈"으로 표시됩니다.</span></p><div class="btns">${SCORES.map(k=>BTN(()=>{const i=G.prio.indexOf(k);if(i>=0){if(G.prio.length>1){G.prio.splice(i,1);G.f.prio_changed=true;}}else if(G.prio.length<2){G.prio.push(k);G.f.prio_changed=true;}draw();},k,G.prio.includes(k)?"main":"")).join("")}</div>
-   <p><b>여력 다시 나누기</b> <span class="note">2칸이 새로 생겼고, 기존에서 최대 2칸을 옮길 수 있습니다.</span></p>
+   <p><b>여력 다시 나누기</b> <span class="note">2칸이 새로 생겼고, 기존에서 최대 2칸을 옮길 수 있습니다.${G.hold?` 4월에 보류한 ${G.hold}칸도 지금 나눕니다.`:""}</span></p>
    <div class="cond">${has("c_4-3_C")?'<span>강태식: "6월 재배분 때 듣겠다고 하셨죠."</span>':""}${has("ct_more")?"<span>6월 계약의 GROW 2칸이 이미 쓰이고 있습니다.</span>":""}${has("q2_prevent")||has("pm_root")?"<span>점검표 축소 작업이 SEC 칸을 쓰고 있습니다.</span>":""}${G.over?`<span>지난 분기에 초과 부하가 ${G.over}회 있었습니다.</span>`:""}</div>
    <div class="table">${Object.keys(add).map(k=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><span style="font-size:14.5px;color:var(--ink)">${k}</span><span class="btns" style="align-items:center">${BTN(()=>{if(G.cells[k]+add[k]>0){if(add[k]<=0&&moves>=2)return;if(add[k]<=0)moves++;add[k]--;draw();}},"−")}<b>${G.cells[k]+add[k]}</b>${BTN(()=>{if(free>0){if(add[k]<0)moves--;add[k]++;draw();}},"+")}</span></div>`).join("")}</div>
    <div class="foot"><span class="note num">남은 칸 ${free} · 이동 ${moves}/2</span><button class="btn main" ${free===0?"":"disabled"} ${A(()=>{const live={};const hi={RUN:"mfg+2 src+1",AI:"rd+2",GROW:"mkt+2",SEC:"prc+2 src+1"},lo={RUN:"mfg-4 src-2",AI:"rd-4",GROW:"mkt-3",SEC:"prc-3"};
      Object.keys(add).forEach(k=>{G.cells[k]+=add[k];if(add[k]){if(G.cells[k]>=3)applyFx(hi[k],{live});else if(G.cells[k]<=1)applyFx(lo[k],{live});}});
-     if(G.cells.GROW>=5)applySig("③P",1,"R-6","GROW 5칸 이상");if(moves>=2)applyFx("큰변화1");record("R-6",JSON.stringify(G.cells));
+     if(G.cells.GROW>=5)applySig("③P",1,"R-6","GROW 5칸 이상");if(moves>=2)applyFx("큰변화1");record("R-6",JSON.stringify(G.cells));G.hold=0;
      if(has("c_4-3_C")){if(add.RUN>0)applyFx("mfg+3",{live});else applyFx("mfg-3 안전-1",{live});}
      drawSide(live);page=moves?6:7;draw();})}>확정</button></div></div>`);}
   else if(page===6)shell(`<div class="pane"><div class="eyebrow">반기 회고</div><h2>바뀐 배분을 어떻게 알릴까요?</h2><p class="note">⏳은 3분기 몫에서 씁니다.</p><div class="opts"><button class="opt" ${A(()=>{G.time-=1;G.tu.all+=1;G.tu.exp+=1;applyFx("안전+1 `alloc_renotice`");applySig("④L",1,"R-6","재공지");page=7;draw();})}><span class="k">·</span><span>옮긴 칸과 이유를 알린다</span><span class="cost">⏳1</span></button><button class="opt" ${A(()=>{applyFx("안전-2 소문규칙",{rel:"rd"});applySig("④P",1,"R-6","숫자만");page=7;draw();})}><span class="k">·</span><span>숫자만 고쳐 둔다</span><span class="cost">0</span></button></div></div>`);
@@ -312,6 +323,20 @@ function SC_EVAL(s){
  draw();
 }
 
+/* 이의 면담의 첫 대사: 그 사람의 1년을 따라 달라진다 */
+function appealLine(k,g){const f=G.f,gr=(g&&g.등급)||"";const L={
+ rd:()=>f.cha_left?"설계자를 보내고도 과제를 끝냈습니다. 그게 이 등급입니까.":"실험 건수도 데모도 채웠습니다. 무엇이 모자랐는지 듣고 싶습니다.",
+ src:()=>f.case_src?"입원한 2주가 등급에 들어간 겁니까. 그게 아니라면 무엇입니까.":"감사 대응을 제가 다 했습니다. 그 기록은 어디에 들어갔습니까.",
+ mfg:()=>f.inc_proc||f.inc_direct?"9월 새벽에 라인을 살린 사람들입니다. 이 등급의 이유를 듣고 싶습니다.":"야간을 제일 많이 선 모듈입니다. 무엇을 보고 정하셨습니까.",
+ prc:()=>f.pub_prevent?"예방이 기준이라고 하셨죠. 8개월 무사고가 이 등급입니까.":"사고를 막은 일은 어디에 적혔습니까. 이유를 듣고 싶어요.",
+ mkt:()=>f.win_mkt||f.win_credit||f.win_check?"올해 가장 큰 수주를 했습니다. 그런데 왜 이 등급이죠?":"고객 앞에 선 건 저였습니다. 무엇이 빠졌는지 알고 싶어요.",
+ kim:()=>f.kim_sick?"아팠던 게 등급에 들어간 건가요. 그게 아니면 뭔지 알고 싶어요.":"야간을 제일 많이 섰는데요. 그건 기록이 아닌가요.",
+ yoon:()=>f.yoon_validator||f.auto_staged?"검수 규칙을 쓴 사람입니다. 그 일은 등급에 없는 겁니까.":"8년 치 검토표를 넘겼습니다. 넘기고 나니 이 등급이네요.",
+ oh:()=>f.oh_fix||f.oh_back?"5월 뒤로 다시 배포를 맡았습니다. 그래도 5월로 정해진 건가요.":"5월 일 때문인가요. 그렇다면 그렇다고 듣고 싶어요.",
+ han:()=>f.han_present||f.case_doer?"발표도 했고 표지에 이름도 있었습니다. 그런데 왜 이 등급인가요.":"제안서 본문을 제가 썼습니다. 그게 어디에 적혀 있나요.",
+ cha:()=>f.cha_design||f.cha_end_lead?"설계를 맡아 끝냈습니다. 이유를 듣고 싶습니다.":"실험 건수는 제가 제일 많습니다. 무엇을 보신 건가요.",
+ anon:()=>"다들 이의를 낸다기에 저도 냅니다. 제 등급은 무엇으로 정해졌습니까."};
+ return (L[k]?L[k]():"제가 왜 이 등급인지 듣고 싶습니다.")+(gr==="C"?" C라는 글자를 보고 한참 앉아 있었습니다.":"");}
 /* 이의제기와 배 책임 결말 (원고 03-12 12-4) */
 function SC_APPEAL(s){
  const exp={"초과":"A","달성 (전 항목)":"A"};const rank={S:0,A:1,B:2,C:3};
@@ -327,10 +352,10 @@ function SC_APPEAL(s){
  const step=i=>{
   if(i>=cands.length){finishBae();return;}
   const e=cands[i],k=e.k,g=G.grades[k];
-  SC_CHOICE({id:"12-4"+k,tag:"이의제기",when:"12월",title:name(k)+"의 이의제기",meet:true,say:[[k,"제가 왜 이 등급인지 듣고 싶습니다."]],options:[
-   {k:"A",cost:1,t:"등급 카드를 펴고, 고른 기록과 합의서 항목을 하나씩 짚어 가면서 말해 준다.",dis:()=>g&&g.근거충족?"":"제시할 기록이 부족합니다.",done:"기록과 합의서 항목을 하나씩 짚었습니다.",fx:"안전+2",sig:"②L",tw:[{p:30,t:"\"그 기준이면 그렇네요. 그래도 아쉬워요.\""},{p:20,t:"\"기록에 없는 일이 있습니다.\" 사실을 하나 더 가져왔습니다.",fx:"사람+1"}]},
-   {k:"B",cost:1,t:"같은 등급의 다른 동료와 견주어, 올해 상대적으로 어디쯤 있었는지 말해 준다.",done:"동료들과 견주어 설명했습니다.",fx:"안전-3 "+(LD[k]?k:PP[k].lead)+"-2",sig:"②P",onDone:()=>{G.appealOK=false;},tw:[{p:50,t:"\"다른 사람보다 못했다는 말이네요\"가 돌았습니다.",fx:"소문1"},{p:20,t:"납득하고 돌아갔습니다.",fx:"안전+1"}]},
-   {k:"C",cost:1,t:"올해는 등급을 그대로 두되, 내년에 먼저 챙기겠다고 하고 사정을 들어 준다.",done:"내년에 먼저 챙기겠다고 했습니다.",fx:"안전-1 사람+1",sig:"④P",onDone:(G2,hit)=>{G.appealOK=false;if(hit&&hit.pr)addPromise({id:"P9"+k,text:name(k)+"의 내년 평가를 먼저 챙김",to:name(k),due:"내년"});},tw:[{p:40,pr:1,t:"\"내년이요?\" 내년 약속이 장부에 남았습니다."},{p:30,t:"들어 주는 것으로 풀렸습니다.",fx:"안전+2"}]},
+  SC_CHOICE({id:"12-4"+k,tag:"이의제기",when:"12월",title:name(k)+"의 이의제기",meet:true,say:[[k,appealLine(k,g)]],options:[
+   {k:"A",cost:1,t:"등급 카드를 펴고, 고른 기록과 합의서 항목을 하나씩 짚어 가면서 말해 준다.",dis:()=>g&&g.근거충족?"":"제시할 기록이 부족합니다.",done:"기록과 합의서 항목을 하나씩 짚었습니다.",fx:"안전+2",sig:"②L",tw:[{p:30,t:vary("apA",["\"그 기준이면 그렇네요. 그래도 아쉬워요.\"","\"항목마다 짚어 주시니 할 말은 없네요.\"","\"기록이 그렇다면 받아들이겠습니다.\"","\"내년에는 그 항목부터 챙기겠습니다.\"","\"설명은 이해했습니다. 마음은 조금 걸리네요.\""])},{p:20,t:vary("apA2",["\"기록에 없는 일이 있습니다.\" 사실을 하나 더 가져왔습니다.","빠진 기록이 있다며 메일 두 통을 보여 줬습니다.","\"이 건은 적히지 않았더라고요.\" 작업 이력을 가져왔습니다.","동료가 써 준 확인 메모를 내밀었습니다.","\"그날 일은 여기 있습니다.\" 회의록을 펼쳤습니다."]),fx:"사람+1"}]},
+   {k:"B",cost:1,t:"같은 등급의 다른 동료와 견주어, 올해 상대적으로 어디쯤 있었는지 말해 준다.",done:"동료들과 견주어 설명했습니다.",fx:"안전-3 "+(LD[k]?k:PP[k].lead)+"-2",sig:"②P",onDone:()=>{G.appealOK=false;},tw:[{p:50,t:vary("apB",["\"다른 사람보다 못했다는 말이네요\"가 돌았습니다.","\"누구랑 견줬는지 다들 궁금해합니다\"라는 글이 올라왔습니다.","면담에서 나온 다른 사람 이름이 다음 날 게시판에 적혔습니다.","\"등수를 불러 주더라\"는 말이 점심 자리에 돌았습니다.","\"결국 줄 세우기였네요\"가 메신저에 돌았습니다."]),fx:"소문1"},{p:20,t:vary("apB2",["납득하고 돌아갔습니다.","\"어디쯤인지는 알겠습니다\" 하고 일어났습니다.","고개를 끄덕이고 나갔습니다.","더 묻지 않았습니다.","\"기준은 알았습니다\"라고 했습니다."]),fx:"안전+1"}]},
+   {k:"C",cost:1,t:"올해는 등급을 그대로 두되, 내년에 먼저 챙기겠다고 하고 사정을 들어 준다.",done:"내년에 먼저 챙기겠다고 했습니다.",fx:"안전-1 사람+1",sig:"④P",onDone:(G2,hit)=>{G.appealOK=false;if(hit&&hit.pr)addPromise({id:"P9"+k,text:name(k)+"의 내년 평가를 먼저 챙김",to:name(k),due:"내년"});},tw:[{p:40,pr:1,t:vary("apC",["\"내년이요?\" 내년 약속이 장부에 남았습니다.","\"그 말, 적어 두겠습니다.\" 내년 약속이 장부에 남았습니다.","\"내년 이맘때 다시 여쭙겠습니다.\" 약속이 장부에 남았습니다.","\"먼저 챙기신다는 말 기억하겠습니다.\" 장부에 한 줄이 늘었습니다.","\"그럼 내년에 뵙죠.\" 약속이 장부에 남았습니다."])},{p:30,t:vary("apC2",["들어 주는 것으로 풀렸습니다.","한참 이야기하고 나서 표정이 풀렸습니다.","끝까지 들어 준 것이 답이 됐습니다.","말을 다 하고 나니 됐다고 했습니다.","\"들어 주셔서 감사합니다\" 하고 나갔습니다."]),fx:"안전+2"}]},
    {k:"D",t:"면담 시간을 내지 못해 서면 답변으로 처리한다.",done:"서면으로 답했습니다.",fx:"안전-2",sig:"④P",onDone:()=>{G.appealOK=false;}},
   ]},{done:()=>step(i+1)});
  };

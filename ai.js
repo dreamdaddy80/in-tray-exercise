@@ -116,7 +116,10 @@ function aiInboxExpire(s,st){s.mail.forEach(m=>{if(AIREP[m.id]&&!(st.vdone||{})[
 
 /* 월별 AI 검토 장면. 원자료를 물어보는 일은 한 문장이면 되므로 ⏳0.5 */
 const ASK_COST=.5;
-function SC_AIQ(s){const it=s.item;const v={stamp:null,ev:[],asked:false};let step=1;
+const AI_FIX={ok:["정정을 요청했습니다. 담당자: \"원자료와 다시 맞춰 봤는데 그대로입니다.\"","정정을 요청했습니다. 담당자: \"다시 돌려 봤습니다. 숫자는 같습니다.\"","정정을 요청했습니다. 담당자: \"한 줄씩 견줘 봤는데 틀린 곳을 못 찾았습니다.\"","정정을 요청했습니다. 담당자: \"어느 줄이 틀렸는지 짚어 주시겠어요? 저는 맞게 나옵니다.\""],
+ err:["정정을 요청했습니다. 담당자가 짚은 줄을 확인하고 결론을 고쳤습니다.","정정을 요청했습니다. 담당자: \"그 줄을 놓쳤네요. 결론을 다시 썼습니다.\"","정정을 요청했습니다. 고친 판이 그날 오후에 다시 올라왔습니다.","정정을 요청했습니다. 담당자가 원자료를 다시 보고 결론을 바꿨습니다."],
+ unv:["정정을 요청했습니다. 담당자: \"무엇이 틀렸는지는 이 자료로는 알 수 없어요.\"","정정을 요청했습니다. 담당자: \"틀렸다고 할 근거도 맞다고 할 근거도 여기엔 없습니다.\"","정정을 요청했습니다. 담당자: \"고치려면 원자료부터 더 받아야 합니다.\"","정정을 요청했습니다. 담당자: \"어느 쪽으로 고쳐야 할지 저도 모르겠습니다.\""]};
+function SC_AIQ(s){const it=s.item;const fixLine=vary("aifix_"+it.truth,AI_FIX[it.truth]);const v={stamp:null,ev:[],asked:false};let step=1;
  const d=()=>{paint("");
   if(step===1){const rsv=isKey({id:it.id}),short=!rsv&&G.time<ASK_COST;if(short&&!v.asked){G.aiLock=G.aiLock||{};G.aiLock[it.id]=1;}
    shell(`<div class="pane"><div class="eyebrow">AI 분석 검토 · ${G.month}월</div><h2>${it.sub}</h2><div class="prose"><p>${it.lead}</p><p class="note">${it.from}</p></div>
@@ -125,7 +128,7 @@ function SC_AIQ(s){const it=s.item;const v={stamp:null,ev:[],asked:false};let st
   }else{
    const A0={use:{t:"분석을 받아들여 다음 결정에 쓴다."},fix:{t:"틀린 곳을 짚어 작성자에게 정정을 요청한다.",cost:1},hold:{t:"결론을 쓰기 전에 원자료를 더 받아 본다."}};
    const dfx={ok:{use:"성과+1",fix:(it.rel||"mfg")+"-2",hold:"성과-1"},err:{use:"안정-2",fix:"안정+1",hold:""},unv:{use:"안정-1",fix:"",hold:"안정+1"}}[it.truth];
-   const ddone={use:"분석대로 반영했습니다.",fix:{ok:"정정을 요청했습니다. 담당자: \"원자료와 다시 맞춰 봤는데 그대로입니다.\"",err:"정정을 요청했습니다. 담당자가 짚은 줄을 확인하고 결론을 고쳤습니다.",unv:"정정을 요청했습니다. 담당자: \"무엇이 틀렸는지는 이 자료로는 알 수 없어요.\""}[it.truth],hold:"원자료를 더 요청했습니다."};
+   const ddone={use:"분석대로 반영했습니다.",fix:fixLine,hold:"원자료를 더 요청했습니다."};
    const opts=["use","fix","hold"].map((k,i)=>{const a={...A0[k],...((it.act||{})[k]||{})};return {k:"ABC"[i],t:a.t,cost:a.cost||0,fx:a.fx!=null?a.fx:(it.fx?it.fx[k]:dfx[k]),done:a.done||ddone[k],tw:a.tw,onDone:()=>verRec(it.id,{action:k})};});
    SC_CHOICE({id:it.id,tag:"AI 분석 검토",when:G.month+"월",title:"이 분석을 어떻게 쓸까요?",rel:it.rel,intro:[`찍은 도장: ${STAMP[v.stamp]}${v.ev.length?` · 근거로 고른 줄: ${v.ev.map(i=>it.raw.rows[i][0]).join(", ")}`:" · 근거로 고른 줄 없음"}`],options:opts});
   }};
@@ -159,5 +162,5 @@ function verStats(){const v=G.ver||[];const n=v.length;const st=v.filter(x=>x.st
 function verHtml(){const s=verStats();if(!s.n)return "";const pct=(a,b)=>b?Math.round(a/b*100)+"%":"-";
  const all=Object.assign({},AIREP);AIQ.forEach(x=>all[x.id]=x);
  return `<h2 style="font-size:18px">AI 분석과 일한 방식</h2><div class="table">
- ${[["검증 정확도",`${s.acc}/${s.n} (${pct(s.acc,s.n)})`],["과잉 의심 (맞는 분석을 의심함)",s.over+"건"],["맹신 (틀리거나 판단할 수 없는 분석을 확인함)",s.blind+"건"],["근거를 붙인 판단",`${s.ev}/${s.stamped} (${pct(s.ev,s.stamped)}) · 그중 핵심 줄을 고른 판단 ${s.evGood}`],["원자료를 물어본 횟수",s.ask+"회"+(s.askLock?` · 시간이 없어 묻지 못함 ${s.askLock}회`:"")],["윗선·고객에게 낸 정정 의견",`${s.up}/${s.upN}`+(s.upF?` · 시간이 없어 고르지 못함 ${s.upF}건`:"")]].concat(s.missed?[["도장 없이 지나간 분석",s.missed+"건"]]:[]).map(([a,b])=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b style="font-size:15px;text-align:right">${b}</b></div>`).join("")}</div>
+ ${[["검증 정확도",`${s.acc}/${s.n} (${pct(s.acc,s.n)})`],["과잉 의심 (맞는 분석을 의심함)",s.over+"건"],["맹신 (틀리거나 판단할 수 없는 분석을 확인함)",s.blind+"건"],["근거를 붙인 판단",`${s.ev}/${s.stamped} (${pct(s.ev,s.stamped)}) · 그중 핵심 줄을 고른 판단 ${s.evGood}`],["원자료를 물어본 횟수",s.ask+"회"+(s.askLock?` · 시간이 없어 묻지 못함 ${s.askLock}회`:"")],["윗선·고객에게 낸 정정 의견",`${s.up}/${s.upN}`+(s.upF?` · 시간이 없어 고르지 못함 ${s.upF}건`:"")]].concat((()=>{const d=Object.values(G.draftLog||{});if(!d.length)return [];const n=d.reduce((p,x)=>p+x.n,0),l=d.reduce((p,x)=>p+x.left,0);return [["AI 초안의 틀린 곳을 고쳐 보낸 글",`${n-l}/${n}`]];})()).concat(s.missed?[["도장 없이 지나간 분석",s.missed+"건"]]:[]).map(([a,b])=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b style="font-size:15px;text-align:right">${b}</b></div>`).join("")}</div>
  <details class="ref"><summary>분석별 정답 보기</summary><div class="prose" style="font-size:14.5px;margin-top:8px">${(G.ver||[]).map(x=>{const it=all[x.id];return it?`<p><b>${x.month||""}월 ${it.sub}</b> · 내 도장: ${x.stamp?STAMP_SHORT[x.stamp]:"없음"} · 정답: ${STAMP_SHORT[it.truth]}<br><span class="note">${it.why} 핵심 줄: ${it.key.map(i=>it.raw.rows[i][0]).join(", ")}</span></p>`:""}).join("")}</div></details>`;}
