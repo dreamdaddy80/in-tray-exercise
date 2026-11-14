@@ -22,7 +22,7 @@ addContent([
    {k:"C",t:"기준은 리더들과만 맞춰 두고, 구성원에겐 면담 때 말해 준다.",done:"리더들과만 맞췄습니다.",fx:"`pub_leaders` 안전-3 mfg+2 src+2",sig:"②P",tw:[{p:25,t:"리더들이 자기 모듈에 직접 설명하기 시작했습니다.",fx:"안전+3 B3-10"},{p:75,t:"구성원들은 아직 기준을 보지 못했습니다.",fx:"B3+40"}]},
   ],
   planb:[
-   {k:"A",t:"적어 둔다",cost:1,done:"재검토 조건을 합의서에 적었습니다.",fx:"`planb_kpi`"},
+   {k:"A",t:"적어 둔다",cost:.5,done:"재검토 조건을 합의서에 적었습니다.",fx:"`planb_kpi`"},
    {k:"B",t:"적지 않는다",done:"재검토 조건 없이 합의서를 마쳤습니다."},
   ]},
  {id:"3-2",type:"choice",month:3,when:"3월 둘째 주",tag:"KPI 면담",title:"서하준 (R&D)",rel:"rd",prep:true,

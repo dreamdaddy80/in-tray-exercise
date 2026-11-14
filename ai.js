@@ -114,12 +114,13 @@ function aiInbox(m,st,redraw){const it=AIREP[m.id];st.vs=st.vs||{};const v=st.vs
 /* 시간이 다 돼 도장 없이 넘어간 메일 */
 function aiInboxExpire(s,st){s.mail.forEach(m=>{if(AIREP[m.id]&&!(st.vdone||{})[m.id]){const it=AIREP[m.id];verRec(m.id,{sub:it.sub,month:G.month,truth:it.truth,stamp:null,ev:[],evOK:false,asked:false,exec:false});}});}
 
-/* 월별 AI 검토 장면 */
+/* 월별 AI 검토 장면. 원자료를 물어보는 일은 한 문장이면 되므로 ⏳0.5 */
+const ASK_COST=.5;
 function SC_AIQ(s){const it=s.item;const v={stamp:null,ev:[],asked:false};let step=1;
  const d=()=>{paint("");
-  if(step===1){const short=G.time<1;
+  if(step===1){const rsv=isKey({id:it.id}),short=!rsv&&G.time<ASK_COST;if(short&&!v.asked){G.aiLock=G.aiLock||{};G.aiLock[it.id]=1;}
    shell(`<div class="pane"><div class="eyebrow">AI 분석 검토 · ${G.month}월</div><h2>${it.sub}</h2><div class="prose"><p>${it.lead}</p><p class="note">${it.from}</p></div>
-   ${aiBoxHtml(it,v,d,{dis:short?"이번 분기 팀장 시간이 남지 않아 물어볼 수 없습니다.":"",pay:()=>{G.time-=1;G.tu.all+=1;G.verAsk=(G.verAsk||0)+1;}},`${typeof it.ask.who==="string"&&(LD[it.ask.who]||PP[it.ask.who])?name(it.ask.who):it.ask.who}에게 원자료를 물어본다 · ⏳1`)}
+   ${aiBoxHtml(it,v,d,{dis:short?lackText(ASK_COST-G.time):"",pay:()=>{if(rsv)G.rsvUsed=(G.rsvUsed||0)+ASK_COST;else G.time-=ASK_COST;G.tu.all+=ASK_COST;G.verAsk=(G.verAsk||0)+1;if(G.aiLock)delete G.aiLock[it.id];}},`${typeof it.ask.who==="string"&&(LD[it.ask.who]||PP[it.ask.who])?name(it.ask.who):it.ask.who}에게 원자료를 물어본다 · ${rsv?"예약 ":""}⏳${ASK_COST}`)}
    <div class="foot"><span class="note">도장을 찍은 뒤 이 분석을 어떻게 쓸지 정합니다.</span><button class="btn main" ${v.stamp?"":"disabled"} ${A(()=>{verRec(it.id,{sub:it.sub,month:G.month,truth:it.truth,stamp:v.stamp,ev:[...v.ev],evOK:evOK(it,v.ev),asked:v.asked,exec:!!it.exec});step=2;d();})}>도장 찍기</button></div></div>`);
   }else{
    const A0={use:{t:"분석을 받아들여 다음 결정에 쓴다."},fix:{t:"틀린 곳을 짚어 작성자에게 정정을 요청한다.",cost:1},hold:{t:"결론을 쓰기 전에 원자료를 더 받아 본다."}};
@@ -150,10 +151,13 @@ AIQ.forEach(it=>{const i=CONTENT.findIndex(x=>x.id===it.before);const sc={id:it.
 /* 결산용 지표 */
 function verStats(){const v=G.ver||[];const n=v.length;const st=v.filter(x=>x.stamp);const acc=st.filter(x=>x.stamp===x.truth).length;
  const over=v.filter(x=>x.truth==="ok"&&x.stamp&&x.stamp!=="ok").length,blind=v.filter(x=>x.truth!=="ok"&&x.stamp==="ok").length;
- const ev=st.filter(x=>x.ev&&x.ev.length).length,evGood=st.filter(x=>x.evOK).length;const up=v.filter(x=>x.exec&&x.truth==="err"&&x.action==="fix").length,upN=v.filter(x=>x.exec&&x.truth==="err").length;
- return{n,stamped:st.length,acc,over,blind,ev,evGood,ask:G.verAsk||0,missed:n-st.length,up,upN};}
+ const ev=st.filter(x=>x.ev&&x.ev.length).length,evGood=st.filter(x=>x.evOK).length;
+ /* 시간이 모자라 정정 의견 선택지가 잠겨 있던 건은 분모에서 뺀다 */
+ const fz=id=>(G.decisions||[]).some(d=>d.scene===id&&d.forced&&d.lockedOpt);const upF=v.filter(x=>x.exec&&x.truth==="err"&&x.action!=="fix"&&fz(x.id)).length;
+ const up=v.filter(x=>x.exec&&x.truth==="err"&&x.action==="fix").length,upN=v.filter(x=>x.exec&&x.truth==="err").length-upF;
+ return{n,stamped:st.length,acc,over,blind,ev,evGood,ask:G.verAsk||0,askLock:Object.keys(G.aiLock||{}).length,missed:n-st.length,up,upN,upF};}
 function verHtml(){const s=verStats();if(!s.n)return "";const pct=(a,b)=>b?Math.round(a/b*100)+"%":"-";
  const all=Object.assign({},AIREP);AIQ.forEach(x=>all[x.id]=x);
  return `<h2 style="font-size:18px">AI 분석과 일한 방식</h2><div class="table">
- ${[["검증 정확도",`${s.acc}/${s.n} (${pct(s.acc,s.n)})`],["과잉 의심 (맞는 분석을 의심함)",s.over+"건"],["맹신 (틀리거나 판단할 수 없는 분석을 확인함)",s.blind+"건"],["근거를 붙인 판단",`${s.ev}/${s.stamped} (${pct(s.ev,s.stamped)}) · 그중 핵심 줄을 고른 판단 ${s.evGood}`],["원자료를 물어본 횟수",s.ask+"회"],["윗선·고객에게 낸 정정 의견",`${s.up}/${s.upN}`]].concat(s.missed?[["도장 없이 지나간 분석",s.missed+"건"]]:[]).map(([a,b])=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b style="font-size:15px;text-align:right">${b}</b></div>`).join("")}</div>
+ ${[["검증 정확도",`${s.acc}/${s.n} (${pct(s.acc,s.n)})`],["과잉 의심 (맞는 분석을 의심함)",s.over+"건"],["맹신 (틀리거나 판단할 수 없는 분석을 확인함)",s.blind+"건"],["근거를 붙인 판단",`${s.ev}/${s.stamped} (${pct(s.ev,s.stamped)}) · 그중 핵심 줄을 고른 판단 ${s.evGood}`],["원자료를 물어본 횟수",s.ask+"회"+(s.askLock?` · 시간이 없어 묻지 못함 ${s.askLock}회`:"")],["윗선·고객에게 낸 정정 의견",`${s.up}/${s.upN}`+(s.upF?` · 시간이 없어 고르지 못함 ${s.upF}건`:"")]].concat(s.missed?[["도장 없이 지나간 분석",s.missed+"건"]]:[]).map(([a,b])=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b style="font-size:15px;text-align:right">${b}</b></div>`).join("")}</div>
  <details class="ref"><summary>분석별 정답 보기</summary><div class="prose" style="font-size:14.5px;margin-top:8px">${(G.ver||[]).map(x=>{const it=all[x.id];return it?`<p><b>${x.month||""}월 ${it.sub}</b> · 내 도장: ${x.stamp?STAMP_SHORT[x.stamp]:"없음"} · 정답: ${STAMP_SHORT[it.truth]}<br><span class="note">${it.why} 핵심 줄: ${it.key.map(i=>it.raw.rows[i][0]).join(", ")}</span></p>`:""}).join("")}</div></details>`;}

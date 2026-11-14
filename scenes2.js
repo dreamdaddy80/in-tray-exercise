@@ -1,8 +1,9 @@
 /* 특수 장면: 배분, 세 개의 설명, 반기 회고, 청구서, 연말 평가, 이의제기 */
 const BTN=(fn,t,cls)=>`<button class="btn ${cls||""}" ${A(fn)}>${t}</button>`;
 const AXN={1:"① 일 맡기기",2:"② 평가하기",3:"③ 자원 나누기",4:"④ 설명하기"};
-function axScore(a,filter){const x=G.sig.filter((s,i)=>s.a===a&&(!filter||filter(s,i)));const L=x.filter(s=>s.s==="L").reduce((p,s)=>p+s.w,0),P=x.filter(s=>s.s==="P").reduce((p,s)=>p+s.w,0);return{n:L+P,v:L+P?Math.round(L/(L+P)*100):null,L,P};}
-function evid(a,side){const seen=[];G.sig.filter(s=>s.a===a&&s.s===side).forEach(s=>{const n=label(s.scene,s.choice);if(!seen.includes(n))seen.push(n);});return seen.slice(0,3);}
+/* 시간이 모자라 강제된 선택(forced)의 신호는 습관 계산에서 뺀다 */
+function axScore(a,filter){const x=G.sig.filter((s,i)=>s.a===a&&!s.forced&&(!filter||filter(s,i)));const L=x.filter(s=>s.s==="L").reduce((p,s)=>p+s.w,0),P=x.filter(s=>s.s==="P").reduce((p,s)=>p+s.w,0);return{n:L+P,v:L+P?Math.round(L/(L+P)*100):null,L,P};}
+function evid(a,side){const seen=[];G.sig.filter(s=>s.a===a&&s.s===side&&!s.forced).forEach(s=>{const n=label(s.scene,s.choice);if(!seen.includes(n))seen.push(n);});return seen.slice(0,3);}
 
 /* 4-2 여력·토큰 배분과 공지문 (원고 03-4) */
 function SC_ALLOC(s){
@@ -41,24 +42,25 @@ function SC_ALLOC(s){
   shell(`<div class="pane"><div class="eyebrow">구성원 공지문</div><h2>왜 이렇게 나눴는지 쓰세요</h2><p><b>공지에 담을 배분 기준을 고르세요.</b></p><div class="btns">${CR.map(x=>BTN(()=>{txt=$("nt").value;const i=crit.indexOf(x);if(i>=0)crit.splice(i,1);else crit.push(x);d3();},x,crit.includes(x)?"main":"")).join("")}</div>
   <label class="label" for="nt">공지문 3~5문장 · 왜 이렇게 나눴는지, 무엇을 하지 않기로 했는지</label><textarea id="nt" style="min-height:130px">${txt}</textarea>
   <p><b>어떻게 보낼까요?</b></p><div class="opts">
-  <button class="opt" ${G.time<2?"disabled":""} ${A(()=>{txt=$("nt").value;const rd=readable(txt,20);if(!rd.ok){nwarn="공지문: "+rd.why;d3();return;}nwarn="";send("full");})}><span class="k">·</span><span>쓴 공지문을 팀 전체에 보낸다</span><span class="cost">⏳2</span></button>${G.time<2?borrowLink(2-G.time,()=>{txt=$("nt").value;d3();}):""}
-  <button class="opt" ${G.time<1?"disabled":""} ${A(()=>send("num"))}><span class="k">·</span><span>배분 숫자만 알린다</span><span class="cost">⏳1</span></button>
+  <button class="opt" ${G.time<2?"disabled":""} ${A(()=>{txt=$("nt").value;const rd=readable(txt,20);if(!rd.ok){nwarn="공지문: "+rd.why;d3();return;}nwarn="";send("full");})}><span class="k">·</span><span>쓴 공지문을 팀 전체에 보낸다</span><span class="cost">⏳2</span>${G.time<2?`<span class="why">${lackText(2-G.time)}</span>`:""}</button>${G.time<2?borrowLink(2-G.time,()=>{txt=$("nt").value;d3();}):""}
+  <button class="opt" ${G.time<1?"disabled":""} ${A(()=>send("num"))}><span class="k">·</span><span>배분 숫자만 알린다</span><span class="cost">⏳1</span>${G.time<1?`<span class="why">${lackText(1-G.time)}</span>`:""}</button>${G.time<1?borrowLink(1-G.time,()=>{txt=$("nt").value;d3();}):""}
   <button class="opt" ${A(()=>send("none"))}><span class="k">·</span><span>보내지 않는다</span><span class="cost">0</span></button></div>${nwarn?`<div class="happen"><span class="label">보내기 전에</span>${nwarn}</div>`:""}</div>`);
  };
  const send=m=>{
   txt=$("nt").value;const three=["효과","비용","장애·보안 위험"].every(x=>crit.includes(x));
   G.written.notice={기준:[...crit],글:m==="none"?"미공지":txt,방식:m};G.goal3={three,sent:m==="full"};
-  const live={};let line="";
+  const live={};let line="",forcedA=false;
   if(m==="full"){G.time-=2;G.tu.all+=2;G.tu.exp+=2;applyFx("안전+2 `alloc_notice`"+(three?" 사람+1":""),{live});applySig("④L",1,"4-2","공지");if(three)applySig("③L",1,"4-2","세 기준");
    if(Math.random()<.25){const min=Object.keys(c).sort((a,b)=>c[a]-c[b])[0],who={RUN:"mfg",AI:"rd",GROW:"mkt",SEC:"prc"}[min];applyFx(who+"-2",{live});line=`"왜 우리 모듈은 ${c[min]}칸이에요?"`;}}
   else if(m==="num"){G.time-=1;G.tu.all+=1;G.f.alloc_num=true;applyFx("B5+15");}
+  else if(G.time<1){G.f.alloc_none=true;(G.forcedF=G.forcedF||{}).alloc_none="4-2";G.forcedTell=(G.forcedTell||0)+1;applyFx("안전-2",{live});applySig("③P ④P",1,"4-2","미공지",true);forcedA=true;}
   else{G.f.alloc_none=true;applyFx("안전-2 B5+30 소문규칙",{live,rel:"rd"});applySig("③P ④P",1,"4-2","미공지");}
-  record("4-2공지",m);
+  record("4-2공지",m,forcedA?{forced:true,locked:["알리기:full","알리기:num"],lockedTell:true}:null);
   {const tb=G.f["c_4-2b_A"]?["작년 실적","리더 요청량"]:G.f["c_4-2b_B"]?["효과","비용"]:G.f["c_4-2b_C"]?["팀장 재량"]:[];const tn=G.f["c_4-2b_A"]?"1분기에 쓴 양대로":G.f["c_4-2b_B"]?"토큰당 효과 순으로":"모듈마다 똑같이";
    if(m!=="none"&&crit.length&&tb.length&&!tb.some(x=>crit.includes(x))){G.f.notice_gap=true;G.cons.push({scene:"4-2",choice:"공지",why:crit.join("·"),fit:false});line=(line?line+"</p><p>":"")+`공지에는 "${crit.join(", ")}"(으)로 나눴다고 썼습니다. 토큰은 ${tn} 나눴습니다. 두 내용이 함께 팀에 남았습니다.`;}}
   paint("");
   shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>배분을 마쳤습니다</h2><div class="prose"><p>${m==="full"?"공지문을 팀 전체에 보냈습니다.":m==="num"?"배분 숫자를 알렸습니다.":"따로 알리지 않았습니다."}</p>${line?`<p>${line}</p>`:""}</div>
-  <div class="ask"><p>팀 여력이 갑자기 줄면 어느 칸부터 줄일지, 순서를 미리 정해 둘까요?</p><div class="btns"><button class="btn" ${G.time<1?"disabled":""} ${A(()=>{G.time-=1;G.tu.all+=1;applyFx("`planb_alloc`");next();})}>순서를 정한다 ⏳1</button>${BTN(next,"정하지 않는다")}</div></div></div>`,live);
+  <div class="ask"><p>팀 여력이 갑자기 줄면 어느 칸부터 줄일지, 순서를 미리 정해 둘까요?</p><div class="btns"><button class="btn" ${G.time<.5?"disabled":""} ${A(()=>{G.time-=.5;G.tu.all+=.5;applyFx("`planb_alloc`");next();})}>순서를 정한다 ⏳0.5</button>${BTN(next,"정하지 않는다")}</div></div></div>`,live);
  };
  d1();
 }
@@ -161,18 +163,25 @@ const BILL_CAUSE={
  B5:[["alloc_num","4-2 배분 숫자만 알림","4-2",4],["alloc_none","4-2 공지 안 보냄","4-2",4],["r2_more","4-5 신규 과제 추가","4-5",4],["small_win","5-6 소규모 수주","5-6",5],["ct_more","6-1 신규 2건","6-1",6],["prop_full","7-2 전 범위 수락","7-2",7],["auto_wide","8-5 전면 자동화","8-5",8]],
  B6:[["f_140","M21~M23 140시간이 밖으로 나감","M22",4],["ct_cut","6-1 5% 인하","6-1",6],["ct_more","6-1 신규 2건","6-1",6],[g=>!g.f.planb_contract,"6-1 재검토 조건 없음","6-1",6],["ai_draft","6-2 AI 초안","6-2",6]],
  B7:[["kim_fragile","6-3 \"괜찮습니다\"로 끝남","6-3",6],["prop_full","7-2 전 범위 수락","7-2",7],["mfg_acting","7-4 강태식 겸임","7-4",7],["cha_left","8-3 차 선임 결심","8-3",8]],
- B8:[()=>G.sig.filter(x=>x.choice==="안 알림").map(x=>[nm(x.scene)+" 결정을 알리지 않음",x.scene])],
- B9:[()=>G.sig.filter(x=>x.choice==="안 알림").map(x=>[nm(x.scene)+" 결정을 알리지 않음",x.scene])],
+ B8:[()=>G.sig.filter(x=>x.choice==="안 알림"&&!x.forced).map(x=>[nm(x.scene)+" 결정을 알리지 않음",x.scene])],
+ B9:[()=>G.sig.filter(x=>x.choice==="안 알림"&&!x.forced).map(x=>[nm(x.scene)+" 결정을 알리지 않음",x.scene])],
  B10:[["rule_silent","6-4 다시 알리지 않음","6-4",6],["p3_spin","8-1 차출이라고 구분","8-1",8]],
  B11:[()=>Object.values(G.prom).filter(p=>p.status==="파기").map(p=>["지키지 못한 약속: "+p.text,p.due])],
 };
 const MON=sc=>{const m=String(sc).match(/^(\d+)-/);if(m)return +m[1];const mm=String(sc).match(/^M(\d+)/);if(mm)return +mm[1]<=17?1:+mm[1]<=30?4:7;const d=String(sc).match(/^(\d+)월/);return d?+d[1]:null;};
-function billCauses(b){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"){c(G).forEach(x=>out.push({t:x[0],m:MON(x[1])}));return;}const ok=typeof c[0]==="function"?c[0](G):G.f[c[0]];if(ok)out.push({t:nm(c[2])+" — "+stripId(c[1]),m:c[3]});});if((b==="B5"||b==="B7")&&G.over>0)out.push({t:`초과 부하가 ${G.over}번 쌓였습니다`,m:null});if(b==="B7"&&G.fatigue>0)out.push({t:`큰 변화가 ${G.fatigue}번 이어졌습니다`,m:null});const seen={};return out.filter(x=>{const k=x.t;if(seen[k])return false;seen[k]=1;return true;});}
-function causeHtml(b,at){const cs=billCauses(b).filter(c=>!c.m||c.m<=at);const why=(G.billWhy||{})[b];
- if(cs.length)return `<p><b>기록에 남은 관련 결정</b></p>${cs.map(c=>`<p class="note">${/^\d+월/.test(c.t)||!c.m?"":c.m+"월 "}${c.t}${c.m?` → ${at-c.m}개월 뒤 청구서`:""}</p>`).join("")}<p class="note">이 결정들이 확률을 올렸습니다. 청구서는 확률로 오므로, 하나가 곧바로 원인이라고 단정할 수는 없습니다.</p>`;
- if(why==="wow")return `<p><b>왜 왔나:</b> 특정한 결정 하나가 아니라, 올해 기록에서 가장 약하게 나온 습관(${AXN[BILL[b].ax]})에서 왔습니다.</p>`;
- return `<p><b>왜 왔나:</b> 기록에서 이 청구서와 이어지는 결정을 찾지 못했습니다. 팀 바깥의 사정이나 운으로 왔을 수 있습니다.</p>`;}
-function billP(id){const g=G,b=(g.bill[id]||0),c=g.cells||{};let p=0;const dirR=()=>{const d=g.decisions.filter(x=>x.choice==="직접"&&/^M\d/.test(x.scene)).length,all=g.decisions.filter(x=>/^M\d/.test(x.scene)).length;return all&&d/all>=.5;};
+function billCauses(b){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"){c(G).forEach(x=>out.push({t:x[0],m:MON(x[1])}));return;}const ok=typeof c[0]==="function"?c[0](G):(G.f[c[0]]&&!(G.forcedF||{})[c[0]]);if(ok)out.push({t:nm(c[2])+" — "+stripId(c[1]),m:c[3]});});if((b==="B5"||b==="B7")&&G.over>0)out.push({t:`초과 부하가 ${G.over}번 쌓였습니다`,m:null});if(b==="B7"&&G.fatigue>0)out.push({t:`큰 변화가 ${G.fatigue}번 이어졌습니다`,m:null});const seen={};return out.filter(x=>{const k=x.t;if(seen[k])return false;seen[k]=1;return true;});}
+/* 청구서와 이어지지만 시간이 모자라 고를 수 없었던 결정. 원인으로 세지 않고 따로 보여 준다 */
+function billForced(b,at){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"||typeof c[0]==="function")return;if(G.f[c[0]]&&(G.forcedF||{})[c[0]]&&(!at||c[3]<=at))out.push(nm(c[2])+" — "+stripId(c[1]));});
+ if(b==="B8"||b==="B9")G.sig.filter(x=>x.choice==="안 알림"&&x.forced).forEach(x=>{const m=MON(x.scene);if(!at||!m||m<=at)out.push(nm(x.scene)+" 결정을 알리지 못함");});
+ return out.filter((x,i,a)=>a.indexOf(x)===i);}
+function forcedNote(b,at){const fs=billForced(b,at);return fs.length?`<p class="note"><b>시간이 없어 고르지 못한 결정 ${fs.length}건</b> (원인으로 세지 않았습니다)<br>${fs.join("<br>")}</p>`:"";}
+function causeHtml(b,at){const cs=billCauses(b).filter(c=>!c.m||c.m<=at);const why=(G.billWhy||{})[b];const fn=forcedNote(b,at);
+ if(cs.length)return `<p><b>기록에 남은 관련 결정</b></p>${cs.map(c=>`<p class="note">${/^\d+월/.test(c.t)||!c.m?"":c.m+"월 "}${c.t}${c.m?` → ${at-c.m}개월 뒤 청구서`:""}</p>`).join("")}<p class="note">이 결정들이 확률을 올렸습니다. 청구서는 확률로 오므로, 하나가 곧바로 원인이라고 단정할 수는 없습니다.</p>${fn}`;
+ if(why==="wow")return `<p><b>왜 왔나:</b> 특정한 결정 하나가 아니라, 올해 기록에서 가장 약하게 나온 습관(${AXN[BILL[b].ax]})에서 왔습니다.</p>${fn}`;
+ return `<p><b>왜 왔나:</b> 기록에서 이 청구서와 이어지는 결정을 찾지 못했습니다. 팀 바깥의 사정이나 운으로 왔을 수 있습니다.</p>${fn}`;}
+function billP(id){const g0=G,ff=g0.forcedF||{},fl={};Object.keys(g0.f).forEach(k=>{if(!ff[k]||["alloc_notice","pub_prevent","f_corrected","planb_contract"].includes(k))fl[k]=g0.f[k];});
+ /* 시간이 모자라 강제된 선택에서 생긴 플래그는 청구서 확률에 넣지 않는다 */
+ const g=Object.assign(Object.create(g0),{f:fl});const b=(g.bill[id]||0),c=g.cells||{};let p=0;const dirR=()=>{const d=g.decisions.filter(x=>x.choice==="직접"&&/^M\d/.test(x.scene)).length,all=g.decisions.filter(x=>/^M\d/.test(x.scene)).length;return all&&d/all>=.5;};
  if(id==="B1")p=5+b+(g.f.d_M13?15:0)+(g.f.fam_direct?20:0)+(g.f.oh_depends?15:0)+(dirR()?20:0)+(g.trust.prc<=40?10:0);
  if(id==="B2")p=5+b+(g.f.unfam_direct?20:0)+((c.SEC||0)<=1?15:0);
  if(id==="B3")p=5+b+(g.f.pub_leaders?30:0)+(g.f.pub_items?10:0)+(g.f.renotice_part?15:0)+(g.f.rule_silent?20:0)+(g.f.alloc_notice?0:10);

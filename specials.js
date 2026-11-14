@@ -16,7 +16,7 @@ const PICK={
 const END=(m,title,on,q)=>({id:"END"+m,type:"monthEnd",month:m,title,onEnd:on||(()=>{}),quarter:!!q});
 const SPEC={
  "4-2":{id:"4-2",type:"alloc",month:4,when:"4월"},
- "6-1p":{id:"6-1p",type:"choice",month:6,when:"6월",tag:"F사 협상",title:"재검토 조건",intro:["F사가 계약 뒤에 지표를 문제 삼아 다시 협상하자고 하면, 어디까지 물러설지 미리 적어 둘까요?"],options:[{k:"A",t:"적어 둔다",cost:1,done:"협상선을 적어 뒀습니다.",fx:"`planb_contract`"},{k:"B",t:"적지 않는다",done:"적지 않았습니다.",fx:"B6+15"}]},
+ "6-1p":{id:"6-1p",type:"choice",month:6,when:"6월",tag:"F사 협상",title:"재검토 조건",intro:["F사가 계약 뒤에 지표를 문제 삼아 다시 협상하자고 하면, 어디까지 물러설지 미리 적어 둘까요?"],options:[{k:"A",t:"적어 둔다",cost:.5,done:"협상선을 적어 뒀습니다.",fx:"`planb_contract`"},{k:"B",t:"적지 않는다",done:"적지 않았습니다.",fx:"B6+15"}]},
  "6-2":{id:"6-2",type:"write",month:6,when:"6월",title:"하반기 계약을 세 사람에게",
   fit:g=>g.f.ct_measure?["AI 활용 효과","장애 예방 활동"]:g.f.ct_cut?["추가 과제 매출 기여","고객 칭찬"]:["추가 과제 매출 기여","AI 활용 효과"],
   conds:[{c:g=>g.prom.P3,t:"2월에 \"올해 AI를 이유로 인원을 줄이지 않겠다\"고 썼습니다."},{c:g=>g.f.alloc_notice,t:"4월 공지문에 쓴 \"하지 않기로 한 일\"이 있습니다."},{c:g=>g.f.f_140&&!g.f.f_corrected,t:"F사는 아직 주 140시간을 확정치로 알고 있습니다."}],
