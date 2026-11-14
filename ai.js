@@ -99,7 +99,7 @@ const AIQ=[
 function verRec(id,o){G.ver=G.ver||[];const i=G.ver.findIndex(x=>x.id===id);if(i>=0)G.ver[i]={...G.ver[i],...o};else G.ver.push({id,...o});}
 function aiBoxHtml(it,v,redraw,askCost,askLabel){
  const rows=it.raw.rows.map((r,i)=>`<button class="rawrow" aria-pressed="${v.ev.includes(i)}" ${A(()=>{const j=v.ev.indexOf(i);if(j>=0)v.ev.splice(j,1);else{if(v.ev.length>=2)v.ev.shift();v.ev.push(i);}redraw();})}>${r.map(c=>`<span>${c}</span>`).join("")}</button>`).join("");
- return `<div class="aibox"><div class="label">🤖 ${it.src||it.from}</div>${it.ai.map(t=>`<p>${t}</p>`).join("")}
+ return `<div class="aibox"><div class="label">🤖 ${it.src||it.from}</div>${it.ai.map(t=>`<p>${t}</p>`).join("")}${(G.ver||[]).length<3&&G.f.aiq_guide!==it.id?`<p class="note">AI가 낸 분석입니다. 아래 원자료와 맞는지 보고 도장을 찍으세요. 맞는 분석도 있고, 틀리거나 이 자료만으로는 판단할 수 없는 분석도 있습니다.</p>`:""}
  <div class="label" style="margin-top:8px">원자료 <span class="note">도장의 근거로 쓸 줄을 눌러 고를 수 있습니다 (최대 2줄)</span></div>
  <div class="rawtab"><div class="rawrow head">${it.raw.head.map(c=>`<span>${c}</span>`).join("")}</div>${rows}</div>
  ${v.asked?`<div class="say">${typeof it.ask.who==="string"&&LD[it.ask.who]||PP[it.ask.who]?face(it.ask.who):""}<div><b>${LD[it.ask.who]||PP[it.ask.who]?name(it.ask.who):it.ask.who}</b><span>${it.ask.t}</span></div></div>`:`<div class="btns" style="margin-top:8px"><button class="btn" ${askCost.dis?"disabled":""} ${A(()=>{if(askCost.pay)askCost.pay();v.asked=true;redraw();})}>${askLabel}</button></div>${askCost.dis?`<p class="note">${askCost.dis}</p>`:""}`}
@@ -119,10 +119,10 @@ const ASK_COST=.5;
 const AI_FIX={ok:["정정을 요청했습니다. 담당자: \"원자료와 다시 맞춰 봤는데 그대로입니다.\"","정정을 요청했습니다. 담당자: \"다시 돌려 봤습니다. 숫자는 같습니다.\"","정정을 요청했습니다. 담당자: \"한 줄씩 견줘 봤는데 틀린 곳을 못 찾았습니다.\"","정정을 요청했습니다. 담당자: \"어느 줄이 틀렸는지 짚어 주시겠어요? 저는 맞게 나옵니다.\""],
  err:["정정을 요청했습니다. 담당자가 짚은 줄을 확인하고 결론을 고쳤습니다.","정정을 요청했습니다. 담당자: \"그 줄을 놓쳤네요. 결론을 다시 썼습니다.\"","정정을 요청했습니다. 고친 판이 그날 오후에 다시 올라왔습니다.","정정을 요청했습니다. 담당자가 원자료를 다시 보고 결론을 바꿨습니다."],
  unv:["정정을 요청했습니다. 담당자: \"무엇이 틀렸는지는 이 자료로는 알 수 없어요.\"","정정을 요청했습니다. 담당자: \"틀렸다고 할 근거도 맞다고 할 근거도 여기엔 없습니다.\"","정정을 요청했습니다. 담당자: \"고치려면 원자료부터 더 받아야 합니다.\"","정정을 요청했습니다. 담당자: \"어느 쪽으로 고쳐야 할지 저도 모르겠습니다.\""]};
-function SC_AIQ(s){const it=s.item;const fixLine=vary("aifix_"+it.truth,AI_FIX[it.truth]);const v={stamp:null,ev:[],asked:false};let step=1;
+function SC_AIQ(s){const it=s.item;if(!G.f.aiq_guide)G.f.aiq_guide=it.id;const fixLine=vary("aifix_"+it.truth,AI_FIX[it.truth]);const v={stamp:null,ev:[],asked:false};let step=1;
  const d=()=>{paint("");
   if(step===1){const rsv=isKey({id:it.id}),short=!rsv&&G.time<ASK_COST;if(short&&!v.asked){G.aiLock=G.aiLock||{};G.aiLock[it.id]=1;}
-   shell(`<div class="pane"><div class="eyebrow">AI 분석 검토 · ${G.month}월</div><h2>${it.sub}</h2><div class="prose"><p>${it.lead}</p><p class="note">${it.from}</p></div>
+   shell(`<div class="pane"><div class="eyebrow">AI 분석 검토 · ${G.month}월</div><h2>${it.sub}</h2><div class="prose"><p>${it.lead}</p><p class="note">${it.from}</p></div>${G.f.aiq_guide&&G.f.aiq_guide!==it.id?"":`<div class="happen"><span class="label">AI 분석 검토는 이렇게 합니다</span>올해는 AI가 만든 분석이 안건에 자주 붙어 옵니다. 결정에 쓰기 전에 팀장이 먼저 확인합니다.<br>1. 분석의 결론과 아래 원자료를 견줘 봅니다. 숫자를 직접 더해 보면 됩니다.<br>2. 근거가 되는 줄을 눌러 고르고(최대 2줄), 필요하면 담당자에게 물어봅니다.<br>3. 도장을 찍습니다. 원자료와 맞으면 확인, 어긋나면 오류, 이 자료만으로 알 수 없으면 검증 불가입니다.<br>맞는 분석을 의심해도, 틀린 분석을 믿어도 기록에 남습니다. 정답은 12월 결산에서 공개합니다.</div>`}
    ${aiBoxHtml(it,v,d,{dis:short?lackText(ASK_COST-G.time):"",pay:()=>{if(rsv)G.rsvUsed=(G.rsvUsed||0)+ASK_COST;else G.time-=ASK_COST;G.tu.all+=ASK_COST;G.verAsk=(G.verAsk||0)+1;if(G.aiLock)delete G.aiLock[it.id];}},`${typeof it.ask.who==="string"&&(LD[it.ask.who]||PP[it.ask.who])?name(it.ask.who):it.ask.who}에게 원자료를 물어본다 · ${rsv?"예약 ":""}⏳${ASK_COST}`)}
    <div class="foot"><span class="note">도장을 찍은 뒤 이 분석을 어떻게 쓸지 정합니다.</span><button class="btn main" ${v.stamp?"":"disabled"} ${A(()=>{verRec(it.id,{sub:it.sub,month:G.month,truth:it.truth,stamp:v.stamp,ev:[...v.ev],evOK:evOK(it,v.ev),asked:v.asked,exec:!!it.exec});step=2;d();})}>도장 찍기</button></div></div>`);
   }else{
