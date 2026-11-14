@@ -2,6 +2,14 @@
 const SECONDS={"4-1":()=>300,"7-1":g=>CONTENT[g.idx].mail.filter(m=>m.need==null||g.safe>=m.need).length*30};
 const fat=g=>{const f=g.big>=5?2:g.big===4?1:0;g.fatigue=f;return f;};
 const pm=g=>g.pulse[g.quarter-1]||[50,50,50];
+/* 분기별로 "업무 배분이 공정하다" 문항을 움직이는 결정. 식에 이미 들어 있는 것(대기표 변경, 표지 규칙 등)은 여기에 넣지 않는다 */
+const FAIR=[
+ [["pub_full",4,"3월 평가 기준을 전원에게 공개함"],["pub_leaders",-4,"3월 평가 기준을 리더들과만 맞춤"],["night_open",4,"2월 야간 대기를 모듈 밖까지 열어 나눔"],["kim_no_leave",-2,"1월에 김 사원이 쉬지 못함"]],
+ [["alloc_notice",4,"4월 배분 기준을 공지함"],["alloc_none",-4,"4월 배분을 알리지 않음"],["award_both",4,"5월 포상을 두 모듈 이름으로 냄"],["award_fix",-3,"5월 포상을 한 모듈로만 냄"],["kim_rest",2,"6월 김 사원의 대기를 덜어 줌"],["night_open",2,"야간 대기를 모듈 밖까지 나눠 서는 중"]],
+ [["report_both",3,"상반기 보고서에 모듈별 기여를 적음"],["award_form",2,"예방과 복구를 함께 적는 포상 양식이 생김"],["night_auto",2,"야간 경고를 자동으로 걸러 대기 부담을 줄임"],["hq_two",-2,"본사 차출로 2명이 빠짐"],["alloc_renotice",2,"6월 재배분의 이유를 알림"]],
+ [["credit_both",3,"9월 포상에 복구자와 점검자를 함께 올림"],["credit_fix",-3,"9월 포상을 복구자에게만 줌"],["bae_move",2,"배 책임의 이동을 승인함"],["scope_full",-2,"전 품목 1월 착수로 일이 몰림"],["b26_score",2,"내년 예산을 같은 잣대로 매겨 나눔"]],
+];
+function fairAdj(g,q){return (FAIR[q]||[]).filter(x=>g.f[x[0]]).map(x=>[x[2],x[1]]);}
 const QS={
  "6-7":g=>{const f=fat(g),p=pm(g);return [p[0]+(g.f.alloc_notice?5:0)+(g.f.renotice?5:0)-(g.f.rule_silent?8:0)-(g.f.renotice_split?3:0)+g.told.full*2-g.told.none*2,50+(g.score.사람-50)*.3+(g.f.credit_rule?3:0)-(g.f.pulse_split_q1?3:0)-g.over*3-(g.f.night_stuck?8:0)-g.broken*5,g.score.사람*.6+g.safe*.4-g.burnout-f*3];},
  "9-7":g=>{const f=fat(g),p=pm(g);return [p[0]+(g.f.alloc_renotice?3:0)+g.told.full*2-g.told.none*2-(g.f.rule_silent?5:0)-(g.bills.includes("B8")?5:0),50+(g.score.사람-50)*.3+(g.f.credit_rule?3:0)+(g.f.night_rotate?3:0)+(g.f.credit_both?3:0)-(g.f.report_mkt?2:0)-g.over*3-g.broken*5-(g.bills.includes("B5")?5:0)-(g.f.pulse_split_q2?3:0),g.score.사람*.6+g.safe*.4-g.burnout-f*3-(g.f.cha_left?3:0)];},

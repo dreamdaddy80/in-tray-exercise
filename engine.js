@@ -450,7 +450,10 @@ function SC_KPI(s){
 
 /* 펄스 서베이 */
 function SC_PULSE(s){
- const q=val(s.qs).map(x=>Math.max(0,Math.min(100,Math.round(x))));
+ const raw=val(s.qs);
+ /* "업무 배분이 공정하다" 문항: 배분 공지, 대기표 조정, 포상 공동 기재 같은 결정을 잇고, 무엇이 움직였는지 적어 둔다 */
+ {const adj=typeof fairAdj==="function"?fairAdj(G,G.quarter):[];const base=Math.round(raw[1]);raw[1]+=adj.reduce((p,x)=>p+x[1],0);(G.fairLog=G.fairLog||[])[G.quarter]={base,people:Math.round((G.score.사람-50)*.3),adj,v:Math.max(0,Math.min(100,Math.round(raw[1])))};}
+ const q=raw.map(x=>Math.max(0,Math.min(100,Math.round(x))));
  G.pulseSeen=G.pulseSeen||[];const cm=s.comments.filter(c=>c.c(G)).map(c=>c.t).filter(t=>!G.pulseSeen.includes(t));
  const keep=Math.max(cm.length?1:0,Math.round(cm.length*Math.min(1,G.safe/100*1.5)));
  const shown=cm.slice(0,keep);shown.forEach(t=>G.pulseSeen.push(t));
@@ -506,10 +509,15 @@ function SC_INTERVIEW(s){
   G.time-=cost;G.tu.all+=cost;G.tu.meet+=cost;let live={},caught=false;const lines=val(row.line,how);const lead=row.lead||(PP[row.k]&&PP[row.k].lead);
   if(how==="sneak"){live=applyFx("안전+1");applySig("④P",1,s.id,row.k+":몰래");if(Math.random()<.4){caught=true;applyFx(`${lead}-8 안전-4`,{live});}}
   else live=applyFx(how==="skip"?`안전+2 ${lead}-1`:val(row.fx));
+  /* 알게 된 것: 면담 전후의 know_ 플래그를 견준다. 이 대사에 딸린 정보가 없으면 그 사람의 정보 카드를 차례로 한 장 연다 */
+  const before=Object.keys(G.f).filter(k=>/^know_/.test(k));
   if(row.fxInfo)applyFx(val(row.fxInfo));
-  const before=Object.keys(G.f).filter(k=>/^know_/.test(k));G.f["talk_"+row.k]=true;G.f["talks_"+row.k]=(G.f["talks_"+row.k]||0)+1;record(s.id,row.k+":"+how);const learned=Object.keys(G.f).filter(k=>/^know_/.test(k)&&!before.includes(k)&&KNOW[k]).map(k=>KNOW[k]);
+  if(!Object.keys(G.f).some(k=>/^know_/.test(k)&&!before.includes(k)&&KNOW[k])&&!/^(할 말 없어\.|\(만날 수 없음\))$/.test(String(lines))){const card=(TALK_INFO[row.k]||[]).find(f=>!G.f[f]);if(card)G.f[card]=true;}
+  if(G.f.know_han_edit)G.f.han_talked=true;
+  G.f["talk_"+row.k]=true;G.f["talks_"+row.k]=(G.f["talks_"+row.k]||0)+1;record(s.id,row.k+":"+how);const learned=Object.keys(G.f).filter(k=>/^know_/.test(k)&&!before.includes(k)&&KNOW[k]).map(k=>KNOW[k]);
+  if(!learned.length)learned.push(`${name(row.k)}${jo(name(row.k),"과","와")}의 면담 ${G.f["talks_"+row.k]}회째입니다. 오늘 들은 말을 면담 기록에 적어 두었습니다. 면담 기록은 연말 평가 때 근거로 쓸 수 있습니다.`);
   paint("");
-  shell(`<div class="pane"><div class="eyebrow">일어난 일</div>${sayHtml(row.k,lines)}<div class="happen"><span class="label">알게 된 것</span>${learned.length?learned.join("<br>"):"새로 알게 된 사실은 없었습니다. 만난 것 자체가 기록에 남습니다."}</div>${caught?`<p>일주일 뒤, ${name(lead)}이 묻습니다. "제 사람 따로 만나셨다면서요."</p>`:""}<div class="foot"><span></span><button class="btn main" ${A(next)}>다음</button></div></div>`,live);
+  shell(`<div class="pane"><div class="eyebrow">일어난 일</div>${sayHtml(row.k,lines)}<div class="happen"><span class="label">알게 된 것</span>${learned.join("<br>")}</div>${caught?`<p>일주일 뒤, ${name(lead)}이 묻습니다. "제 사람 따로 만나셨다면서요."</p>`:""}<div class="foot"><span></span><button class="btn main" ${A(next)}>다음</button></div></div>`,live);
  };
  const draw=()=>{paint("");
   const short=c=>c>G.time;
@@ -534,10 +542,26 @@ function boot(){
 function sceneOf(id){id=String(id);for(const s of CONTENT){if(s.id===id)return s;if(Array.isArray(s.cases))for(const c of s.cases)if(c.id===id)return c;}const base=id.replace(/(_\d+|[a-z]|-\d+)$/,"");return base!==id?sceneOf(base):null;}
 function mailOf(id){for(const s of CONTENT)if(Array.isArray(s.mail)){const m=s.mail.find(x=>x.id===id);if(m)return{m,month:s.month};}return null;}
 function cleanTitle(t){return String(val(t)||"").replace(/Wobbler[①②③]\s*/g,"").replace(/^리더 회의[①②③④]?\s*·\s*/,"").replace(/^[^·]*면담\s*·\s*/,"").replace(/\s*\(.*?\)\s*/g," ").replace(/[🚨⚖️📚👥🗣️]/gu,"").replace(/\s+/g," ").trim();}
-function nm(id){id=String(id);{const mm=id.match(/^(.*)-1$/);const bs=mm&&sceneOf(mm[1]);if(bs&&bs.type==="med")id=mm[1];}const ml=mailOf(id.split("~")[0]);if(ml)return `${ml.month}월 「${ml.m.sub}」`;const R={"R-6":"6월 반기 회고 재배분","4-2":"4월 자원 배분"};if(R[id])return R[id];const s=sceneOf(id);const mo=MON?MON(id):null;return (mo?mo+"월 ":"")+(s?`「${cleanTitle(s.title)||cleanTitle(s.tag)||"결정"}」`:"결정");}
-function choiceText(id,ch){const map={"직접":"직접 처리","코칭":"방향만 주고 맡김","답장":"답장","위임":"위임","보류":"보류","안 알림":"알리지 않음","설명":"이유까지 설명","기준 먼저 공유":"기준 먼저 공유"};if(map[ch])return map[ch];if(/^[a-z]+:/.test(ch)){const [k,how]=ch.split(":");return name(k)+" 면담 "+(how==="몰래"?"(몰래 알아봄)":how);}
+/* 화면에 「결정」 같은 일반 단어가 나가지 않게: 갈림 장면은 실제로 나온 경우의 제목, 제목이 없는 장면은 종류 이름을 쓴다 */
+const TYPE_NAME={evalc:"연말 평가",appeal:"이의 면담",kpi:"KPI 합의서",pulse:"팀 설문 결과",interview:"면담",returns:"되돌아온 일",bills:"청구서",alloc:"자원 배분",write:"세 개의 설명",review:"반기 회고",aiq:"AI 분석 검토"};
+function nm(id){id=String(id);{const mm=id.match(/^(.*)-1$/);const bs=mm&&sceneOf(mm[1]);if(bs&&bs.type==="med")id=mm[1];}
+ {const rt=id.match(/^RET(\d+)(M\d+)$/);if(rt){const ml=mailOf(rt[2]);return `${rt[1]}월 되돌아온 일「${ml?ml.m.sub:"맡긴 일"}」`;}}
+ {const ap=id.match(/^12-4([a-z]+)$/);if(ap&&(LD[ap[1]]||PP[ap[1]]))return `12월 「${name(ap[1])}의 이의 면담」`;}
+ const ml=mailOf(id.split("~")[0]);if(ml)return `${ml.month}월 「${ml.m.sub}」`;const R={"R-6":"6월 반기 회고 재배분","4-2":"4월 자원 배분","4-2공지":"4월 배분 공지"};if(R[id])return R[id];
+ let s=sceneOf(id);if(s&&s.type==="branch"&&Array.isArray(s.cases)){const i=(G.cases||{})[s.id];s=Object.assign({month:s.month},s.cases[i!=null&&s.cases[i]?i:0]||{});}
+ const mo=(MON?MON(id):null)||(s&&s.month)||null;if(s&&s.type==="interview")return (mo?mo+"월 ":"")+"면담";
+ const t=s&&(cleanTitle(s.title)||TYPE_NAME[s.type]||cleanTitle(s.tag));return (mo?mo+"월 ":"")+`「${t||"그달의 안건"}」`;}
+/* 선택지 요약: 결과 문장이 있으면 그 첫 문장, 없으면 선택지 문장을 문장 단위로 줄인다 */
+function shortSentence(t){t=String(t||"").replace(/\s*⏳[\d.]*/g,"").trim();const first=(t.match(/^[^.!?]*[.!?]/)||[t])[0].trim();if(first.length<=46)return first.replace(/[.]$/,"");const cut=first.slice(0,44);return cut.slice(0,Math.max(20,cut.lastIndexOf(" ")))+"…";}
+const FIXED_CHOICE={ai:{A:"분석을 받아들임",B:"정정을 요청함",C:"원자료를 더 받아 봄"},ret:{A:"막힌 곳을 듣고 다시 맡김",B:"내가 가져와 끝냄",C:"기한만 다시 주고 돌려보냄"},appeal:{A:"기록과 합의서 항목을 짚어 설명함",B:"동료와 견주어 설명함",C:"내년에 먼저 챙기겠다고 함",D:"서면 답변으로 처리함"}};
+function choiceText(id,ch){{const fx=/^AI\d/.test(id)?FIXED_CHOICE.ai:/^RET\d+M/.test(id)?FIXED_CHOICE.ret:/^12-4[a-z]/.test(id)?FIXED_CHOICE.appeal:null;if(fx&&fx[ch])return fx[ch];}
+ const map={"직접":"직접 처리","코칭":"방향만 주고 맡김","답장":"답장","위임":"위임","보류":"보류","안 알림":"알리지 않음","설명":"이유까지 설명","기준 먼저 공유":"기준 먼저 공유"};if(map[ch])return map[ch];if(/^[a-z]+:/.test(ch)){const [k,how]=ch.split(":");const n=name(k),ob=jo(n,"을","를");return n+({"몰래":ob+" 리더 모르게 만남","sneak":ob+" 리더 모르게 만남","skip":ob+" 리더에게 알리고 만남","1on1":jo(n,"과","와")+" 1:1 면담"}[how]||" 면담");}
  {const mm=String(id).match(/^(.*)-1$/);const bs=mm&&sceneOf(mm[1]);if(bs&&bs.type==="med"){const t={A:"두 사람을 따로 만나 사정을 들음",B:"둘을 한자리에 불러 정리",C:"메일로 결론만 통보"}[ch];if(t)return t;}}
- const s=sceneOf(id);const o=s&&Array.isArray(s.options)&&s.options.find(x=>x.k===ch);if(o){let t=String(val(o.t)).replace(/\s*⏳\d*/g,"");const cut=t.search(/[,.]/);if(cut>8&&cut<34)t=t.slice(0,cut);else if(t.length>34)t=t.slice(0,32)+"…";return t;}return ch;}
+ let s=sceneOf(id);if(s&&s.type==="branch"&&Array.isArray(s.cases))s=s.cases[(G.cases||{})[s.id]||0]||s;
+ let os=null;try{os=s&&(typeof s.options==="function"?s.options(G):s.options);}catch(e){}
+ if(s&&s.type==="kpi")os=/-3$/.test(id)?s.planb:/-2$/.test(id)?s.levels:null;
+ const o=Array.isArray(os)&&os.find(x=>x.k===ch);if(o){let d="";try{d=val(o.done);}catch(e){}return shortSentence(typeof d==="string"&&d?d:val(o.t));}
+ return /^[A-D]$/.test(ch)?"고른 안 "+ch:ch;}
 function label(id,ch){return nm(id)+" — "+choiceText(id,ch);}
 function stripId(t){return String(t).replace(/^(M\d+(~M\d+)?|R-\d|\d+-\d+[a-z]?(_\d)?)\s+/,"");}
 function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`사람 점수 때문에 다음 분기 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`F사 기대 ${c.기대} 대비 안정 ${c.안정} → F사 만족 ${sg(c.안정_F사)}`);else if(c.안정_F사)p.push(`안정 점수 때문에 F사 만족이 ${sg(c.안정_F사)}`);if(c.F사_재무)p.push(`F사 만족 때문에 재무가 ${sg(c.F사_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
@@ -609,7 +633,13 @@ function qSummary(q){const l=[];if(q.chain)l.push(q.chain.replace(/^\d분기 연
  return l.length?`<div class="happen"><span class="label">${q.q}분기 정산</span>${l.join("<br>")}</div>`:"";}
 
 /* 면담에서 알게 된 것 */
-const KNOW={know_kim:"김 사원은 주 세 번 대기를 섭니다. 다른 사람은 주 한 번쯤입니다.",know_yoon:"발주 검토표의 예외 규칙은 윤 책임만 압니다.",know_oh:"오 사원은 E-417이 왜 나는지 아직 모릅니다.",know_han:"제안서 본문은 거의 한 선임이 씁니다. 표지에는 이름이 없습니다.",know_cha:"차 선임은 설계를 맡고 싶어 합니다.",know_bae:"배 책임의 작년 이의제기 회신은 \"종결\" 두 글자였습니다.",know_oh_risk:"오 사원이 바쁜 주에 점검 절차를 건너뛰고 있습니다.",know_metric:"9월에 지표를 두고 이야기가 나올 수 있습니다.",know_case:"우수 사례 이야기가 나올 수 있습니다.",know_token:"연간 토큰 정산이 다가옵니다. 지표부터 맞춰 두면 좋습니다.",know_rift:"평가 결과를 두고 강태식과 문지원 사이에 할 말이 생겼습니다.",know_mfg_mood:"리더들은 올해 강태식이 팀장이 될 줄 알았습니다.",know_line:"생산 라인이 요즘 불안합니다.",know_july:"F사가 7월에 큰 제안을 하나 줄 것 같습니다.",know_han2:"한 선임은 보고서에 고객이 묻는 것이 빠졌다고 봅니다.",know_eval_rd:"서하준은 평가 때 실험 건수를 어떻게 볼지 궁금해합니다.",know_eval_prc:"이수진은 예방 기록이 평가에 어디에 들어갈지 묻습니다.",know_dec:"연말에 무언가 터질 것 같다는 말이 있습니다.",know_cha3:"차 선임 일은 11월에 정해질 것 같습니다.",know_auto:"자동화 안건이 8월에 다시 올라옵니다.",know_hq:"8월에 본사가 인력 조사를 합니다."};
+/* 사람마다 면담에서 차례로 열리는 정보 카드. 뒤 장면의 "면담에서 들은 말이 떠오른다" 줄과 연말 평가 기록에 쓰인다 */
+const TALK_INFO={rd:["know_rd_load","know_rd_token"],src:["know_src_sign","know_src_audit"],mfg:["know_mfg_night","know_mfg_cover"],prc:["know_prc_time","know_prc_name"],mkt:["know_mkt_f","know_mkt_pipe"],
+ kim:["know_kim","know_kim_alert"],yoon:["know_yoon","know_yoon_err"],oh:["know_oh","know_oh_risk"],han:["know_han","know_han_edit"],cha:["know_cha","know_cha_alone"],bae:["know_bae","know_bae_b"]};
+const KNOW={know_rd_load:"R&D 실험의 절반은 차 선임 한 사람이 돌립니다.",know_rd_token:"R&D가 쓴 토큰의 3분의 1은 중간에 접은 실험에 들어갔습니다.",know_src_sign:"조달 결재는 문지원 한 사람을 거칩니다. 자리를 비우면 멈춥니다.",know_src_audit:"감사 자료는 해마다 문지원과 윤 책임 둘이 밤에 만듭니다.",
+ know_mfg_night:"야간 대기표에는 8명이 있지만, 실제로 설 수 있는 사람은 5명입니다.",know_mfg_cover:"강태식은 야간 자리가 빌 때마다 자기 이름을 먼저 넣어 왔습니다.",know_prc_time:"점검표 47개 항목을 다 보면 여섯 시간이 걸립니다. 실제로 쓰는 시간은 12분쯤입니다.",know_prc_name:"가공 모듈의 예방 실적은 올해 본사 보고서에 한 줄도 없습니다.",
+ know_mkt_f:"F사 임원은 숫자보다 누가 책임지는지를 먼저 묻습니다.",know_mkt_pipe:"하반기 제안 세 건이 같은 세 사람에게 걸려 있습니다.",know_kim_alert:"야간 경고 열에 아홉은 같은 세 종류입니다.",know_yoon_err:"AI 분류가 긴급 발주를 일반으로 넣는 일이 있습니다. 윤 책임이 따로 적어 두고 있습니다.",
+ know_han_edit:"제안서 편집 이력을 함께 열어 보았습니다. 한 선임이 고친 곳이 41건입니다. 연말 평가 기록에 \"기여 41건\"이 생겼습니다.",know_cha_alone:"차 선임은 설계 검토를 받아 본 적이 없습니다. 늘 혼자 정했습니다.",know_bae_b:"작년 B의 사유는 인사 기록 어디에도 적혀 있지 않습니다.",know_kim:"김 사원은 주 세 번 대기를 섭니다. 다른 사람은 주 한 번쯤입니다.",know_yoon:"발주 검토표의 예외 규칙은 윤 책임만 압니다.",know_oh:"오 사원은 E-417이 왜 나는지 아직 모릅니다.",know_han:"제안서 본문은 거의 한 선임이 씁니다. 표지에는 이름이 없습니다.",know_cha:"차 선임은 설계를 맡고 싶어 합니다.",know_bae:"배 책임의 작년 이의제기 회신은 \"종결\" 두 글자였습니다.",know_oh_risk:"오 사원이 바쁜 주에 점검 절차를 건너뛰고 있습니다.",know_metric:"9월에 지표를 두고 이야기가 나올 수 있습니다.",know_case:"우수 사례 이야기가 나올 수 있습니다.",know_token:"연간 토큰 정산이 다가옵니다. 지표부터 맞춰 두면 좋습니다.",know_rift:"평가 결과를 두고 강태식과 문지원 사이에 할 말이 생겼습니다.",know_mfg_mood:"리더들은 올해 강태식이 팀장이 될 줄 알았습니다.",know_line:"생산 라인이 요즘 불안합니다.",know_july:"F사가 7월에 큰 제안을 하나 줄 것 같습니다.",know_han2:"한 선임은 보고서에 고객이 묻는 것이 빠졌다고 봅니다.",know_eval_rd:"서하준은 평가 때 실험 건수를 어떻게 볼지 궁금해합니다.",know_eval_prc:"이수진은 예방 기록이 평가에 어디에 들어갈지 묻습니다.",know_dec:"연말에 무언가 터질 것 같다는 말이 있습니다.",know_cha3:"차 선임 일은 11월에 정해질 것 같습니다.",know_auto:"자동화 안건이 8월에 다시 올라옵니다.",know_hq:"8월에 본사가 인력 조사를 합니다."};
 /* 진단 모드: 시드를 고정하면 같은 선택에 같은 결과가 나온다 */
 (function(){const q=new URLSearchParams(location.search);const sd=q.get("seed");if(sd==null)return;const base=[...String(sd)].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619)>>>0,2166136261);let st=base;const orig=Math.random;
  const mul=()=>{st|=0;st=st+0x6D2B79F5|0;let t=Math.imul(st^st>>>15,1|st);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};

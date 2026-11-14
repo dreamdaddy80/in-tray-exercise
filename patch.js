@@ -472,3 +472,14 @@ const REF_TEXT={"1-3": "<b>Charan 외(2011), 리더십 파이프라인</b><br>�
 {const s=S("9-1");const cause=s.intro[0];s.intro=[];s.options.forEach(o=>{const d0=o.done;o.done=g=>val(d0)+" 복구 뒤에 확인한 내용입니다. "+val(cause);});}
 /* 전체 점검에서 찾은 것: 4월 공지를 보내지 않았다면 강태식②에서 "이미 알린 안"이라고 하지 않는다 */
 {const o=OP("4-3","C"),t0=o.t;o.t=g=>g.f.alloc_none?t0.replace("이미 알린 안이니","이미 정한 안이니"):t0;}
+
+/* ===== 면담에서 들은 말을 뒤 장면과 잇기 ===== */
+{const all=CONTENT.flatMap(x=>[x,...(Array.isArray(x.cases)?x.cases:[])]);
+ const heard=(id,f,key)=>{const s=all.find(x=>x.id===id);if(!s){console.warn("면담 연결: 장면 없음",id);return;}const k=key||"conds";s[k]=(s[k]||[]).concat([C(g=>g.f[f],"면담에서 들은 말이 떠오른다. "+KNOW[f])]);};
+ heard("2-5","know_mfg_night");heard("8-2","know_mfg_night");heard("4-3","know_mfg_cover");heard("8-2","know_kim_alert");
+ heard("5-2","know_prc_time");heard("7-5","know_prc_name");heard("3-7","know_bae_b");heard("9-3","know_bae_b");
+ heard("11-2","know_han_edit");heard("7-4_1","know_src_sign");heard("4-6","know_src_audit");heard("8-3_1","know_rd_load");heard("8-3_2","know_rd_load");
+ heard("5-6_1","know_rd_token");heard("11-6","know_rd_token");heard("9-4","know_mkt_f");heard("10-2","know_mkt_pipe");heard("8-5","know_yoon_err");heard("7-2b","know_cha_alone");
+ /* 대사에 이미 정보가 들어 있던 면담 */
+ const info=(id,k,f)=>{const s=all.find(x=>x.id===id);const r=s&&(s.leaders.find(x=>x.k===k)||s.members.find(x=>x.k===k));if(r&&!r.fxInfo)r.fxInfo=f;};
+ info("4-7","src","`know_mfg_mood`");info("4-7","prc","`know_oh_risk`");info("11-8","rd","`know_eval_rd`");info("11-8","prc","`know_eval_prc`");info("11-8","src",g=>g.f.tae_end_left?"":"`know_rift`");}

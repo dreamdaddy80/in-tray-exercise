@@ -32,10 +32,18 @@ function evalAch(){const a=x=>{if(!G.ach.includes(x))G.ach.push(x);};
  const wp=G.wrotePieces||{};if(["6-2","9-6","12-6"].every(k=>wp[k]&&wp[k].every(n=>n>=2)))a("세 개의 목소리");
 }
 /* 시간 부족으로 강제된 선택: 네 축, 칭호, 청구서 원인, AI 지표에서 빼고 결산에 따로 보여 준다 */
-function forcedRows(){return forcedList().map(d=>{const lk=(d.locked||[]).map(x=>/^알리기:/.test(x)?({full:"기준과 근거 설명",short:"결과만 알리기",num:"배분 숫자 알리기"})[x.slice(4)]:x==="면담"?"면담":/^AI/.test(d.scene)?({A:"분석을 받아들인다",B:"정정을 요청한다",C:"원자료를 더 받아 본다"})[x]:choiceText(d.scene,x)).filter((x,i,a)=>x&&a.indexOf(x)===i);
+function forcedRows(){return forcedList().map(d=>{const lk=(d.locked||[]).map(x=>/^알리기:/.test(x)?({full:"기준과 근거 설명",short:"결과만 알리기",num:"배분 숫자 알리기"})[x.slice(4)]:x==="면담"?"면담":choiceText(d.scene,x)).filter((x,i,a)=>x&&a.indexOf(x)===i);
  const n=nm(d.scene);return `${/^\d+월/.test(n)?n:d.month+"월 "+n}${lk.length?` · 잠겨 있던 것: ${lk.join(", ")}`:""}`;});}
 function forcedHtml(){const r=forcedRows();const ot=G.borrowed||0;
  return `<div class="happen"><span class="label">시간 부족으로 강제된 선택 ${r.length}건</span>${r.length?`팀장 시간이 모자라 더 나은 선택지가 잠겨 있던 결정입니다. 네 축 기록, 칭호, 청구서 원인에는 넣지 않았습니다.<details class="ref"><summary>목록 보기</summary><p class="note" style="margin-top:6px">${r.join("<br>")}</p></details>`:"올해는 시간이 모자라 선택지가 잠긴 채로 내린 결정이 없었습니다."}${ot?`<br>올해 야근으로 빌린 시간은 모두 ⏳${ot}입니다.`:""}</div>`;}
+/* 자가진단과 실제 행동의 차이로 나눈다. 차이가 15%p 미만이면 일치, 스스로 본 쪽이 15%p 이상 높으면 과대평가(맹점), 기록이 15%p 이상 높으면 숨은 강점.
+   시간 부족으로 강제된 선택은 axScore에서 이미 빠져 있다 */
+const AXIS_GAP=15;
+function axisBox(d,v){if(v==null)return "기록이 적어 판단하지 않습니다.";const g=d-v;
+ if(g>=AXIS_GAP)return `과대평가(맹점). 스스로 본 것보다 기록이 ${g}%p 낮습니다.`;if(g<=-AXIS_GAP)return `숨은 강점. 스스로 본 것보다 기록이 ${-g}%p 높습니다.`;
+ return v>=50?"알고 있는 강점. 스스로 본 것과 기록이 비슷하고, 리더 쪽입니다.":"알고 있는 과제. 스스로 본 것과 기록이 비슷하고, 관리자 쪽입니다.";}
+function fairHtml(){const L=(G.fairLog||[]);if(!L.filter(Boolean).length)return "";const sg=v=>(v>0?"+":"")+v;
+ return `<details class="ref"><summary>펄스 "업무 배분이 공정하다"를 움직인 것</summary><div class="prose" style="font-size:14.5px;margin-top:8px">${L.map((x,i)=>x?`<p><b>${i+1}분기 ${x.v}</b> · 사람 점수의 영향 ${sg(x.people)}${x.adj.length?"<br>"+x.adj.map(a=>`${sg(a[1])} ${a[0]}`).join("<br>"):"<br>이 분기에는 이 문항을 따로 움직인 결정이 없었습니다."}</p>`:"").join("")}<p class="note">깨진 약속, 초과 부하, 도착한 청구서도 이 문항을 내립니다.</p></div></details>`;}
 function exportBundle(){const w=G.written;return JSON.stringify({강제된선택:forcedList().map(d=>({장면:d.scene,월:d.month,고른것:d.choice,잠긴것:d.locked||[]})),선임다짐:G.pledge,우선순위:G.prio,우선순위변경:!!G.f.prio_changed,핵심과제:w.tasks,공개한기준:w.kpi,공개수준:G.f.pub_full?"전체":G.f.pub_items?"항목":"리더만",공지문:w.notice,"세개의설명6월":w["6-2"],"세개의설명9월":w["9-6"],"세개의설명12월":w["12-6"],반기회고:w.again,약속장부:G.prom,연말등급:G.grades,일관성:consPct(),기준의질:G.quality,기준미달:breaches(),AI검증:typeof verStats==="function"?{지표:verStats(),기록:G.ver||[]}:null,숨은값:{월별:G.mon||[]},확률의호의:{건수:(G.luck||[]).length,장애관련:(G.luck||[]).filter(x=>x.cat==="장애").length,목록:G.luck||[]},디브리핑:w.debrief,실행카드:w.action},null,2);}
 
 /* 분기별 추이 차트: 네 성적표, 시작~4분기, 같은 축 0~100 */
@@ -83,7 +91,7 @@ function SC_FINALE(s){
    ${(G.chain||[]).map(chainLine).filter(Boolean).map(t=>`<p class="note">${t}</p>`).join("")}${(G.fexpLog||[]).length?`<details class="ref"><summary>F사 기대가 움직인 결정</summary><p class="note" style="margin-top:6px">${G.fexpLog.map(x=>`${x.m}월 ${x.t} → 기대 ${x.d>0?"+":""}${x.d}`).join("<br>")}</p><p class="note">약속을 키우면 같은 안정 점수도 불만이 됩니다.</p></details>`:""}${nb()}</div>`);ch.bind();}
   else if(page===3)shell(`<div class="pane"><div class="eyebrow">결과 유형</div><div class="happen"><span class="label">1월의 다짐</span><span class="voice">${G.pledge}</span></div><h2>${ty[0]}</h2><p>${ty[1]}</p><p class="note">우선순위: ${G.prio.join(", ")}${G.f.prio_changed?" (6월에 우선순위를 바꿈)":""}</p>${nb()}</div>`);
   else if(page===4){const n=G.unsent.length;shell(`<div class="pane" style="background:var(--ink);color:var(--panel);border-radius:4px"><div class="eyebrow" style="color:inherit;opacity:.7">보내지 않은 메시지</div><h2>올해 당신의 받은편지함에 도착하지 않은 메시지가 ${n}건 있었습니다.</h2><div class="prose">${G.unsent.map(x=>`<p class="voice">${x}</p>`).join("")}<div style="color:inherit">${safeSpark()}</div><p>${n?(G.f.quiet_inbox?`그해 7월, 받은편지함은 ${CONTENT.find(x=>x.id==="7-1").mail.filter(m=>G.f["got_"+m.id]).length}건이었습니다. 10시 전에 비었습니다.`:""):"올해는 말하려던 것이 모두 도착했습니다. 시끄러웠던 받은편지함을 기억하시나요."}</p></div><div class="foot"><span></span>${BTN(()=>{page++;draw();},"다음")}</div></div>`);}
-  else if(page===5)shell(`<div class="pane"><div class="eyebrow">네 개의 축</div><h2>간극은 실패의 증거가 아니라 성찰의 재료입니다.</h2>${forcedHtml()}<div class="table">${[1,2,3,4].map(a=>{const r=axScore(a),d=G.diag?G.diag[a]:50,self=d>=50,act=(r.v||0)>=50;const box=self&&act?"알고 있는 강점. 그렇게 믿었고, 기록도 그렇습니다.":self?"맹점. 그렇게 믿었습니다. 기록은 다릅니다.":act?"숨은 강점. 스스로 생각한 것보다 기록이 낫습니다.":"알고 있는 과제. 스스로도 알고 있었고, 기록도 그렇습니다.";
+  else if(page===5)shell(`<div class="pane"><div class="eyebrow">네 개의 축</div><h2>간극은 실패의 증거가 아니라 성찰의 재료입니다.</h2>${forcedHtml()}<div class="table">${[1,2,3,4].map(a=>{const r=axScore(a),d=G.diag?G.diag[a]:50,box=axisBox(d,r.v);
    const h1=axScore(a,(x,i)=>i<(G.h2At||0)),h2=axScore(a,(x,i)=>i>=(G.h2At||0));
    return `<div class="task"><b>${AXN[a]}</b><p class="num">자가진단 ${d}% · 실제 행동 ${r.v==null?"-":r.v+"%"}</p><p>${box}</p><p class="note">일치: ${evid(a,"L").join(", ")||"없음"}</p><p class="note">균열: ${evid(a,"P").join(", ")||"없음"}</p>${G.h2_focus===a?`<p class="note">바꾸기로 한 습관입니다. 상반기 ${h1.v==null?"-":h1.v+"%"} → 하반기 ${h2.v==null?"-":h2.v+"%"}</p><p class="note">6월에 쓴 행동: "${G.written.again?G.written.again.행동:""}"</p>`:""}</div>`}).join("")}</div>${nb()}</div>`);
   else if(page===6){const miss=Object.entries(G.billP||{}).filter(([b,p])=>!G.bills.includes(b)&&p>=40);
@@ -102,6 +110,7 @@ function SC_FINALE(s){
    ${G.evalBlocked?row("3월 기준 선택 때문에 증빙이 막힌 사람",G.evalBlocked.length?(G.f.pub_leaders?`${G.evalBlocked.length}명 전원 · 기준을 구성원에게 공개하지 않음`:G.evalBlocked.map(x=>`${name(x.k)}${x.need.length?` (공개하지 않은 기준: ${x.need.join(", ")})`:""}`).join(" · ")):"없음"):""}
    ${row("⑥ 평가",`근거 충족 ${G.evalGood||0}/${G.evalN||11} · ${G.appeal0?("이의제기 0건 ("+(G.appeal0==="침묵"?"말하지 않은 사람이 있었음":"근거가 충족됨")+")"):"이의 면담 "+(G.appealOK?"기록 제시":"기록 미제시")}${G.f.kpi_order?" · KPI 순서대로":""}`)}
    </div>
+   ${fairHtml()}
    ${typeof verHtml==="function"?verHtml():""}
    ${(G.badEvid||[]).length?`<h2 style="font-size:18px">쓰면 안 되는 근거</h2><p>12월에 근거로 고른 다음 기록은 등급의 근거가 될 수 없습니다.</p><div class="prose" style="font-size:14.5px">${G.badEvid.map(x=>`<p>${x}</p>`).join("")}</div><div class="table">${[["투입 시간","오래 일한 것은 무엇을 해냈는지를 말해 주지 않습니다. 6월 지침에서 제외되었습니다."],["병가·휴직","아픈 것은 평가 대상이 아닙니다."],["익명 글·소문","확인되지 않은 일이고, 글쓴이를 추정한 것은 쓸 수 없습니다."],["내부 제보·반대 의견","말한 사람이 등급으로 불이익을 받으면 다음 사람은 말하지 않습니다."],["이동·이직 의사","앞날에 대한 의사이지 올해의 기여가 아닙니다."]].map(([a,b])=>`<div class="task"><b>${a}</b><span class="note">${b}</span></div>`).join("")}</div>`:""}
    <p class="note">업적: ${G.ach.join(", ")||"없음"}</p>${window.SEEDED?`<p class="note">진단 모드 · 시드 ${window.SEEDED}: 같은 선택을 하면 같은 확률 결과가 나옵니다.</p>`:`<p class="note">확률로 일어난 일은 "일어난 일" 화면에 따로 표시했습니다. 같은 선택도 회차마다 결과가 다를 수 있습니다. 평가 도구로 쓸 때는 주소 끝에 ?seed=숫자 를 붙여 진단 모드로 실행하세요.</p>`}${nb()}</div>`);}
@@ -133,7 +142,7 @@ function miniLine(title,series,max,unit){const W=300,H=110,L=26,R=8,T=10,B=20,iw
 function revealPage(step,go){const M=G.mon||[];const sum=k=>M.reduce((a,x)=>a+(x[k]||0),0);const h=(G.hist||[]).slice(-1)[0]||{};
  const repY=sum("rep"),hidY=sum("hidden");const first=M.slice(0,3).reduce((a,x)=>a+x.rep,0),last=M.slice(-3).reduce((a,x)=>a+x.rep,0);
  if(step===0){shell(`<div class="pane"><div class="eyebrow">결산 · 12월</div><h2>올해의 숫자</h2><div class="table">
-  ${[["성과",G.score.성과],["F사 만족",G.fsat],["재무",G.score.재무],["안정·보안",G.score.안정],["올해 보고된 이슈·아차 사례",repY+"건"],["청구서",G.bills.length+"장"]].map(([a,b])=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b class="num" style="font-size:16px">${b}</b></div>`).join("")}</div>
+  ${[["성과",G.score.성과],["F사 만족",G.fsat],["재무",G.score.재무],["사람",G.score.사람],["안정·보안",G.score.안정],["올해 보고된 이슈·아차 사례",repY+"건"],["청구서",G.bills.length+"장"]].map(([a,b])=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:var(--ink)">${a}</span><b class="num" style="font-size:16px">${b}</b></div>`).join("")}</div>
   <p class="voice">${last<first?`보고된 이슈는 1분기 ${first}건에서 4분기 ${last}건으로 줄었습니다.`:`보고된 이슈는 1분기 ${first}건, 4분기 ${last}건이었습니다.`}</p>
   <div class="foot"><span></span>${BTN(go,"다음","main")}</div></div>`);return;}
  const v=k=>M.map(x=>x[k]||0);
