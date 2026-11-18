@@ -393,4 +393,60 @@ SCENES.v3final=function(s){
   const blob=new Blob([JSON.stringify(o,null,1)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=`intray_v3_${(G.nick||"응답").replace(/[^\w가-힣]/g,"")}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(u),500);};
  const draw=()=>{paint("");shell(`<div class="pane">${pages[page]()}<div class="foot">${page?`<button class="btn" ${A(()=>{grab();page--;draw();window.scrollTo(0,0);})}>← 이전</button>`:"<span></span>"}${page<pages.length-1?`<button class="btn main" ${A(()=>{grab();page++;draw();window.scrollTo(0,0);})}>다음</button>`:`<button class="btn main" ${A(()=>{grab();next();})}>더 보기: 상세 결산</button>`}</div></div>`);};
  draw();};
+
+/* ===================== 첫 페이지: 과정 개요 (03-1 P0 · 01 기획요약) ===================== */
+SCENES.title=function(s){
+ const old=load(),has0=old&&old.idx>0,rd=old&&old.round?`Round ${old.round}`:"프롤로그";
+ const start=()=>{const go=()=>{G=newGame();clearSave();next();beep(520,.1);};if(has0)confirmBox("처음부터 시작할까요?",`저장된 진행(${rd})이 지워집니다. 되돌릴 수 없습니다.`,"처음부터 시작",go,true);else go();};
+ const cont=()=>{G=old;render();};
+ const TRAIT={rd:"새 AI 도구라면 누구보다 먼저 써 보는 실험가",src:"무엇이든 한 번 더 확인하는 규정과 안정의 관리자",mfg:"불을 끄는 해결사. 팀장 자리를 놓친 2년 선배",prc:"불이 나기 전에 막는 예방자. 어제까지의 동료",mkt:"F사 임원들 앞에서 가장 빛나는 수주형 리더"};
+ const btns=`<div class="btns"><button class="btn main" ${A(start)}>처음부터 시작</button>${has0?`<button class="btn" ${A(cont)}>이어서 하기 (${rd})</button>`:""}</div>`;
+ shell(paint(`<div class="lp">
+ <section class="lp-hero">
+  <div class="eyebrow">신임 팀장 In-Tray 시뮬레이션 · v3</div>
+  <h1>F사 운영팀 신임 팀장, 첫 1년</h1>
+  <p class="lp-lead"><b>월요일 아침 8시 40분.</b> 받은편지함에 여덟 통이 와 있고, 곧 전화가 한 통 울립니다. 어제까지 옆자리에서 함께 일하던 동료들이 오늘부터 당신을 팀장이라고 부릅니다.</p>
+  <div class="lp-chips"><span>3라운드 · 1년</span><span>라운드마다 약 20분</span><span>2박 3일 과정, 하루 한 라운드</span><span>정답 없음</span></div>
+  ${btns}
+  <p class="note">라운드가 끝나면 이 브라우저에 자동 저장됩니다. 입력한 내용은 교육 목적의 채점에만 쓰이며, 인사 평가와 연결되지 않습니다.</p>
+ </section>
+
+ <section class="lp-sec"><h2>상황</h2><div class="lp-3">
+  <div><b>팀</b><p>F사 운영팀 30명. 식품업계 1위 F사의 원료 수입부터 해외 공장 라인까지를 받치는 IT 시스템을 운영합니다. 시스템이 멈추면 F사의 사업이 멈춥니다.</p></div>
+  <div><b>올해의 압박</b><p>인원은 3년째 그대로인데 일은 늘었습니다. F사는 운영비 동결을 요구하고, 회사는 AI Native 전환을 선언했습니다. 작년 말에는 "왜 이 등급인지 아무도 설명해 주지 않았다"는 이의제기가 나왔습니다.</p></div>
+  <div><b>당신</b><p>이 팀에서 5년 넘게 일한 엔지니어였고, 1월 1일부로 팀장이 되었습니다. 시스템은 누구보다 잘 압니다. 일을 맡겨 본 적도, 등급을 매겨 본 적도 없습니다.</p></div>
+ </div></section>
+
+ <section class="lp-sec"><h2>세 번의 라운드</h2><p class="note">라운드 앞에는 강의가, 뒤에는 피드백이 있습니다. 라운드는 강사가 알려 주는 코드로 열립니다.</p><div class="lp-3">
+  <div class="lp-round"><span class="lp-tag">Round 1 · 1분기</span><b>기준 세우기</b><p>받은편지함과 전화, 핵심 과제 정의, 첫 리더 회의, 등급 기준 설계와 KPI 면담.</p><span class="note">강의 1 · 전문가에서 관리자로</span></div>
+  <div class="lp-round"><span class="lp-tag">Round 2 · 2·3분기</span><b>배분과 상충</b><p>AI로 생긴 여력과 토큰 나누기, F사 운영비 협상, 공로 중재, 본사 차출, 같은 결정을 세 사람에게 설명하기.</p><span class="note">강의 2 · 나누고 맡기고 말하게 하기</span></div>
+  <div class="lp-round"><span class="lp-tag">Round 3 · 4분기</span><b>위기와 평가</b><p>새벽 3시 공장 라인의 안전 신호, 평가 지침 변경, 7명의 연말 평가와 이의제기. 그리고 1년 결산과 90일 액션 플랜.</p><span class="note">강의 3 · 위기와 평가, 그리고 현업으로</span></div>
+ </div></section>
+
+ <section class="lp-sec"><h2>함께 일할 모듈 리더 다섯 명</h2><p class="note">직책도 평가 권한도 없지만, 30명의 하루는 이들을 통해 움직입니다. 성향은 게임 중 언제든 프로필 카드로 볼 수 있고, 더 깊은 이야기는 직접 대화해야 열립니다.</p>
+  <div class="lp-people">${["rd","src","mfg","prc","mkt"].map(k=>`<div>${face(k,50)}<span><b>${LD[k].n}</b> <small>${LD[k].m}</small><em>${TRAIT[k]}</em></span></div>`).join("")}</div>
+ </section>
+
+ <section class="lp-sec lp-2">
+  <div><h2>네 장의 성적표</h2><ul class="lp-list">
+   <li><b>고객</b> F사와의 계약을 약속대로 지켰는가</li><li><b>재무</b> 팀 손익 (매출은 여기서만)</li>
+   <li><b>구성원</b> 팀원 30명의 몰입과 목소리</li><li><b>서비스 안정</b> 시스템 가용성 · 장애 · 보안</li></ul>
+   <p class="note">네 장은 이어져 있습니다. 구성원이 지치면 서비스가 흔들리고, 고객이 떠나고, 손익이 나빠집니다. 네 장을 모두 만점으로 만드는 길은 없습니다.</p></div>
+  <div><h2>이 세계의 규칙</h2><ol class="lp-list">
+   <li>공개하지 않은 기준은 결정의 근거로 쓸 수 없습니다.</li><li>설명하지 않은 결정은 소문이 됩니다.</li><li>공개한 기준을 바꾸면 다시 알려야 합니다.</li></ol>
+   <p class="note"><b>넘어서는 안 되는 선</b> 장애 절차, 보안(고객 데이터), 현장 안전. 벗어나면 다른 점수와 관계없이 기준 미달입니다.</p></div>
+ </section>
+
+ <section class="lp-sec"><h2>무엇을 돌아보게 되나</h2><div class="lp-4">
+  <div><b>① 일 맡기기</b><span>직접 처리할까, 기대 결과·기한·권한·이유를 밝혀 맡길까</span></div>
+  <div><b>② 평가하기</b><span>숫자로만 볼까, 드러나지 않는 기여까지 기준으로 공개할까</span></div>
+  <div><b>③ 자원 나누기</b><span>아낀 시간을 새 일로 채울까, 기준을 세워 나눌까</span></div>
+  <div><b>④ 설명하기</b><span>결과로 보여 줄까, 결정 뒤 근거를 대상에 맞게 설명할까</span></div></div>
+  <p class="note">시작할 때 8문항으로 지금의 습관을 적어 두고, 결산에서 "스스로 본 나 · 남이 본 나 · 실제로 한 행동"을 나란히 봅니다.</p>
+ </section>
+
+ <section class="lp-sec lp-end">${btns}<p class="note">좋은 선택에도 대가가 있고, 나쁜 선택이 당장은 통하기도 합니다. 어떤 결과는 몇 달 뒤에 옵니다.</p></section>
+ </div>
+ <details class="opmenu"><summary>운영자 검토용</summary><div class="oppop" role="menu"><p class="note">게임을 끝까지 하지 않아도 장면을 자유롭게 넘겨 볼 수 있습니다. 검토 중 진행은 저장하지 않습니다.</p><button class="opitem" role="menuitem" ${A(()=>startReview("P1"))}>프롤로그부터 검토</button><button class="opitem" role="menuitem" ${A(()=>startReview("1-1"))}>Round 1부터 검토</button></div></details>`));
+};
 })();
