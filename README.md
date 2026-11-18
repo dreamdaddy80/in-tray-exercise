@@ -5,3 +5,9 @@
 - 브라우저에서 `index.html`을 열면 바로 실행됩니다. 빌드 단계는 없습니다.
 - 진행 상황은 브라우저의 localStorage에 저장됩니다.
 - 결산 화면에서 채점용 응답 묶음을 복사할 수 있습니다.
+
+## v3 · 3라운드 60분판
+2박 3일 과정에서 하루 한 라운드씩 하는 판은 [`v3/`](v3/) 폴더에 있습니다.
+
+- 플레이: https://dreamdaddy80.github.io/in-tray-exercise/v3/
+- 진행자 집계: https://dreamdaddy80.github.io/in-tray-exercise/v3/facilitator.html

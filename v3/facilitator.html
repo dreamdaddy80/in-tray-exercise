@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>진행자 집계</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 진행자 집계: 학습자가 제출한 라운드 결과 코드를 붙여 넣으면 반 전체를 보여 준다. 서버 없이 이 브라우저에서만 계산한다. */
+:root{--bg:#E7E9E6;--panel:#FBFBFA;--sunk:#F0F1EE;--ink:#151615;--muted:#666A63;--line:#E3E5E1;--accent:#DDF46A;--good:#2E7D3A;--bad:#B4402F;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F110F;--panel:#1B1D1B;--sunk:#202320;--ink:#EFF1EC;--muted:#9A9F98;--line:#2B2E2A;--accent:#D4EE5E;--good:#7ED08F;--bad:#F08A7A;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500}}
+:root[data-theme="dark"]{--bg:#0F110F;--panel:#1B1D1B;--sunk:#202320;--ink:#EFF1EC;--muted:#9A9F98;--line:#2B2E2A;--accent:#D4EE5E;--good:#7ED08F;--bad:#F08A7A}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;font-size:15px;line-height:1.55;word-break:keep-all}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 10px}h2{font-size:17px;margin:0 0 8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0}
+textarea{width:100%;min-height:120px;font:13px/1.4 ui-monospace,monospace;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+button{font:inherit;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}button.main{background:var(--accent);border-color:var(--accent);color:#151615}
+.note{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:5px 6px;border-top:1px solid var(--line);text-align:left}td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:10px;border-radius:5px;background:var(--s1);display:inline-block;vertical-align:middle}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.present .nick{filter:blur(6px)}
+</style>
+<div class="wrap">
+ <h1>진행자 집계 · In-Tray v3</h1>
+ <p class="note">학습자가 라운드 성적표나 결산에서 복사한 결과 코드(<code>IT3-R…</code>)를 한 줄에 하나씩 붙여 넣으세요. 코드에는 별칭, 스타일, 핵심 선택, 지표, 습관 점수만 들어 있고 쓴 글은 없습니다. 계산은 이 브라우저 안에서만 합니다.</p>
+ <div class="card"><textarea id="in" placeholder="IT3-R1-eyJ2Ijoz...-1a2b"></textarea>
+  <div class="row" style="margin-top:8px"><button class="main" id="go">집계하기</button><label class="row note"><input type="checkbox" id="pres"> 발표 모드 (별칭 가리기)</label><span class="note" id="msg"></span></div></div>
+ <div id="out"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const KEYS={"1-5":["첫 주간 회의",{A:"보고형",B:"토론형",C:"격주+1:1"}],pub:["KPI 기준 공개 수준",{A:"전체 공개",B:"항목만",C:"리더에게만"}],"3-8":["승인 안 된 AI 도구",{A:"즉시 신고",B:"먼저 파악 후 신고",C:"공개 조치 후 신고"}],"4-5":["F사 운영비 요구 1단계",{A:"추정치라 밝힘",B:"3% + 2년",C:"신규 과제로 대신"}],"6-1":["하반기 계약",{A:"동결 + 실측",B:"5% 인하 + 우선 협상권",C:"동결 + 신규 2건"}],"5-4":["장애 공로 추천",{A:"생산",B:"두 모듈",C:"보류"}],"8-1a":["본사 차출 대응",{A:"그대로 보냄",B:"1명으로 협상",C:"파견으로"}],"R3-1a":["새벽 지휘",{A:"강태식 지휘",B:"직접 원격 지휘"}],"R3-1b":["3번 라인",{A:"정지 + 절차",B:"부분 가동",C:"우회 승인"}],"9-4":["F사 재협상",{A:"오류 인정 + 검증",B:"운영비 깎아 줌",C:"조사 후 답",D:"산식부터"}],"6-4b":["지침 변경 알림",{A:"전원 재공지",B:"리더 통해",C:"평가 때"}],"12-3a":["나머지 구성원 평가",{A:"관찰 확인",B:"리더 의견대로",C:"KPI 순서"}]};
+const STY={push:"추진형",care:"배려형",bal:"균형형"};const KPI=["고객","재무","구성원","서비스 안정","F사 만족"];const AX=["① 맡기기","② 평가","③ 자원","④ 설명"];
+function decode(line){const m=line.trim().match(/^IT3-R(\d)-([A-Za-z0-9_-]+)-([0-9a-f]{4})$/);if(!m)return null;const b=m[2];let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;if((h%65536).toString(16).padStart(4,"0")!==m[3])return{bad:"검사 값 불일치"};
+ try{const j=JSON.parse(decodeURIComponent(escape(atob(b.replace(/-/g,"+").replace(/_/g,"/")))));j.r=+m[1];return j;}catch(e){return{bad:"해석 실패"};}}
+const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):"—";const med=a=>{if(!a.length)return "—";const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)];};
+function run(){
+ const rows=$("in").value.split(/\s+/).filter(Boolean).map(decode);const ok=rows.filter(r=>r&&!r.bad),bad=rows.length-ok.length;
+ $("msg").textContent=`${ok.length}개 읽음${bad?` · ${bad}개는 읽지 못함`:""}`;
+ /* 같은 별칭·라운드는 마지막 코드만 쓴다 */
+ const last={};ok.forEach(r=>{last[(r.nick||"?")+"|"+r.r]=r;});const D=Object.values(last);
+ const rounds=[1,2,3].filter(r=>D.some(x=>x.r===r));let h="";
+ rounds.forEach(R=>{const L=D.filter(x=>x.r===R);
+  h+=`<div class="card"><h2>Round ${R} · ${L.length}명</h2><p class="note nick">별칭: ${L.map(x=>x.nick||"(없음)").join(", ")}</p><p class="note">소요 시간 중앙값 ${Math.round(med(L.map(x=>x.t||0))/60)}분</p><div class="grid">`;
+  /* 핵심 선택 분포 + 반 인생극장 */
+  Object.keys(KEYS).forEach(k=>{const g={};L.forEach(x=>{const v=(x.ch||{})[k];if(v==null)return;const c=String(v)[0];(g[c]=g[c]||[]).push(x);});const cs=Object.keys(g).sort();if(!cs.length)return;
+   h+=`<div><b>${KEYS[k][0]}</b><table><tr><th>선택</th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${cs.map(c=>`<tr><td>${c}. ${KEYS[k][1][c]||""}</td><td class="n">${g[c].length} <span class="bar" style="width:${Math.round(g[c].length/L.length*36)}px"></span></td>${KPI.map((_,i)=>`<td class="n">${avg(g[c].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table><p class="note">반 인생극장: 같은 결정에서 다른 길을 고른 동료들의 라운드 끝 지표 평균</p></div>`;});
+  if(L.some(x=>(x.ch||{}).cells)){const g={};L.forEach(x=>{const c=(x.ch||{}).cells;if(!c)return;const top=["RUN","AI","GROW","SEC"][[...c].map(Number).indexOf(Math.max(...[...c].map(Number)))];(g[top]=g[top]||[]).push(x);});
+   h+=`<div><b>여력 배분 (가장 많이 놓은 칸)</b><table><tr><th>칸</th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${Object.keys(g).map(c=>`<tr><td>${c}</td><td class="n">${g[c].length}</td>${KPI.map((_,i)=>`<td class="n">${avg(g[c].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table></div>`;}
+  /* 스타일별 */
+  const sg={};L.forEach(x=>{(sg[x.style]=sg[x.style]||[]).push(x);});
+  h+=`<div><b>스타일별 지표 평균</b><table><tr><th>스타일</th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${Object.keys(sg).map(s=>`<tr><td>${STY[s]||s}</td><td class="n">${sg[s].length}</td>${KPI.map((_,i)=>`<td class="n">${avg(sg[s].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table></div>`;
+  /* 4축 */
+  h+=`<div><b>네 축 평균 · 스스로 본 나 vs 실제 행동</b><table><tr><th>축</th><th>자가진단</th><th>실제 행동</th><th>차이</th></tr>${[1,2,3,4].map(a=>{const s=avg(L.map(x=>x.ax&&x.ax.self?x.ax.self[a]:null).filter(v=>v!=null)),v=avg(L.map(x=>x.ax&&x.ax.act?x.ax.act[a]:null).filter(v=>v!=null));const d=typeof s==="number"&&typeof v==="number"?v-s:"—";return `<tr><td>${AX[a-1]}</td><td class="n">${s}</td><td class="n">${v}</td><td class="n" style="color:${d<-15?"var(--bad)":"inherit"}">${d}</td></tr>`;}).join("")}</table><p class="note">실제 행동이 자가진단보다 15 넘게 낮은 축이 반 전체의 맹점 후보입니다.</p></div>`;
+  if(R===1){const g2=L.filter(x=>x.g2).length;h+=`<div><b>학습 목표 ② (기준 설계) 자동 판정</b><p>${g2}/${L.length}명 충족</p></div>`;}
+  h+=`</div></div>`;});
+ $("out").innerHTML=h||'<div class="card note">읽은 코드가 없습니다.</div>';
+}
+$("go").onclick=run;$("pres").onchange=e=>document.body.classList.toggle("present",e.target.checked);
+</script>
