@@ -202,7 +202,7 @@ SC_KPI=function(s){
   if(has("noticed_prc")&&!has("pub_prevent"))applyFx("prc-3",{live});
   const q=(hidden?30:0)+(bad?0:30)+Math.round(right/pick.length*20);
   G.written.kpi=pick.map(i=>({기준:s.cards[i].n,연결:link[i]}));
-  G.goal2=pick.length>=3&&hidden>0&&right===pick.length;G.quality=q;
+  G.goal2=pick.length>=3&&hidden>0&&right===pick.length;G.quality=q;G.kpiChk={n:pick.length,hidden,right};
   record(s.id,G.pub.join(","));
   if(has("pub_prevent")||has("pub_security")||has("pub_support"))ach("보이지 않는 것을 보다");
   SC_CHOICE({id:s.id+"-2",tag:s.tag,when:s.when,title:"어디까지 알릴까요?",intro:[`고른 기준: <b>${G.pub.join(", ")}</b>`,"이 기준을 누구에게, 어디까지 보여 줄지 정합니다. 많이 알릴수록 시간이 들고 따져 묻는 사람이 늘어납니다. 적게 알릴수록 팀원들은 각자 짐작합니다. 기준을 받은 구성원만 연말에 그 기준으로 설명을 들을 수 있습니다."],options:s.levels},{done:(o)=>{
@@ -255,7 +255,7 @@ function roundStart(r){
   G.time=Math.max(2,ROUND_TIME[r]+(prev.carry||0)+(prev.bonus||0)-(prev.pen||0));
   if(G.tokenCap)G.token=G.tokenCap;
  }
- G.rs=G.rs||{};G.rs[r]={score:{...G.score},fsat:G.fsat,trust:{...G.trust},safe:G.safe,sig:G.sig.length,dec:G.decisions.length,tok0:G.roundTok[r]||0,t0:Date.now()};
+ G.rs=G.rs||{};G.rs[r]={score:{...G.score},fsat:G.fsat,trust:{...G.trust},safe:G.safe,sig:G.sig.length,dec:G.decisions.length,tok0:G.roundTok[r]||0,t0:Date.now(),fx0:(G.fxLog||[]).length,cons0:(G.cons||[]).length};
  (G.styleLog=G.styleLog||[]).push({r,style:G.style});
  if(G.style==="push")applyFx("안전-3");else if(G.style==="care")applyFx("안전+3");else G.time=Math.max(0,G.time-1);
  drawBar();
@@ -429,22 +429,59 @@ function resultCode(r){
 window.v3ResultCode=resultCode;
 SCENES.roundEnd=function(s){
  const r=s.round,st=(G.rs||{})[r]||{score:{},trust:{}};
- const d=(a,b)=>{const x=a-b;return `${b} → <b>${a}</b> <span class="note" style="color:${x>0?"var(--good)":x<0?"var(--bad)":"var(--muted)"}">${x>0?"+":""}${x}</span>`;};
+ const dl=(a,b)=>{const x=a-b;return `<span class="note" style="color:${x>0?"var(--good)":x<0?"var(--bad)":"var(--muted)"}">${x>0?"+":""}${x}</span>`;};
+ const d=(a,b)=>`${b} → <b>${a}</b> ${dl(a,b)}`;
  const ax=axRange(st.sig||0),axAll=axRange(0);
  const ev=(G.sig||[]).slice(st.sig||0).filter(x=>!x.forced);const fit=ev.find(x=>x.s==="L"),gap=ev.find(x=>x.s==="P");
- const nameOf=id=>{const sc=byId[id]||CONTENT.find(x=>x.id===id);if(sc)return noNum(val(sc.title)||id);const m=typeof mailOf==="function"?mailOf(id):null;return m&&m.m&&m.m.sub?m.m.sub:id;};
+ const nameOf=id=>{const sc=byId[id]||CONTENT.find(x=>x.id===id);if(sc)return (window.SC_NICK&&SC_NICK[id])||noNum(val(sc.title)||sc.tag||id);const m=typeof mailOf==="function"?mailOf(id):null;return m&&m.m&&m.m.sub?"받은편지함 · "+m.m.sub:id;};
+ /* 점수가 왜 움직였나: 이번 라운드 효과 기록을 장면별로 묶고, 기록에 없는 나머지는 분기 말 연쇄로 본다 */
+ const log=(G.fxLog||[]).slice(st.fx0||0);
+ const why=(k,total)=>{const m={};log.forEach(e=>{if(e.d[k])m[e.t]=(m[e.t]||0)+e.d[k];});
+  const rows=Object.entries(m).filter(x=>x[1]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const rest=total-rows.reduce((a,x)=>a+x[1],0);if(rest)rows.push(["분기 말 연쇄 · 자동 정산",rest]);
+  if(!rows.length)return `<small class="why">이번 라운드에 이 점수를 움직인 결정이 없었습니다.</small>`;
+  return `<small class="why">${rows.slice(0,3).map(x=>`${x[0].length>16?x[0].slice(0,16)+"…":x[0]} <b style="color:${x[1]>0?"var(--good)":"var(--bad)"}">${x[1]>0?"+":""}${x[1]}</b>`).join("<br>")}${rows.length>3?`<br>외 ${rows.length-3}건`:""}</small>`;};
+ const DEF={성과:"F사가 만족하는가, 약속한 서비스를 지켰는가",재무:"팀 손익: 매출, 운영비, 토큰 비용",사람:"팀원 30명의 몰입과 목소리",안정:"시스템 가용성, 장애, 보안"};
+ const card=(lab,def,a,b,k)=>`<div class="sccard"><span>${lab}</span><small class="def">${def}</small><div class="v">${d(a,b)}</div>${why(k,a-b)}</div>`;
+ const used=(G.roundTok&&G.roundTok[r])||0,cap=G.tokenCap||40;const eff=used>0?((G.score.성과+G.score.안정)/2/(used/10)).toFixed(1):null;
+ const cons=(G.cons||[]).slice(st.cons0||0);const consAll=G.cons||[];
+ const kc=G.kpiChk;
+ const pubTxt=G.f.pub_full?"전체 공개 · 기준과 비중, 사례까지 팀 전원에게 공개":G.f.pub_items?"항목만 공개 · 비중은 면담에서 따로 설명":G.f.pub_leaders?"리더에게만 · 팀원들은 아직 기준을 모름":"정하지 않음";
+ const ok=b=>b?`<b style="color:var(--good)">✓</b>`:`<b style="color:var(--bad)">✕</b>`;
+ const AXD={1:"맡기고 권한을 주는가, 직접 처리하는가",2:"기준과 사실로 보는가, 인상과 숫자로 보는가",3:"우선순위로 나누는가, 고르게·요청 순으로 나누는가",4:"이유까지 알리는가, 결과만 알리는가"};
+ const kp=window.knowPct?knowPct():null;
+ const chT=(id,c0)=>{const doc=/\(문서\)$/.test(String(c0)),c=String(c0).replace(/\(문서\)$/,"");const sc=byId[id]||CONTENT.find(x=>x.id===id);const all=sc?[...(sc.options||[]),...(sc.levels||[]),...(sc.planb||[]),...((sc.cases||[]).flatMap(x=>x.options||[]))]:[];const EX={"4-2b":{A:"1분기에 쓴 양대로 토큰을 나눠 준다",B:"토큰당 기대 효과가 큰 모듈부터 배정한다",C:"다섯 모듈에 똑같이 나눈다"}};const o=all.find(x=>x&&x.k===c);const t=EX[id]&&EX[id][c]?EX[id][c]:o?String(val(o.t)).replace(/<[^>]+>/g,""):String(c);return (t.length>44?t.slice(0,44)+"…":t)+(doc?" · 만나지 않아 리더가 문서로 써 온 안":"");};
  const draw=()=>{paint("");
   shell(`<div class="pane"><div class="eyebrow">Round ${r} 성적표</div><h2>${s.title}</h2>
-  <p><b>① 팀이 어떻게 됐나</b> <span class="note">조직 KPI · 정답은 없습니다</span></p>
-  <div class="kv">${SCORES.map(k=>`<div><span>${SL(k)}</span>${d(G.score[k],st.score[k]??50)}</div>`).join("")}<div><span>F사 만족</span>${d(G.fsat,st.fsat??50)}</div><div><span>토큰 효율</span>${(()=>{const used=(G.roundTok&&G.roundTok[r])||0,cap=G.tokenCap||40;const eff=used>0?((G.score.성과+G.score.안정)/2/(used/10)).toFixed(1):"미사용";return `<b>${eff}</b> <span class="note">(💳${used}/${cap})</span>`;})()}</div></div>
-  ${(G.chain||[]).length?`<p class="note">서비스 수익 체인 · ${G.chain.slice(r===2?-2:-1).map(c=>chainLine(c)).join(" / ")}</p>`:""}
-  <p><b>② 그 판단은 기준과 맞았나</b></p><div class="prose" style="font-size:14.5px">${r===1?`<p>기여 기준 3개 이상 · 드러나지 않는 기여 포함 · 연결: ${G.goal2?"충족":"미충족"} · 공개 수준: ${G.f.pub_full?"전체 공개":G.f.pub_items?"항목만":G.f.pub_leaders?"리더에게만":"—"}</p>`:""}<p>근거 일관성: ${(()=>{const c=(G.cons||[]);return c.length?Math.round(c.filter(x=>x.fit).length/c.length*100)+"% ("+c.length+"건)":"아직 근거를 고른 안건이 없습니다";})()}</p>${window.v3RubricHtml?window.v3RubricHtml(r):'<p class="note">서술형(핵심 과제 근거, 공지문, 설명)은 채점 대기입니다.</p>'}</div>
-  <p><b>③ 내 습관은 어느 쪽이었나</b> <span class="note">리더 쪽 비율 · 이번 라운드 / 누적</span></p>
-  <div class="kv">${[1,2,3,4].map(a=>`<div><span>${AXN3[a]}</span><b>${ax[a]??"—"}</b> <span class="note">/ ${axAll[a]??"—"}</span></div>`).join("")}</div>
-  ${fit?`<p class="note">일치 증거 · ${AXN3[fit.a]}: ${nameOf(fit.scene)} (${fit.choice})</p>`:""}${gap?`<p class="note">균열 증거 · ${AXN3[gap.a]}: ${nameOf(gap.scene)} (${gap.choice})</p>`:""}
-  ${window.cinemaHtml?cinemaHtml("R"+r):""}${window.theoryCard?theoryCard(r):""}${G.selfStudy&&window.v3SelfStudyHtml?window.v3SelfStudyHtml(r):""}
-  <p class="note">리더를 아는 정도: ${window.knowPct?knowPct().join("/")+"칸":""}</p>
-  <p><b>결과 코드</b> <span class="note">피드백 세션에서 반 전체 결과를 볼 때 씁니다. 별칭만 들어가고, 쓴 글은 들어가지 않습니다.</span></p>
+  <div class="prose"><p>이번 라운드에 내린 결정들이 남긴 것을 세 가지 질문으로 돌아봅니다.</p></div>
+  <div class="steps"><div><b>① 결과</b> <span> · 팀의 숫자가 어떻게 움직였나</span></div><div><b>② 판단</b> <span> · 그 결정이 스스로 정한 기준과 맞았나</span></div><div><b>③ 습관</b> <span> · 결정할 때 어느 쪽으로 기울었나</span></div></div>
+  <p class="note">결과가 좋아도 판단이 기준과 어긋났을 수 있고, 결과가 나빠도 판단은 옳았을 수 있습니다. 세 가지를 따로 보세요.</p>
+
+  <h3 class="sch">① 팀이 어떻게 됐나 <span class="note">조직 KPI · 정답은 없습니다</span></h3>
+  <p class="note">균형성과표(BSC) 네 관점과 F사 만족입니다. 0~100점이고, 화살표 왼쪽이 라운드를 시작할 때, 오른쪽이 지금입니다. 한쪽을 올리면 다른 쪽이 내려가기 쉬워서, 모두 오르는 정답은 없습니다. 카드 아래에는 점수를 가장 크게 움직인 결정을 적었습니다.</p>
+  <div class="scgrid">${SCORES.map(k=>card(SL(k),DEF[k],G.score[k],st.score[k]??50,k)).join("")}${card("F사 만족","F사가 우리 팀을 얼마나 만족스러워하는가. 서비스 안정이 F사 기대에 못 미치면 내려가고, 재무로 이어짐",G.fsat,st.fsat??50,"F")}
+  <div class="sccard"><span>토큰 효율</span><small class="def">AI 토큰(💳)을 쓴 만큼 고객·서비스 안정 점수를 냈는가. (고객+서비스 안정)÷2를 쓴 토큰÷10으로 나눈 값</small><div class="v"><b>${eff??"미사용"}</b> <span class="note">💳${used}/${cap}</span></div><small class="why">${eff?"높을수록 토큰을 효율적으로 썼다는 뜻입니다.":"이번 라운드에는 토큰을 쓰는 선택지를 고르지 않았습니다."}</small></div></div>
+  ${(G.chain||[]).length?`<div class="happen"><span class="label">분기 말 연쇄 · 서비스 수익 체인</span>분기가 끝날 때 게임이 자동으로 정산합니다. 구성원 점수가 다음 분기 서비스 안정에, 서비스 안정이 F사 만족에, F사 만족이 재무에 늦게 영향을 줍니다.<br>${G.chain.slice(r===2?-2:-1).map(c=>chainLine(c)).filter(Boolean).join("<br>")}</div>`:""}
+
+  <h3 class="sch">② 그 판단은 기준과 맞았나</h3>
+  <p class="note">결과와 별개로, 결정을 내린 방식이 스스로 세운 기준과 맞았는지 봅니다.</p>
+  ${r===1?`<div class="card" style="margin-bottom:10px"><b>KPI 합의서 점검</b> <span class="note">· 3월에 리더들과 합의한 기여 기준</span>
+   <div class="chk">${kc?`<div>${ok(kc.n>=3)} 기여 기준을 3개 이상 골랐다 <span class="note">(${kc.n}개)</span></div><div>${ok(kc.hidden>0)} 드러나지 않는 기여(예방, 주니어 지원 등)를 넣었다</div><div>${ok(kc.right===kc.n)} 모든 기준을 팀 목표와 맞게 연결했다 <span class="note">(${kc.right}/${kc.n})</span></div>`:`<div>${ok(G.goal2)} 기준 3개 이상 · 드러나지 않는 기여 포함 · 팀 목표와 연결 ${G.goal2?"모두 충족":"중 일부 미충족"}</div>`}
+   <div><span class="note">공개 수준:</span> ${pubTxt}</div></div></div>`:""}
+  <div class="card" style="margin-bottom:10px"><b>근거 일관성</b> <span class="note">· ${consAll.length?Math.round(consAll.filter(x=>x.fit).length/consAll.length*100)+"% ("+consAll.length+"건 중 "+consAll.filter(x=>x.fit).length+"건 일치, 처음부터 누적)":"아직 근거를 고른 안건이 없습니다"}</span>
+   <p class="note" style="margin:4px 0 6px">몇몇 안건은 결정 뒤에 "이 결정의 근거"를 골랐습니다. 그 근거가 내가 합의한 기준과 맞으면 일치입니다. 같은 기준을 꾸준히 쓰는 것이 팀원들이 느끼는 공정의 바탕입니다.</p>
+   ${cons.length?`<div class="chk">${cons.map(c=>`<div>${ok(c.fit)} ${nameOf(c.scene)} <span class="note">· 근거: ${c.why||"—"}</span></div>`).join("")}</div>`:`<p class="note">이번 라운드에는 근거를 고른 안건이 없었습니다.</p>`}</div>
+  ${window.v3RubricHtml?window.v3RubricHtml(r):'<p class="note">서술형(핵심 과제 근거, 공지문, 설명)은 채점 대기입니다.</p>'}
+
+  <h3 class="sch">③ 내 습관은 어느 쪽이었나 <span class="note">리더 쪽 비율</span></h3>
+  <p class="note">결정마다 두 방향 중 한쪽에 점이 쌓였습니다. <b>리더 쪽</b>은 사람에게 맡기고 기준과 이유를 설명하는 방향, <b>관리자 쪽</b>은 직접 처리하고 결과만 정하는 방향입니다. 큰 숫자는 이번 라운드에서 리더 쪽을 고른 비율(%), "/" 뒤는 처음부터 누적입니다. "—"는 그 습관이 드러난 결정이 아직 없다는 뜻입니다.</p>
+  <div class="scgrid">${[1,2,3,4].map(a=>`<div class="sccard"><span>${AXN3[a]}</span><small class="def">${AXD[a]}</small><div class="v"><b>${ax[a]??"—"}</b>${ax[a]!=null?"%":""} <span class="note">/ 누적 ${axAll[a]??"—"}${axAll[a]!=null?"%":""}</span></div></div>`).join("")}</div>
+  ${fit||gap?`<div class="chk" style="margin-top:8px">${fit?`<div><b style="color:var(--good)">리더 쪽</b> · ${AXN3[fit.a]}: "${nameOf(fit.scene)}"에서 「${chT(fit.scene,fit.choice)}」</div>`:""}${gap?`<div><b style="color:var(--bad)">관리자 쪽</b> · ${AXN3[gap.a]}: "${nameOf(gap.scene)}"에서 「${chT(gap.scene,gap.choice)}」</div>`:""}</div>`:""}
+
+  ${window.cinemaHtml&&cinemaHtml("R"+r)?`<h3 class="sch">그래, 결심했어 <span class="note">고르지 않은 길</span></h3><p class="note">이번 라운드의 가장 큰 갈림길에서 내가 고른 길과 다른 길을 나란히 놓았습니다. 오른쪽은 결정 직전 상태에서 다른 선택지를 골랐다면 어땠을지 게임이 다시 계산한 추정값이고, 초록색이 그 지표에서 더 나은 쪽입니다.</p>${cinemaHtml("R"+r)}`:""}
+  ${window.theoryCard?theoryCard(r):""}${G.selfStudy&&window.v3SelfStudyHtml?window.v3SelfStudyHtml(r):""}
+  ${kp?`<p class="note">리더를 아는 정도: 프로필 카드 ${kp[1]}칸 중 ${kp[0]}칸을 열었습니다. 리더의 가치·거슬림·걱정을 많이 알수록 반응을 미리 읽을 수 있습니다.</p>`:""}
+  <h3 class="sch">결과 코드</h3><p class="note">피드백 세션에서 반 전체 결과를 모아 볼 때 강사에게 냅니다. 별칭과 선택·점수만 들어가고, 직접 쓴 글은 들어가지 않습니다.</p>
   <label class="label" for="nick">별칭 (실명·사번 쓰지 않기)</label><input id="nick" value="${(G.nick||"").replace(/"/g,"")}" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:200px">
   <div class="codebox" id="rc">${resultCode(r)}</div>
   <div class="foot"><button class="btn" ${A(()=>{G.nick=$("nick").value.trim().slice(0,20);$("rc").textContent=resultCode(r);try{navigator.clipboard.writeText($("rc").textContent);toast("결과 코드를 복사했습니다.");}catch(e){toast("코드를 직접 선택해 복사해 주세요.");}save();})}>코드 복사</button><button class="btn main" ${A(()=>{G.nick=$("nick").value.trim().slice(0,20);next();})}>${r<3?"저장하고 마치기":"결산으로"}</button></div></div>`);
@@ -627,3 +664,20 @@ if(typeof document!=="undefined"&&!window.openProfile&&!document.querySelector("
    (o.ear?`<circle cx="30" cy="57" r="1.9" fill="${o.ear}" stroke="${OL}" stroke-width="1"/><circle cx="70" cy="57" r="1.9" fill="${o.ear}" stroke="${OL}" stroke-width="1"/>`:"")+
    (mood<0?`<path d="M63.5 29.5q3 0 3 3M71.5 29.5q-3 0-3 3M63.5 37.5q3 0 3-3M71.5 37.5q-3 0-3-3" stroke="#e0262f" stroke-width="2" fill="none" stroke-linecap="round"/>`:"")+`</g></g></svg>`;};
 }
+
+window.SC_NICK={"1-3":"올해의 핵심 과제","1-5":"첫 주간 회의","3-1":"KPI 합의서 · 기여 기준","3-9":"1분기 펄스 서베이","RET2":"되돌아온 일","4-2":"여력 배분","4-3":"강태식의 공개 반대","4-5":"F사 운영비 협상 (2차)","6-1":"F사 운영비 협상 (3차)","6-1p":"F사 협상 · 재검토 조건","5-4":"장애 대응 포상 추천","8-1a":"본사 인력 차출","8-1b":"본사 인력 차출","8-1c":"본사 인력 차출","6-3":"김 사원의 야간 대기","4-4":"표지에는 다른 이름","S1":"청구서 · 미뤄 둔 일의 대가","S2":"청구서 · 미뤄 둔 일의 대가","6-2":"세 개의 설명","9-7":"3분기 펄스 서베이","R3-0":"Round 3 배분 조정","R3-1a":"새벽 장애 · 지휘자 지정","9-4":"F사 임원 전화","11-4":"강태식의 거취","6-4a":"인사팀 평가 지침 변경","6-4b":"바뀐 지침 알리기","12-3":"연말 평가 등급 배분","12-4":"이의 면담","12-6":"평가 결과 공지","R1-pick":"KPI 합의 (면담·문서)","4-2b":"AI 토큰 배분","3-2":"KPI 합의 · 서하준(R&D)","3-3":"KPI 합의 · 문지원(조달)","3-4":"KPI 합의 · 강태식(생산)","3-5":"KPI 합의 · 이수진(가공)","3-6":"KPI 합의 · 정다은(마케팅)","R3-1b":"새벽 장애 · 3번 라인 판단","12-3a":"연말 평가 · 나머지 구성원"};
+/* 성적표 근거: 결정마다 네 점수와 F사 만족이 얼마나 움직였는지 기록한다 (2026-11-20) */
+{const _af=applyFx;applyFx=function(str,ctx){const b={...G.score,F:G.fsat};const out=_af(str,ctx);const d={};let any=0;
+ ["성과","재무","사람","안정"].forEach(k=>{const x=G.score[k]-b[k];if(x){d[k]=x;any=1;}});const xf=G.fsat-b.F;if(xf){d.F=xf;any=1;}
+ if(any){const sc=CONTENT[G.idx]||{};const t=sc.type==="inbox"?"받은편지함 처리":sc.type==="roundEnd"||sc.type==="monthEnd"?"분기 말 연쇄 · 자동 정산":(window.SC_NICK&&SC_NICK[sc.id])||noNum(String(val(sc.title)||sc.tag||sc.id||"기타"));(G.fxLog=G.fxLog||[]).push({id:sc.id||"",t,d});if(G.fxLog.length>400)G.fxLog.splice(0,G.fxLog.length-400);}
+ return out;};}
+if(!document.getElementById("sc-css")){const st=document.createElement("style");st.id="sc-css";st.textContent=`
+.sch{font-size:17px;margin:26px 0 6px}
+.sch .note{font-weight:400;font-size:13px}
+.scgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
+.sccard{background:var(--panel2,var(--tile));border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.sccard>span{font-weight:600;color:var(--ink)}
+.sccard .def{color:var(--muted);font-size:12px;line-height:1.45}
+.sccard .v{font-size:19px;margin-top:2px}
+.sccard .why{font-size:12px;line-height:1.55;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:auto}
+.chk{display:grid;gap:5px;margin-top:6px;font-size:14.5px;line-height:1.5}`;document.head.appendChild(st);}

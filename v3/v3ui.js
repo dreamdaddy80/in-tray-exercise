@@ -263,7 +263,7 @@ function cinema(r){
  return{r,label:C.label,keys:C.keys,mineN,altN,mine5,alt5,mw,aw,gap,say};}
 function cinemaHtml(r){const c=cinema(r);if(!c)return "";const sg=v=>r==="R1"&&false?v:(v>0?"+":"")+v;
  const cell=(i,v,o)=>{const b=(r==="R2"&&i===0)?v<o:v>o;return `<td class="num" style="${b?"color:var(--good);font-weight:600":""}">${c.keys[i]==="기준 인지(추정)"?v:sg(v)}</td>`;};
- return `<div class="cine"><div class="eyebrow">그래, 결심했어 · ${c.label}</div><table><tr><th></th><th>내 선택${r==="R2"?" (추정)":""}<br><small>${c.mineN}</small></th><th>다른 선택이었다면 (추정)<br><small>${c.altN}</small></th></tr>${c.keys.map((k,i)=>`<tr><td>${k}${r==="R2"&&i===0?' <span class="note">(낮을수록 좋음)</span>':""}</td>${cell(i,c.mine5[i],c.alt5[i])}${cell(i,c.alt5[i],c.mine5[i])}</tr>`).join("")}</table>${c.say.map(x=>`<p class="note" style="margin-top:4px">${x[0]==="board"?"익명 게시판":name(x[0])}: "${x[1]}" <span class="note">· 다른 선택 쪽</span></p>`).join("")}<p class="note">결정 직전 상태에서 다른 선택지의 즉시 효과와 확률 결과의 기대값만 다시 계산했습니다. 어느 쪽이 정답인지 판정하지 않습니다.</p></div>`;}
+ return `<div class="cine"><div class="eyebrow">그래, 결심했어 · ${c.label}</div><table><tr><th></th><th>내 선택${r==="R2"?" (추정)":""}<br><small>${c.mineN}</small></th><th>다른 선택이었다면 (추정)<br><small>${c.altN}</small></th></tr>${c.keys.map((k,i)=>`<tr><td>${k}${r==="R2"&&i===0?' <span class="note">(낮을수록 좋음)</span>':""}</td>${cell(i,c.mine5[i],c.alt5[i])}${cell(i,c.alt5[i],c.mine5[i])}</tr>`).join("")}</table>${c.say.length?`<p class="note" style="margin-top:8px"><b>다른 선택을 했다면 들었을 말</b></p>`:""}${c.say.map(x=>`<p class="note" style="margin-top:4px">${x[0]==="board"?"익명 게시판":name(x[0])}: "${x[1]}"</p>`).join("")}<p class="note">결정 직전 상태에서 다른 선택지의 즉시 효과와 확률 결과의 기대값만 다시 계산했습니다. 어느 쪽이 정답인지 판정하지 않습니다.</p></div>`;}
 window.cinemaHtml=cinemaHtml;window.cinema=cinema;
 
 /* 라운드 결과 이론 카드 (02-5 E) */
@@ -337,7 +337,7 @@ window.v3RubricHtml=function(r){
   const rb=evalRubric3(txt);if(rb)items.push(["R3-6 연말 평가 결과 팀 공지",rb.badge]);
  }
  if(!items.length)return `<p class="note">이번 라운드에 작성한 서술형 답안이 없습니다.</p>`;
- return `<div class="rubric-box"><span class="label">서술형 예비 루브릭 점검 (02-4 3요소 기준 · 최종 점수는 강사 채점 반영)</span>${items.map(x=>`<div><b>${x[0]}</b>: <span class="num">${x[1]}</span></div>`).join("")}</div>`;
+ return `<div class="rubric-box"><span class="label">서술형 답안 미리 보기 · 최종 점수는 강사가 채점</span><p class="note" style="margin:4px 0 6px">이번 라운드에 직접 쓴 글을 세 가지 요소로 자동 점검했습니다. ① 기준·원칙을 밝혔나 ② 상대의 맥락을 반영했나 ③ 다음 행동과 기한을 적었나. ○ 충족 · △ 일부 · ✕ 없음.</p>${items.map(x=>`<div><b>${x[0]}</b>: <span class="num">${x[1]}</span></div>`).join("")}</div>`;
 };
 const SELF_COMMENTARY={
  1:"[Round 1 자율 학습 해설] 1라운드의 핵심은 '실무자 습관(직접 처리) 내려놓기'와 '연말 평가의 잣대가 될 기준을 미리 공개하기(규칙 ①)'입니다. R1-4에서 드러나지 않는 기여(예방·온보딩)를 기준에 넣고 전체 공개(A)했는지, R1-5에서 만나지 못한 리더가 자기 마음대로 KPI를 적어 온 균열을 확인해 보세요.",
