@@ -255,7 +255,7 @@ Object.keys(KPI_SCENE).forEach(k=>{const sc=get(KPI_SCENE[k]);sc.skip=g=>!(g.kpi
 
 /* ---------- 받은편지함 (03-2 R1-1, 03-3 R2-1) ---------- */
 {const s=get("1-1");const keep=["M01","M03","M06","M08","M09","M11","M13","M14","M16"];
- s.mail=keep.map(id=>s.mail.find(m=>m.id===id));s.seconds=240;s.lead="받은편지함에 읽지 않은 메시지가 8통, 그리고 곧 전화가 한 통 옵니다. 메시지를 열면 시간이 흐르기 시작합니다. 10시 스탠드업까지입니다.";
+ s.mail=keep.map(id=>s.mail.find(m=>m.id===id));s.seconds=240;s.lead="받은편지함에 읽지 않은 메시지가 8통, 그리고 곧 전화가 한 통 옵니다. 메시지를 열면 시간이 흐르기 시작합니다. 10시 팀 아침 회의까지입니다.";
  const m8=s.mail.find(m=>m.id==="M08");Object.assign(m8,{t:"CALL",from:"📞 강태식 (생산)",at:"08:55",sub:"전화가 옵니다",noDel:true,
   body:"\"어젯밤부터 해외 공장 인터페이스에 지연 경고 3건이야. 수요일 새벽에 긴급 작업 들어가야 해. 내가 알아서 할게. 대기는… 김 사원이 서면 돼.\"",
   self:R3("강태식이 계속 맡기로 했습니다. 수요일 새벽 일정도 보겠다고 했습니다.","mfg+2 안정+1 `call_mfg`","①L ④L"),

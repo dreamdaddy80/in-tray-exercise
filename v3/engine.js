@@ -287,13 +287,13 @@ function SC_INBOX(s){
   let r;
   if(st.ringing&&callM&&!st.done[callM.id]&&!st.over){r=ringHtml();}
   else if(!m){
-   if(st.over||all){const bill=inboxSettle(st);r=`<div class="rhead"><h2>${st.over?"10시입니다. 스탠드업이 시작됐습니다.":s.quiet&&s.quiet(G)?"10시 전에 받은편지함이 비었습니다.":"10시 전에 모두 처리했습니다."}</h2><p>${st.over?"처리하지 못한 메시지는 보류로 남았습니다.":""}</p>${bill}</div><div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
+   if(st.over||all){const bill=inboxSettle(st);r=`<div class="rhead"><h2>${st.over?"10시입니다. 팀 아침 회의가 시작됐습니다.":s.quiet&&s.quiet(G)?"10시 전에 받은편지함이 비었습니다.":"10시 전에 모두 처리했습니다."}</h2><p>${st.over?"처리하지 못한 메시지는 보류로 남았습니다.":""}</p>${bill}</div><div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>10시 팀 아침 회의로</button></div>`;}
    else r=`<div class="rhead"><h2>${s.title}</h2><p>${s.lead}</p></div>`;
   }else{
    const d=st.done[m.id],person=m.t==="DM";
    r=`<button class="back" ${A(()=>{st.sel=null;if(inboxNarrow()&&st.wy!=null)st.scrollTo=st.wy;draw();})}>← 목록</button><div class="rhead"><h2>${m.sub}</h2><p>${m.from} · <span class="num">${m.at}</span></p></div><div class="body"><p class="${person?"voice":""}">${m.body}</p>${m.attach?`<p class="attach">${m.attach}</p>`:""}</div>`;
    if(d){r+=`<div class="happen"><span class="label">일어난 일</span>${d}</div>`;
-    if(st.over||all)r+=`${inboxSettle(st)}<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>스탠드업으로</button></div>`;}
+    if(st.over||all)r+=`${inboxSettle(st)}<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>10시 팀 아침 회의로</button></div>`;}
    else if(!st.over&&typeof AIREP!=="undefined"&&AIREP[m.id]&&!(st.vdone||{})[m.id]){r+=aiInbox(m,st,()=>draw());}
    else if(!st.over){
     r+=`<div class="ask">`;
