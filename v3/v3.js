@@ -506,7 +506,7 @@ if(typeof document!=="undefined"&&!window.openProfile&&!document.querySelector("
  s.say=[["src","팀장님, 잠깐만요. R&D 공유 폴더에 올라온 분석 화면 캡처인데, F사 주문번호랑 배송지가 그대로 보여요. 회사가 승인하지 않은 외부 AI 서비스 화면이고요."],
   ["rd","수요 예측을 돌려 보려고 제가 올렸습니다. 가린 줄 알았는데, 지금 확인해 보니 컬럼 몇 개가 빠져 있었어요. 올린 건 이틀 전입니다. …분석 결과는 정말 좋았는데요."]];
  const INTRO=s.intro,SAY=s.say;s.intro=[];s.say=[];
- s.top=()=>`<div class="prose">${para(INTRO)}</div>${SAY.map(x=>sayHtml(x[0],x[1])).join("")}<div class="happen"><span class="label">왜 지금 정해야 하나</span>
+ s.top=()=>`<div class="prose">${para(INTRO)}</div>${SAY.map(x=>sayHtml(x[0],x[1])).join("")}<div class="happen alertbox"><span class="label">⏱ 왜 지금 정해야 하나</span>
 · 데이터가 나간 지 <b>이미 이틀(48시간)</b>이 지났습니다.<br>
 · F사와의 계약: 보안 사고는 알게 된 뒤 <b>24시간 안에</b> F사에 알려야 합니다.<br>
 · 개인정보가 새어 나간 것이면, 회사는 <b>72시간 안에</b> 당국에 신고해야 합니다. 남은 시간은 하루 남짓입니다.<br>
@@ -523,3 +523,37 @@ if(typeof document!=="undefined"&&!window.openProfile&&!document.querySelector("
  s.options.forEach(o=>{if(G2[o.k])o.gl=G2[o.k];});
  const B=s.options.find(o=>o.k==="B");if(B)B.t="바로 사용을 멈추게 하고, 무엇이 얼마나 나갔는지 우리가 먼저 파악한 다음 보안팀에 알린다.";
 }}
+
+/* 돌발 장면 경고 배너: 사이렌(사고·장애) · 전화벨(고객) · 경고 삼각형(지침 변경) (2026-11-20) */
+{const ICON={
+ siren:`<svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><g class="rays" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="20" y1="2" x2="20" y2="7"/><line x1="6.5" y1="8" x2="10" y2="11.5"/><line x1="33.5" y1="8" x2="30" y2="11.5"/><line x1="2" y1="20" x2="7" y2="20"/><line x1="38" y1="20" x2="33" y2="20"/></g><path d="M11 31v-8.5a9 9 0 0 1 18 0V31z" fill="currentColor"/><path d="M15.5 22.5a4.5 4.5 0 0 1 4.5-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".85"/><rect x="8" y="31" width="24" height="5" rx="1.5" fill="currentColor" opacity=".75"/></svg>`,
+ phone:`<svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><g class="rays" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M26 6a10 10 0 0 1 8 8"/><path d="M25 12a4.5 4.5 0 0 1 3.5 3.5"/></g><path class="aring" d="M13.5 5.5l4 6.5-3 3c1.8 3.8 4.7 6.7 8.5 8.5l3-3 6.5 4-1.8 5.3c-.4 1.2-1.6 2-2.9 1.9C15.5 34.8 5.2 24.5 4.3 12.2c-.1-1.3.7-2.5 1.9-2.9z" fill="currentColor"/></svg>`,
+ notice:`<svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><path d="M20 4L37 34H3z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="18.3" y="14" width="3.4" height="11" rx="1.5" fill="#fff"/><circle cx="20" cy="29.5" r="2" fill="#fff"/></svg>`};
+ const ALERTS={
+  "3-8":{lv:"red",icon:"siren",tag:"긴급 · 보안 사고 의심",line:"F사 고객 데이터가 승인되지 않은 외부 AI로 나갔습니다.",chips:["유출 후 48시간 경과","F사 통보 24시간 안","당국 신고 72시간 안"]},
+  "R3-1a":{lv:"red",icon:"siren",tag:"긴급 · 1등급 장애",line:"새벽 3시, 해외 공장 3번 라인 센서 이상. 지휘자를 정해야 합니다.",chips:["고객 통지 30분 안","납기 내일 아침"]},
+  "R3-1b":{lv:"red",icon:"siren",tag:"긴급 · 현장 안전",line:"3번 라인을 세울지, 돌릴지 지금 정해야 합니다.",chips:["인터록 우회는 승인 필수","납기 내일 아침"]},
+  "9-4":{lv:"orange",icon:"phone",tag:"돌발 · 고객 항의 전화",line:"F사 임원이 계약 조건을 다시 보겠다고 합니다.",chips:["가용성 99.4% → 98.7%","계약 재협상 요구"]},
+  "6-4a":{lv:"amber",icon:"notice",tag:"돌발 · 인사팀 공문",line:"하반기 평가부터 평가 지침이 바뀝니다. 3월에 합의한 기준을 다시 봐야 합니다.",chips:["AI 활용 효과 20% 이상","하반기 평가부터 적용"]},
+  "6-4b":{lv:"amber",icon:"notice",tag:"돌발 · 인사팀 공문",line:"바뀐 평가 지침을 팀에 어떻게 알릴지 정해야 합니다.",chips:["하반기 평가부터 적용"]}};
+ window.alertHtml=s=>{const a=s&&ALERTS[s.id];if(!a)return "";
+  return `<div class="alertbar ${a.lv}" role="alert"><span class="siren">${ICON[a.icon]}</span><div class="atext"><b class="lv">${a.tag}</b><div class="aline">${a.line}</div>${a.chips&&a.chips.length?`<div class="chips">${a.chips.map(c=>`<span>${c}</span>`).join("")}</div>`:""}</div></div>`;};
+ if(!document.getElementById("alert-css")){const st=document.createElement("style");st.id="alert-css";st.textContent=`
+.alertbar{--ac:#c5221f;--abg:#fdecea;--atx:#7a1712;display:flex;gap:14px;align-items:center;background:var(--abg);border:1.5px solid var(--ac);border-radius:14px;padding:12px 16px;margin:0 0 16px;color:var(--atx);animation:alertPulse 1.6s ease-in-out infinite}
+.alertbar.orange{--ac:#d35400;--abg:#fff1e6;--atx:#7a3300}
+.alertbar.amber{--ac:#b7791f;--abg:#fff8e1;--atx:#6b4a00;animation:none}
+.alertbar .siren{color:var(--ac);flex:0 0 auto;display:flex}
+.alertbar .rays{animation:alertFlash .7s steps(2,jump-none) infinite}
+.alertbar.orange .aring{transform-origin:20px 20px;animation:alertRing 1.2s ease-in-out infinite}
+.alertbar .lv{display:inline-block;background:var(--ac);color:#fff;border-radius:6px;padding:2px 9px;font-size:13px;letter-spacing:.02em}
+.alertbar .aline{margin-top:5px;font-weight:600;line-height:1.5}
+.alertbar .chips{margin-top:4px}
+.alertbar .chips span{display:inline-block;border:1px solid var(--ac);background:#fff;color:var(--atx);border-radius:999px;padding:1px 9px;margin:4px 6px 0 0;font-size:12.5px;font-weight:600}
+.happen.alertbox{background:#fff5f4;border:1px solid #f1b6b1;border-left:5px solid #c5221f}
+.happen.alertbox .label{color:#c5221f}
+@keyframes alertPulse{0%,100%{box-shadow:0 0 0 0 rgba(197,34,31,.35)}50%{box-shadow:0 0 0 7px rgba(197,34,31,0)}}
+@keyframes alertFlash{0%{opacity:1}100%{opacity:.15}}
+@keyframes alertRing{0%,60%,100%{transform:rotate(0)}10%,30%,50%{transform:rotate(-12deg)}20%,40%{transform:rotate(12deg)}}
+@media (prefers-reduced-motion:reduce){.alertbar,.alertbar .rays,.alertbar .aring{animation:none}}
+@media (max-width:520px){.alertbar{padding:10px 12px;gap:10px}.alertbar svg{width:30px;height:30px}}`;document.head.appendChild(st);}
+}

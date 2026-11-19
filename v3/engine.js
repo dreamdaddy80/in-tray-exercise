@@ -182,7 +182,7 @@ const LINES={
  medGood:["마주 앉아 스스로 절충안을 찾기 시작했습니다.","서로의 표를 바꿔 보더니 겹치는 곳을 찾았습니다.","한쪽이 먼저 물러서자 다른 쪽도 조건을 내놨습니다.","남아서 초안을 같이 고쳤습니다.","자리가 끝날 무렵 공동 안이 나왔습니다.","서로 몰랐던 사정을 듣고 요구를 줄였습니다."],
  medOk:["\"그럼 그렇게 하죠\"로 끝났습니다.","답장은 짧았습니다. \"알겠습니다.\"","이견 없이 메일 한 줄로 정리됐습니다.","양쪽 모두 결론을 받아들였습니다.","더 묻는 사람은 없었습니다.","회신은 \"확인했습니다\"가 전부였습니다."],
  caught:["제 사람 따로 만나셨다면서요.","저를 건너서 이야기하신 건 저도 들었습니다.","제 모듈 사람은 저를 통해서 만나 주셨으면 합니다.","따로 부르신 일, 본인이 먼저 말해 주더군요."]};
-const head=(s)=>`<div class="eyebrow">${[noNum(s.tag),val(s.when)].filter(Boolean).join(" · ")}</div><h2>${noNum(val(s.title))}</h2>`;
+const head=(s)=>`${typeof window.alertHtml==="function"?window.alertHtml(s):""}<div class="eyebrow">${[noNum(s.tag),val(s.when)].filter(Boolean).join(" · ")}</div><h2>${noNum(val(s.title))}</h2>`;
 const para=a=>a.map(x=>val(x)).filter(Boolean).map(x=>`<p>${x}</p>`).join("");
 function condLines(s){const l=(s.conds||[]).filter(c=>c.c(G)).map(c=>val(c.t));return l.length?`<div class="cond">${l.map(x=>`<span>${x}</span>`).join("")}</div>`:"";}
 
