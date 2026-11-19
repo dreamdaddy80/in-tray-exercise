@@ -139,15 +139,22 @@ SCENES.pledge=function(s){
   $("pl").oninput=e=>{txt=e.target.value;$("plc").textContent=txt.trim().length+"자";$("pgo").disabled=!(readable(txt,12).ok&&pr.length===2);};};
  draw();
 };
+/* R1-2 핵심 과제: 무엇을 하는 화면인지 3단계로 보여 주고, 성적표 네 장을 화면 안에서 설명한다 */
+const TASK_EX=["예: 이익의 62%가 추가 과제에서 나오는데, 운영이 흔들리면 그 매출부터 위험해진다.","예: 토큰이 팀 손익에 잡히는데 기준이 없으면 많이 쓰는 모듈이 계속 더 쓰게 된다.","예: 작년 이의제기처럼, 기준을 모르면 같은 등급도 불공정하게 느낀다.","예: 대기가 몇 사람에게 몰리면 지쳐서 경고를 놓치고 장애로 이어진다.","예: 고객 데이터가 승인 안 된 서비스에 들어가면 보안 사고와 계약 위반이 된다.","예: 불을 막는 사람이 인정받지 못하면 예방이 줄고 장애가 늘어난다.","예: F사 임원이 직접 보는 지표라, 늦으면 고객 신뢰가 깎인다.","예: 내일 임원 보고가 잘못되면 수주 기회와 고객 신뢰를 함께 잃는다."];
+const SC_DEF={성과:"F사와 맺은 계약을 약속대로 지켰는가",재무:"팀 손익 · 매출, 운영비, 토큰 비용",사람:"팀원 30명의 몰입과 목소리",안정:"시스템 가용성 · 장애 · 보안"};
 SC_TASKS=function(s){
  const pick=[],data={};
  const order=s.items.map((_,i)=>i).sort(()=>Math.random()-.5);
  const keep=()=>pick.forEach(i=>{const a=$("t"+i),b=$("c"+i),b2=$("d"+i);if(a)data[i]={t:a.value,c:b.value,c2:b2&&b2.value!==b.value?b2.value:""};});
+ const taskBox=i=>`<div class="task"><label class="label" for="c${i}">② 이 문제가 영향을 주는 성적표 (1~2장)</label><div class="btns"><select id="c${i}"><option value="">고르세요</option>${SCORES.map(c=>`<option value="${c}" ${data[i]&&data[i].c===c?"selected":""}>${SL(c)}</option>`).join("")}</select><select id="d${i}" aria-label="영향을 주는 성적표 한 장 더"><option value="">한 장 더 (없으면 비워 두세요)</option>${SCORES.map(c=>`<option value="${c}" ${data[i]&&data[i].c2===c?"selected":""}>${SL(c)}</option>`).join("")}</select></div><label class="label" for="t${i}">③ 왜 그렇게 보는지, 근거 한 문장</label><textarea id="t${i}" placeholder="${TASK_EX[i]||""}">${data[i]?data[i].t:""}</textarea></div>`;
  const draw=()=>{paint("");
   const ok=()=>pick.length===3&&pick.every(i=>{const a=$("t"+i),b=$("c"+i);return a&&readable(a.value,6).ok&&b&&b.value;});
-  shell(`<div class="pane">${head(s)}<div class="prose">${para(s.intro)}</div>${s.id==="1-3"||/1월/.test(s.when||"")?morningMirror():""}<details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">${s.ref}</p></details>
-  <div class="opts">${order.map(i=>{const on=pick.includes(i);return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${on}" ${A(()=>{keep();const j=pick.indexOf(i);if(j>=0)pick.splice(j,1);else if(pick.length<3)pick.push(i);draw();})}><span class="k">${on?"✓":""}</span><span>${s.items[i]}</span></button>`}).join("")}</div>
-  ${pick.map(i=>`<div class="task"><b>${s.items[i]}</b><label class="label" for="c${i}">영향을 주는 성적표 (1~2장)</label><select id="c${i}"><option value="">고르세요</option>${SCORES.map(c=>`<option value="${c}" ${data[i]&&data[i].c===c?"selected":""}>${SL(c)}</option>`).join("")}</select><select id="d${i}" aria-label="영향을 주는 성적표 한 장 더"><option value="">한 장 더 (없으면 비워 두세요)</option>${SCORES.map(c=>`<option value="${c}" ${data[i]&&data[i].c2===c?"selected":""}>${SL(c)}</option>`).join("")}</select><label class="label" for="t${i}">근거 한 문장 (10자 이상 · 기준/맥락/다음 행동 포함 권장)</label><textarea id="t${i}" placeholder="${val(s.hint,i)||""}">${data[i]?data[i].t:""}</textarea></div>`).join("")}
+  shell(`<div class="pane">${head(s)}
+  <p>받은편지함을 닫고 10시 첫 팀 아침 회의 전, 메모장을 엽니다. 방금 본 일들 가운데 <b>올해 1년 동안 팀장으로서 붙잡아야 할 진짜 문제</b>를 가려내는 시간입니다.</p>
+  <ol class="steps"><li><b>아래 여덟 가지 중 3개를 고릅니다.</b> <span class="num">(${pick.length}/3)</span> 모두 실제로 일어나는 일입니다. 오늘 급한 일과 1년 내내 남을 문제를 구분해 보세요.</li><li><b>고른 문제마다, 영향을 주는 성적표를 1~2장 고릅니다.</b> 문제를 누르면 바로 아래에 칸이 열립니다.</li><li><b>근거를 한 문장으로 씁니다.</b> 세 개를 다 채우면 [메모 닫기]가 켜집니다.</li></ol>
+  <div class="sc4"><span class="label">성적표 네 장 · 팀의 1년을 재는 지표 (왼쪽 계기판에 늘 보입니다)</span>${SCORES.map(k=>`<div><b>${SL(k)}</b><span>${SC_DEF[k]}</span></div>`).join("")}</div>
+  ${s.id==="1-3"||/1월/.test(s.when||"")?morningMirror():""}<details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">${s.ref}</p></details>
+  <div class="opts">${order.map(i=>{const on=pick.includes(i);return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${on}" ${A(()=>{keep();const j=pick.indexOf(i);if(j>=0)pick.splice(j,1);else if(pick.length<3)pick.push(i);draw();})}><span class="k">${on?"✓":""}</span><span>${s.items[i]}</span></button>${on?taskBox(i):""}`}).join("")}</div>
   <div class="foot"><span class="note num">${pick.length}/3</span><button class="btn main" id="tgo" disabled ${A(()=>{
    keep();G.written.tasks=pick.map(i=>({과제:s.items[i],성적표:[data[i].c,data[i].c2].filter(Boolean).map(k=>SL(k)).join(", "),근거:data[i].t}));
    pick.forEach(i=>{G.f["task_"+(i+1)]=true;});
