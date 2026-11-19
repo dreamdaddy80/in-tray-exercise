@@ -450,3 +450,10 @@ SCENES.title=function(s){
  <details class="opmenu"><summary>운영자 검토용</summary><div class="oppop" role="menu"><p class="note">게임을 끝까지 하지 않아도 장면을 자유롭게 넘겨 볼 수 있습니다. 검토 중 진행은 저장하지 않습니다.</p><button class="opitem" role="menuitem" ${A(()=>startReview("P1"))}>프롤로그부터 검토</button><button class="opitem" role="menuitem" ${A(()=>startReview("1-1"))}>Round 1부터 검토</button></div></details>`));
 };
 })();
+
+/* 성적표 근거: 결정마다 계기판·F사 만족·리더 신뢰·모듈 업무량이 얼마나 움직였는지 기록한다 (2026-11-20). 다른 효과 감싸기보다 바깥에 둔다 */
+{const _af=applyFx;applyFx=function(str,ctx){if(!G||!G.score)return _af(str,ctx);const b={...G.score,F:G.fsat},bt={...G.trust},bw=G.mod?{...G.mod.add}:{};const out=_af(str,ctx);const d={},tr={},wl={};let any=0;
+ ["성과","재무","사람","안정"].forEach(k=>{const x=G.score[k]-b[k];if(x){d[k]=x;any=1;}});const xf=G.fsat-b.F;if(xf){d.F=xf;any=1;}
+ Object.keys(LD).forEach(k=>{const x=G.trust[k]-bt[k];if(x){tr[k]=x;any=1;}});if(G.mod)Object.keys(LD).forEach(k=>{const x=(G.mod.add[k]||0)-(bw[k]||0);if(x){wl[k]=x;any=1;}});
+ if(any){const sc=CONTENT[G.idx]||{};const t=sc.type==="inbox"?"받은편지함 처리":sc.type==="roundEnd"||sc.type==="monthEnd"?"분기 말 연쇄 · 자동 정산":(window.SC_NICK&&SC_NICK[sc.id])||noNum(String(val(sc.title)||sc.tag||sc.id||"기타"));(G.fxLog=G.fxLog||[]).push({id:sc.id||"",t,d,tr,wl});if(G.fxLog.length>500)G.fxLog.splice(0,G.fxLog.length-500);}
+ return out;};}

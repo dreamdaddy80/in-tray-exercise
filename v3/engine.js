@@ -92,7 +92,7 @@ function applyFx(str,ctx={}){
  }
  return live;
 }
-/* forced: 시간이 모자라 다른 선택지가 잠긴 상태에서 남은 것을 고른 경우. 관리자 쪽(P) 신호만 따로 표시해 습관 계산에서 뺀다 */
+/* forced: 시간이 모자라 다른 선택지가 잠긴 상태에서 남은 것을 고른 경우. 실무자 습관 쪽(P) 신호만 따로 표시해 습관 계산에서 뺀다 */
 function applySig(s,w,scene,choice,forced){
  if(!s)return;
  const n=/×2/.test(s)?2:1;
