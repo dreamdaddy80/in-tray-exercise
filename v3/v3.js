@@ -557,3 +557,73 @@ if(typeof document!=="undefined"&&!window.openProfile&&!document.querySelector("
 @media (prefers-reduced-motion:reduce){.alertbar,.alertbar .rays,.alertbar .aring{animation:none}}
 @media (max-width:520px){.alertbar{padding:10px 12px;gap:10px}.alertbar svg{width:30px;height:30px}}`;document.head.appendChild(st);}
 }
+
+/* 인물 얼굴: 원피스풍 만화 초상 (2026-11-20). 굵은 외곽선, 웃으면 이를 드러낸 큰 웃음, 언짢으면 이를 악물고 핏대.
+   신뢰 66 이상 웃음 · 35 이하 언짢음. 원작 캐릭터를 옮긴 것이 아니라 이 게임 인물들에 그림체만 입혔다 */
+{const OL="#161210",OW=2.1;
+ const HAIRS={
+ spiky:{front:"M26 48C22 27 35 13 51 13C67 13 79 25 74 48L71 41L68 34L64 42L60 32L55 41L50 31L45 41L40 32L36 42L32 35L29 45Z M47 15L52 3L57 15Z",ln:"M44 20L41 30M57 19L60 29M50 16L50 25",hi:"M37 21Q50 15 63 20"},
+ crew:{front:"M28 45C26 25 37 16 50 16C63 16 74 25 72 45L70 38L66.5 33L62.5 36L58.5 30.5L54.5 34.5L50 29.5L45.5 34.5L41.5 30.5L37.5 35.5L34 32.5L30.5 38.5Z M29.5 38L30.5 51L33.5 40Z M70.5 38L69.5 51L66.5 40Z",ln:"M40 22L38 28M50 19L50 26M60 22L62 28",hi:"M38 22Q50 18 62 22"},
+ long:{back:"M24 44C22 24 36 13 50 13C64 13 78 24 76 44L78 96L62 96L63 66L37 66L38 96L22 96Z",front:"M27 47C25 26 37 14 50 14C64 14 76 26 73 47L70.5 39C66 33 60 29 53 27C50 34 42 38.5 31.5 41.5Z",lock:"M29.5 40C26.5 58 27.5 76 30.5 93L39 91C36 77 35 58 36 44Z M70.5 40C73.5 58 72.5 76 69.5 93L61 91C64 77 65 58 64 44Z",ln:"M44 20Q38 26 35 35M58 19Q64 26 67 36M33 60L34 84M67 60L66 84",hi:"M40 20Q50 16 60 19"},
+ bob:{back:"M23 47C21 24 36 13 50 13C64 13 79 24 77 47L79 71C73 75 66 73 64 69L36 69C34 73 27 75 21 71Z",front:"M26 47C25 26 37 15 50 15C63 15 75 26 74 47L71.5 41L67.5 37.5L65 42.5L60 36.5L57 41.5L52 35.5L48 41.5L43 36.5L40 42.5L35 37.5L31.5 43.5Z",lock:"M28.5 40C27.5 52 28.5 63 31.5 69L36 67C34 58 34 50 35 42Z M71.5 40C72.5 52 71.5 63 68.5 69L64 67C66 58 66 50 65 42Z",ln:"M42 21L40 31M58 21L60 31M50 18L50 27",hi:"M38 21Q50 16 62 21"},
+ pony:{back:"M61 21C81 15 92 35 88 58C86 71 79 79 72 82C77 67 78 48 70 34Z M25 47C23 25 37 14 50 14C64 14 77 25 75 47Z",front:"M27 48C25 26 37 14 50 14C64 14 76 26 73 47L70.5 37C66 31 60 27 55 26C52 33.5 44 38.5 34.5 40.5L30.5 47Z",lock:"M29.5 41C28.5 52 29.5 61 33 66L36 52Z",ln:"M45 19Q40 25 37 33M57 19Q61 24 63 30M78 40Q82 52 79 66",hi:"M39 20Q49 16 58 18"}};
+ const JAW={
+  round:"M29 45C29 30 38 23 50 23C62 23 71 30 71 45C71 58 64 70 50 72.5C36 70 29 58 29 45Z",
+  sharp:"M30 44C30 30 38 24 50 24C62 24 70 30 70 44C70 56 63 67 55 72C52 74 48 74 45 72C37 67 30 56 30 44Z",
+  square:"M28 43C28 29 37 23 50 23C63 23 72 29 72 43L72 56C72 65 66 72.5 57 74.5L43 74.5C34 72.5 28 65 28 56Z",
+  long:"M31 42C31 29 39 23 50 23C61 23 69 29 69 42C69 57 64 70 55 74.5C52 76 48 76 45 74.5C36 70 31 57 31 42Z"};
+ const P={
+  rd:{st:"spiky",jaw:"round",h:"#27365c",hh:"#4f6db0",iris:"#2f6fd0",cl:"hoodie",c:"#2fa39a",c2:"#1f7a73",phones:1},
+  src:{st:"long",jaw:"long",h:"#6e432b",hh:"#a2714f",iris:"#8a5426",cl:"blouse",c:"#f1e6cf",c2:"#ffffff",fem:1,glass:1},
+  mfg:{st:"crew",jaw:"square",h:"#1d1d1d",hh:"#4d4d4d",iris:"#3b2b20",cl:"jacket",c:"#33495f",c2:"#e3e6ea",sharp:1,thick:1,stub:1},
+  prc:{st:"bob",jaw:"sharp",h:"#7a3f8c",hh:"#b77ac6",iris:"#9246b0",cl:"cardigan",c:"#e0896e",c2:"#fff3e8",fem:1,pin:"#ffcb3d"},
+  mkt:{st:"pony",jaw:"sharp",h:"#e0562a",hh:"#ff9466",iris:"#239a55",cl:"blazer",c:"#c9283a",c2:"#ffffff",fem:1,ear:"#ffcb3d",tie:"#ffcb3d"},
+  kim:{st:"spiky",jaw:"round",h:"#3a2c1f",hh:"#73593f",iris:"#6b4626",cl:"jacket",c:"#6f8296",c2:"#eef1f4"},
+  yoon:{st:"crew",jaw:"long",h:"#a3a3a3",hh:"#d6d6d6",iris:"#4f3f33",cl:"cardigan",c:"#5f7550",c2:"#f0ece2",glass:1,thick:1},
+  oh:{st:"pony",jaw:"round",h:"#94481f",hh:"#c97b4f",iris:"#8a5426",cl:"blouse",c:"#f0c45a",c2:"#fff8e6",fem:1,tie:"#3f86b8"},
+  han:{st:"long",jaw:"sharp",h:"#1c1c22",hh:"#565670",iris:"#4f3f74",cl:"blouse",c:"#6f56a0",c2:"#f4f0fa",fem:1},
+  cha:{st:"bob",jaw:"round",h:"#5c3b26",hh:"#93684d",iris:"#4f8a2e",cl:"cardigan",c:"#3f8f6c",c2:"#eef5ef",fem:1},
+  bae:{st:"crew",jaw:"square",h:"#4a3628",hh:"#80634f",iris:"#3b2b20",cl:"jacket",c:"#454e59",c2:"#dde1e6",thick:1,stub:1},
+  anon:{st:"spiky",jaw:"round",h:"#9aa0a6",hh:"#c8cdd1",iris:"#6f777e",cl:"jacket",c:"#a3a9ae",c2:"#e8eaec"}};
+ const SK="#f9d9bd",SKD="#e9b48e";let N=0;
+ const stk=`stroke="${OL}" stroke-width="${OW}" stroke-linejoin="round"`;
+ const eye=(cx,cy,sd,o,mood)=>{
+  if(mood>0&&!o.fem)return `<path d="M${cx-4.6} ${cy+1.2}Q${cx} ${cy-4.8} ${cx+4.6} ${cy+1.2}" stroke="${OL}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  if(o.fem){const rx=4.6,ry=6;
+   return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff" stroke="${OL}" stroke-width="1"/><ellipse cx="${cx+sd*.2}" cy="${cy+.8}" rx="3.4" ry="4.4" fill="${o.iris}"/><circle cx="${cx+sd*.2}" cy="${cy+1}" r="2.1" fill="${OL}"/><circle cx="${cx+1.4}" cy="${cy-1.4}" r="1.5" fill="#fff"/><circle cx="${cx-1.2}" cy="${cy+2.8}" r=".7" fill="#fff"/>`+
+    `<path d="M${cx-sd*5.6} ${cy-1.6}Q${cx} ${cy-ry-2.6} ${cx+sd*5.4} ${cy-2.6}l${sd*2.4} -2.4M${cx+sd*5.2} ${cy-1}l${sd*2.6} -.4" stroke="${OL}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;}
+  if(o.sharp)return `<path d="M${cx-sd*4.6} ${cy+.4}Q${cx} ${cy-3.6} ${cx+sd*5.4} ${cy-1.4}Q${cx+sd*1} ${cy+3.6} ${cx-sd*4.6} ${cy+.4}Z" fill="#fff" stroke="${OL}" stroke-width="1"/><circle cx="${cx+sd*.6}" cy="${cy}" r="2" fill="${OL}"/><circle cx="${cx+sd*.6+.7}" cy="${cy-.8}" r=".6" fill="#fff"/><path d="M${cx-sd*5} ${cy-.4}Q${cx} ${cy-4.6} ${cx+sd*5.8} ${cy-2}" stroke="${OL}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+  return `<ellipse cx="${cx}" cy="${cy}" rx="4.3" ry="5" fill="#fff" stroke="${OL}" stroke-width="1"/><circle cx="${cx+sd*.3}" cy="${cy+.6}" r="2.5" fill="${OL}"/><circle cx="${cx+sd*.3+1}" cy="${cy-.5}" r=".85" fill="#fff"/><path d="M${cx-4.6} ${cy-2.4}Q${cx} ${cy-6.6} ${cx+4.6} ${cy-2.4}" stroke="${OL}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;};
+ const brow=(cx,by,sd,mood,o)=>{const oe=cx+sd*6,ie=cx-sd*4.6;const oy=mood<0?by-1.6:by+.4,iy=mood<0?by+3.4:by+(mood>0?-.6:.6),qy=mood>0?by-2.8:by-1.4;const w=o.thick?3.8:o.fem?1.9:2.8;
+  return `<path d="M${oe} ${oy}Q${cx} ${qy} ${ie} ${iy}" stroke="${OL}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;};
+ const mouthOf=(mood,o)=>{
+  if(mood>0)return `<path d="M39.5 60.5Q50 74 60.5 60.5Q50 63 39.5 60.5Z" fill="#fff" ${stk}/><path d="M41.5 62.6Q50 65 58.5 62.6M45 62.4L45.6 67M50 63L50 68.6M55 62.4L54.4 67" stroke="${OL}" stroke-width="1" fill="none"/><path d="M37.5 59.5q1.8 1.2 2.4 3M62.5 59.5q-1.8 1.2-2.4 3" stroke="${OL}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
+  if(mood<0)return `<path d="M42.5 62.5Q50 60.5 57.5 62.5L57 67Q50 68.6 43 67Z" fill="#fff" ${stk}/><path d="M42.8 64.8Q50 63.6 57.2 64.8M46.5 61.8L46.5 67.6M50 61.4L50 68M53.5 61.8L53.5 67.6" stroke="${OL}" stroke-width="1" fill="none"/>`;
+  return `<path d="M44.5 64Q50 66 55.5 63" stroke="${OL}" stroke-width="1.9" fill="none" stroke-linecap="round"/>`;};
+ const clothes=o=>{const body=`<path d="M10 102C12 86 27 78 42 76L58 76C73 78 88 86 90 102Z" fill="${o.c}" ${stk}/>`;
+  if(o.cl==="hoodie")return body+`<path d="M32 81Q50 94 68 81Q62 74.5 50 74.5Q38 74.5 32 81Z" fill="${o.c2}" ${stk}/><path d="M45 86L44 98M55 86L56 98" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>`;
+  if(o.cl==="blouse")return body+`<path d="M42 76L50 86L45 92L36.5 79Z M58 76L50 86L55 92L63.5 79Z" fill="${o.c2}" ${stk}/>`;
+  if(o.cl==="jacket")return body+`<path d="M43 76L50 93L57 76Z" fill="${o.c2}" ${stk}/><path d="M43 76L48 91L39 86Z M57 76L52 91L61 86Z" fill="#00000033" ${stk}/>`;
+  if(o.cl==="cardigan")return body+`<path d="M42 76Q50 85 58 76L57 102L43 102Z" fill="${o.c2}" ${stk}/><circle cx="56" cy="88" r="1" fill="${OL}"/><circle cx="56" cy="95" r="1" fill="${OL}"/>`;
+  return body+`<path d="M43 76L50 91L57 76Z" fill="${o.c2}" ${stk}/><path d="M42 76L49 93L38.5 84Z M58 76L51 93L61.5 84Z" fill="#00000040" ${stk}/>`;};
+ face=function(k,t){const o=P[k]||P.anon,H=HAIRS[o.st],p=LD[k]||PP[k]||{n:""};const id="fc"+(++N);
+  const mood=t==null?0:t>=66?1:t<=35?-1:0;
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${p.n}"><defs><clipPath id="${id}"><circle cx="50" cy="50" r="50"/></clipPath></defs><circle cx="50" cy="50" r="50" fill="var(--tile)"/><g clip-path="url(#${id})"><g transform="translate(50 48) scale(1.22) translate(-50 -48)">`+
+   (H.back?`<path d="${H.back}" fill="${o.h}" ${stk}/>`:"")+clothes(o)+
+   (o.phones?`<path d="M36 80Q50 90 64 80" stroke="#3a3a3a" stroke-width="3" fill="none"/><rect x="31" y="76" width="7" height="9" rx="3" fill="#ff7a3d" ${stk}/><rect x="62" y="76" width="7" height="9" rx="3" fill="#ff7a3d" ${stk}/>`:"")+
+   `<path d="M44 63L56 63L56 79Q50 82 44 79Z" fill="${SK}" ${stk}/><path d="M44.5 67Q50 75 55.5 67L55.5 72Q50 77 44.5 72Z" fill="${SKD}"/>`+
+   `<ellipse cx="30.5" cy="50" rx="3.4" ry="5" fill="${SK}" ${stk}/><ellipse cx="69.5" cy="50" rx="3.4" ry="5" fill="${SK}" ${stk}/><path d="${JAW[o.jaw]}" fill="${SK}" ${stk}/>`+
+   (o.stub?`<path d="M34 59C37 69 44 73.5 50 73.5C56 73.5 63 69 66 59C62 66 57 69 50 69C43 69 38 66 34 59Z" fill="#3a2e28" opacity=".28"/>`:"")+
+   (o.jaw==="square"?`<path d="M48.5 72.2Q50 73.6 51.5 72.2" stroke="${OL}" stroke-width="1" fill="none"/>`:"")+
+   eye(41,50.5,-1,o,mood)+eye(59,50.5,1,o,mood)+
+   `<path d="M50.5 54.5Q48 58.6 51 59.3" stroke="${OL}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`+mouthOf(mood,o)+
+   (mood>0&&o.fem?`<path d="M34 57.5l1.6-2M36.5 58l1.6-2M39 58.3l1.4-1.8M61 58.3l1.4-1.8M63.5 58l1.6-2M66 57.5l1.6-2" stroke="#e8606a" stroke-width="1.1" stroke-linecap="round"/>`:"")+
+   (o.glass?`<g fill="none" stroke="${OL}" stroke-width="1.6"><rect x="34" y="44.5" width="14" height="11.5" rx="2.5"/><rect x="52" y="44.5" width="14" height="11.5" rx="2.5"/><path d="M48 49.5Q50 48.3 52 49.5M34 48L30 47M66 48L70 47"/></g><path d="M36 46.5l3 3M54 46.5l3 3" stroke="#fff" stroke-width="1.2" opacity=".8"/>`:"")+
+   (H.lock?`<path d="${H.lock}" fill="${o.h}" ${stk}/>`:"")+`<path d="${H.front}" fill="${o.h}" ${stk}/>`+
+   `<path d="${H.ln}" stroke="${OL}" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".7"/><path d="${H.hi}" stroke="${o.hh}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`+
+   brow(41,41.4,-1,mood,o)+brow(59,41.4,1,mood,o)+
+   (o.pin?`<rect x="61.5" y="30.5" width="9" height="3" rx="1.4" transform="rotate(-25 66 32)" fill="${o.pin}" stroke="${OL}" stroke-width="1"/>`:"")+
+   (o.tie?`<circle cx="66" cy="22.5" r="3" fill="${o.tie}" stroke="${OL}" stroke-width="1.2"/>`:"")+
+   (o.ear?`<circle cx="30" cy="57" r="1.9" fill="${o.ear}" stroke="${OL}" stroke-width="1"/><circle cx="70" cy="57" r="1.9" fill="${o.ear}" stroke="${OL}" stroke-width="1"/>`:"")+
+   (mood<0?`<path d="M63.5 29.5q3 0 3 3M71.5 29.5q-3 0-3 3M63.5 37.5q3 0 3-3M71.5 37.5q-3 0-3-3" stroke="#e0262f" stroke-width="2" fill="none" stroke-linecap="round"/>`:"")+`</g></g></svg>`;};
+}
