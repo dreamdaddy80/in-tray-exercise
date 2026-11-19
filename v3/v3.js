@@ -481,7 +481,7 @@ SCENES.roundEnd=function(s){
   ${window.cinemaHtml&&cinemaHtml("R"+r)?`<h3 class="sch">그래, 결심했어 <span class="note">고르지 않은 길</span></h3><p class="note">이번 라운드의 가장 큰 갈림길에서 내가 고른 길과 다른 길을 나란히 놓았습니다. 오른쪽은 결정 직전 상태에서 다른 선택지를 골랐다면 어땠을지 게임이 다시 계산한 추정값이고, 초록색이 그 지표에서 더 나은 쪽입니다.</p>${cinemaHtml("R"+r)}`:""}
   ${window.theoryCard?theoryCard(r):""}${G.selfStudy&&window.v3SelfStudyHtml?window.v3SelfStudyHtml(r):""}
   ${kp?`<p class="note">리더를 아는 정도: 프로필 카드 ${kp[1]}칸 중 ${kp[0]}칸을 열었습니다. 리더의 가치·거슬림·걱정을 많이 알수록 반응을 미리 읽을 수 있습니다.</p>`:""}
-  <h3 class="sch">결과 코드</h3><p class="note">피드백 세션에서 반 전체 결과를 모아 볼 때 강사에게 냅니다. 별칭과 선택·점수만 들어가고, 직접 쓴 글은 들어가지 않습니다.</p>
+  <h3 class="sch">결과 코드</h3>${rcExplain(r)}
   <label class="label" for="nick">별칭 (실명·사번 쓰지 않기)</label><input id="nick" value="${(G.nick||"").replace(/"/g,"")}" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:200px">
   <div class="codebox" id="rc">${resultCode(r)}</div>
   <div class="foot"><button class="btn" ${A(()=>{G.nick=$("nick").value.trim().slice(0,20);$("rc").textContent=resultCode(r);try{navigator.clipboard.writeText($("rc").textContent);toast("결과 코드를 복사했습니다.");}catch(e){toast("코드를 직접 선택해 복사해 주세요.");}save();})}>코드 복사</button><button class="btn main" ${A(()=>{G.nick=$("nick").value.trim().slice(0,20);next();})}>${r<3?"저장하고 마치기":"결산으로"}</button></div></div>`);
@@ -681,3 +681,9 @@ if(!document.getElementById("sc-css")){const st=document.createElement("style");
 .sccard .v{font-size:19px;margin-top:2px}
 .sccard .why{font-size:12px;line-height:1.55;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:auto}
 .chk{display:grid;gap:5px;margin-top:6px;font-size:14.5px;line-height:1.5}`;document.head.appendChild(st);}
+
+/* 결과 코드 설명 (2026-11-20) */
+window.rcExplain=function(r){return `<div class="prose" style="font-size:14.5px"><p>아래 긴 글자 줄은 <b>이번 라운드 결과를 한 줄로 압축한 코드</b>입니다. 이 게임은 각자의 브라우저에서만 돌아가서, 결과가 강사에게 자동으로 모이지 않습니다. 그래서 이 코드를 강사에게 보내는 방식으로 반 전체 결과를 모읍니다.</p></div>
+<div class="steps"><div><b>1</b> <span> · '코드 복사'를 누르고, 강사가 안내한 곳(메신저, 설문 등)에 붙여 넣어 보냅니다.</span></div><div><b>2</b> <span> · 강사가 모든 코드를 집계 페이지에 한꺼번에 넣습니다.</span></div><div><b>3</b> <span> · ${r<3?"다음 날 아침 피드백 세션":"종합 피드백 세션"}에서 반 전체 결과를 함께 봅니다. 같은 갈림길에서 동료들은 어떤 길을 골랐고 결과가 어땠는지, 반 전체가 자주 놓친 습관은 무엇인지를 봅니다.</span></div></div>
+<div class="scgrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"><div class="sccard"><span style="color:var(--good)">들어가는 것</span><small class="def" style="font-size:13px">별칭 · 고른 이끄는 방식 · 주요 결정의 선택지 · 고객·재무·구성원·서비스 안정·F사 만족 점수 · 자가진단과 실제 습관 비율 · 걸린 시간</small></div><div class="sccard"><span style="color:var(--bad)">들어가지 않는 것</span><small class="def" style="font-size:13px">실명·사번 · 직접 쓴 글(과제 근거, 공지문, 설명) · 메일 답장 내용. 결과는 교육에만 쓰이고 인사 평가와 이어지지 않습니다.</small></div></div>
+<p class="note">별칭은 집계 화면에서 내 결과를 찾는 이름표입니다. 비워 두어도 됩니다. 코드 맨 끝 네 글자는 복사하다 잘리거나 바뀌지 않았는지 확인하는 검사용 숫자라서, 코드는 처음부터 끝까지 그대로 보내야 합니다.</p>`;};
