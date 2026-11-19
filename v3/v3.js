@@ -166,10 +166,41 @@ SC_TASKS=function(s){
  };
  draw();
 };
-{const _kpi=SC_KPI;SC_KPI=function(s){
- _kpi(s);
- document.querySelectorAll('#view select option').forEach(o=>{if(SCORES.includes(o.value||o.textContent)){const v=o.value||o.textContent;o.value=v;o.textContent=SL(v);}});
-};}
+/* R1-4 KPI 합의서: 두 달 뒤라는 시간 이동, KPI 합의서와 등급 기여 기준이 무엇인지, 이 결정이 연말에 어떻게 쓰이는지를 먼저 보여 준다 */
+SC_KPI=function(s){
+ const order=s.cards.map((_,i)=>i).sort(()=>Math.random()-.5),pick=[],link={};
+ const keep=()=>pick.forEach(i=>{const b=$("l"+i);if(b)link[i]=b.value;});
+ const linkBox=i=>`<div class="task"><label class="label" for="l${i}">② 이 기준이 주로 움직이는 성적표</label><select id="l${i}"><option value="">고르세요</option>${SCORES.map(c=>`<option value="${c}" ${link[i]===c?"selected":""}>${SL(c)}</option>`).join("")}</select></div>`;
+ const draw=()=>{paint("");
+  const ok=()=>pick.length>=3&&pick.length<=5&&pick.every(i=>$("l"+i)&&$("l"+i).value);
+  shell(`<div class="pane"><div class="eyebrow">KPI 합의서 · 두 달 뒤, 3월 첫째 주</div><h2>등급 기여 기준</h2>
+  <div class="prose"><p>1월이 지나고 3월 첫째 주, 인사팀의 KPI 합의 시즌이 시작됐습니다. <b>KPI 합의서</b>는 팀원 한 사람 한 사람이 올해 무엇으로 평가받는지 정하는 문서입니다. 숫자 목표(KPI)는 회사가 정해 내려보냅니다. 팀장이 채워야 하는 칸은 그 아래 <b>등급 기여 기준</b>입니다. KPI 숫자 말고 무엇이 S · A · B · C를 가르는지 적는 곳입니다.</p>
+  <p>전임 팀장은 이 칸에 "종합 판단"이라고만 적었습니다. 작년에 KPI를 다 채우고도 B를 받은 사람들이 "왜 이 등급인지 아무도 설명해 주지 않았다"며 이의를 낸 이유입니다.</p></div>
+  <div class="happen"><span class="label">이 결정이 쓰이는 곳</span>여기서 고른 기준은 연말 평가에서 등급의 근거로 쓸 수 있는 <b>유일한 목록</b>이 됩니다. 규칙 ① 공개하지 않은 기준은 근거로 쓸 수 없습니다.</div>
+  <ol class="steps"><li><b>등급을 가를 기준을 3~5개 고릅니다.</b> <span class="num">(${pick.length}/3~5)</span></li><li><b>고른 기준마다 주로 움직이는 성적표를 고릅니다.</b> 기준을 누르면 바로 아래에 칸이 열립니다.</li><li>다음 화면에서 이 기준을 <b>팀에 어디까지 알릴지</b> 정합니다.</li><li>그다음 리더 다섯 명 중 <b>누구와 직접 만나 합의할지</b> 고릅니다.</li></ol>
+  <div class="sc4"><span class="label">성적표 네 장</span>${SCORES.map(k=>`<div><b>${SL(k)}</b><span>${SC_DEF[k]}</span></div>`).join("")}</div>
+  <p class="note">어떤 기준이 좋은지는 화면에 나오지 않습니다. 이 기준으로 평가하면 팀원들이 내일부터 무엇을 더 하고, 무엇을 덜 할지 떠올려 보세요.</p>
+  <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">${s.ref}</p></details>
+  <div class="opts">${order.map(i=>{const c=s.cards[i],on=pick.includes(i);return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${on}" ${A(()=>{keep();const j=pick.indexOf(i);if(j>=0)pick.splice(j,1);else if(pick.length<5)pick.push(i);draw();})}><span class="k">${on?"✓":""}</span><span><b style="font-weight:600">${c.n}</b><span class="note" style="display:block">${c.d}</span></span></button>${on?linkBox(i):""}`}).join("")}</div>
+  <div class="foot"><span class="note num">${pick.length}/3~5</span><button class="btn main" id="kgo" disabled ${A(finish)}>기준 확정</button></div></div>`);
+  const up=()=>{$("kgo").disabled=!ok();};pick.forEach(i=>$("l"+i).onchange=up);up();
+ };
+ const finish=()=>{keep();
+  const live={};let hidden=0,bad=0,right=0;G.pub=[];
+  pick.forEach(i=>{const c=s.cards[i];applyFx(c.fx,{live});G.f[c.f]=true;G.pub.push(c.n);if(c.hide)hidden++;if(c.bad)bad++;if(c.ok.includes(link[i]))right++;});
+  if(has("noticed_prc")&&!has("pub_prevent"))applyFx("prc-3",{live});
+  const q=(hidden?30:0)+(bad?0:30)+Math.round(right/pick.length*20);
+  G.written.kpi=pick.map(i=>({기준:s.cards[i].n,연결:link[i]}));
+  G.goal2=pick.length>=3&&hidden>0&&right===pick.length;G.quality=q;
+  record(s.id,G.pub.join(","));
+  if(has("pub_prevent")||has("pub_security")||has("pub_support"))ach("보이지 않는 것을 보다");
+  SC_CHOICE({id:s.id+"-2",tag:s.tag,when:s.when,title:"어디까지 알릴까요?",intro:[`고른 기준: <b>${G.pub.join(", ")}</b>`,"이 기준을 누구에게, 어디까지 보여 줄지 정합니다. 많이 알릴수록 시간이 들고 따져 묻는 사람이 늘어납니다. 적게 알릴수록 팀원들은 각자 짐작합니다. 기준을 받은 구성원만 연말에 그 기준으로 설명을 들을 수 있습니다."],options:s.levels},{done:(o)=>{
+   G.quality+=o.k==="A"?20:o.k==="B"?10:0;
+   SC_CHOICE({id:s.id+"-3",tag:s.tag,when:s.when,title:"재검토 조건",intro:["올해 안에 회사 지침이나 사업 조건이 바뀌어 이 기준을 다시 열어야 할 수도 있습니다. 그때를 위해 조건을 미리 적어 둘까요? \"회사 지침이나 사업 조건이 바뀌면 2주 안에 다시 검토해 공지한다.\""],options:s.planb});
+  }});
+ };
+ draw();
+};
 /* R1-2 핵심 과제(1~6) 후속 장면 보너스 연결 (03-2 R1-2 표) */
 get("3-1").levels.forEach(l=>{if(l.k==="A"||l.k==="B"){const fx0=l.fx;l.fx=g=>val(fx0)+(g.f.task_3?" 안전+1":"")+(g.f.task_6&&g.pub&&g.pub.includes("장애 예방 활동")?" prc+2":"");}});
 {const s38=get("3-8");s38.xfx=(s38.xfx||[]).concat([{c:g=>!!g.f.task_5,o:"ABC",fx:"안정+1"}]);}
