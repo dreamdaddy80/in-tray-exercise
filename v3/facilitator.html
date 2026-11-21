@@ -22,19 +22,18 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:5px 6px
 .present .nick{filter:blur(6px)}
 </style>
 <style id="theme-v4">
-/* 톤앤매너 v4 (2026-11-21): 게임 화면과 같은 크림·오렌지 톤 */
+/* 톤앤매너 v5 (2026-11-21): 게임 화면과 같은 딥 네이비 · 앰버 · 아이스 블루 */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
-:root{--bg:#FBF6EF;--panel:#FFFFFF;--sunk:#FAF3EA;--ink:#2E2925;--muted:#7A6F67;--line:#EFE5DA;--accent:#E8772E;--accent-soft:#FDEEDF;--accent-ink:#B9561A;--s1:#E8772E;--s2:#5B8FD6;--s3:#3FA88A;--s4:#E2B23C}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1C1815;--panel:#262120;--sunk:#2E2825;--ink:#F3ECE4;--muted:#B3A69B;--line:#3A322D;--accent:#F08A45;--accent-soft:#3B2A1E;--accent-ink:#F6B27F}}
-body{font-family:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,sans-serif;letter-spacing:-.01em}
+:root,:root[data-theme="light"],:root[data-theme="dark"]{--bg:#05090C;--panel:#0E1A21;--sunk:#12232C;--ink:#E9EEF0;--muted:#8FA3AB;--line:#1F3540;--accent:#F0A020;--good:#8FCDD9;--bad:#F2917F;--s1:#8FCDD9;--s2:#F0A020;--s3:#457280;--s4:#D6CAAE;color-scheme:dark}
+body{font-family:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,sans-serif;letter-spacing:-.01em;background:radial-gradient(900px 560px at 88% -8%,rgba(240,160,32,.20),transparent 62%),radial-gradient(1000px 640px at -6% 4%,rgba(69,114,128,.36),transparent 60%),#05090C;background-attachment:fixed}
 h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
-.card{border:0;border-radius:22px;box-shadow:0 1px 2px rgba(80,50,20,.04),0 8px 24px rgba(80,50,20,.06);padding:18px 20px}
-textarea{border:0;box-shadow:inset 0 0 0 1.5px var(--line);border-radius:16px}
-textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--accent)}
-button{border:0;box-shadow:inset 0 0 0 1.5px var(--line);font-weight:600;padding:8px 16px}
-button:hover{box-shadow:inset 0 0 0 1.5px #E9B48C}
-button.main{background:var(--accent);color:#fff;box-shadow:0 6px 14px rgba(232,119,46,.28)}
-button.main:hover{background:#D4651D}
+.card{border:0;border-radius:22px;background:rgba(14,26,33,.78);box-shadow:inset 0 0 0 1px rgba(143,205,217,.12),0 24px 48px rgba(0,0,0,.4);padding:18px 20px}
+textarea{border:0;background:rgba(5,12,16,.6);box-shadow:inset 0 0 0 1px rgba(143,205,217,.18);border-radius:16px}
+textarea:focus{outline:none;box-shadow:inset 0 0 0 1.5px #8FCDD9}
+button{border:0;background:rgba(143,205,217,.06);box-shadow:inset 0 0 0 1px rgba(143,205,217,.22);font-weight:600;padding:8px 16px}
+button:hover{box-shadow:inset 0 0 0 1px rgba(143,205,217,.45)}
+button.main{background:#F0A020;color:#0B0F12;box-shadow:0 0 0 1px rgba(255,214,140,.5),0 10px 28px rgba(240,160,32,.3)}
+button.main:hover{background:#F7B23E}
 th{color:var(--muted);font-weight:600;font-size:12.5px}
 th,td{border-top-color:var(--line)}
 .bar{border-radius:999px}

@@ -437,6 +437,7 @@ SCENES.title=function(s){
   <div class="lp-chips"><span>3라운드 · 1년</span><span>라운드마다 약 20분</span><span>2박 3일 과정, 하루 한 라운드</span><span>정답 없음</span></div>
   ${btns}
   <p class="note">라운드가 끝나면 이 브라우저에 자동 저장됩니다. 입력한 내용은 교육 목적의 채점에만 쓰이며, 인사 평가와 연결되지 않습니다.</p>
+  <div class="lp-theme" role="group" aria-label="화면 테마"><span>화면 테마</span>${(window.THEMES||[]).map(([k,n,c])=>`<button type="button" data-k="${k}" aria-pressed="${document.documentElement.dataset.skin===k}" onclick="setTheme('${k}')"><span class="sw" aria-hidden="true">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</span>${n}</button>`).join("")}</div>
  </section>
 
  <section class="lp-sec"><h2>상황</h2><div class="lp-3">
@@ -487,4 +488,27 @@ SCENES.title=function(s){
  return out;};}
 
 /* 톤앤매너 v4 (2026-11-21): 다른 스타일이 모두 붙은 뒤 맨 마지막에 테마를 붙인다 */
-(function(){if(document.getElementById("theme-v4"))return;const l=document.createElement("link");l.id="theme-v4";l.rel="stylesheet";l.href="theme.css";document.head.appendChild(l);})();
+(function(){
+ /* 화면 테마: 첫 화면에서 고른다. 고른 값은 이 브라우저에 남는다. 기본은 딥 네이비. */
+ const T={night:"theme-night.css",orange:"theme-orange.css",basic:""};
+ window.THEMES=[["night","딥 네이비",["#082534","#8FCDD9","#F0A020"]],["orange","오렌지",["#E8772E","#F4B98F","#FDEEDF"]],["basic","처음 디자인",["#151615","#9FD98C","#DDF46A"]]];
+ window.setTheme=function(k){
+  if(!(k in T))k="night";
+  let l=document.getElementById("theme-v4");
+  if(T[k]){if(!l){l=document.createElement("link");l.id="theme-v4";l.rel="stylesheet";document.head.appendChild(l);}if(l.getAttribute("href")!==T[k])l.setAttribute("href",T[k]);}
+  else if(l)l.remove();
+  document.documentElement.dataset.skin=k;
+  try{localStorage.setItem("ftm_theme",k)}catch(e){}
+  document.querySelectorAll(".lp-theme button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===k?"true":"false"));
+ };
+ let k="night";try{k=localStorage.getItem("ftm_theme")||"night"}catch(e){}
+ window.setTheme(k);
+ if(!document.getElementById("lp-theme-css")){const st=document.createElement("style");st.id="lp-theme-css";st.textContent=
+ ".lp-theme{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}"+
+ ".lp-theme>span{font-size:13px;color:var(--muted);margin-right:4px}"+
+ ".lp-theme button{display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:transparent;border:0;border-radius:999px;padding:5px 12px 5px 6px;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}"+
+ ".lp-theme button:hover{box-shadow:inset 0 0 0 1.5px var(--muted)}"+
+ ".lp-theme button[aria-pressed=true]{box-shadow:inset 0 0 0 2px var(--accent)}"+
+ ".lp-theme .sw{display:inline-flex}.lp-theme .sw i{width:14px;height:14px;border-radius:50%;margin-left:-4px;box-shadow:0 0 0 1.5px var(--panel),inset 0 0 0 1px rgba(0,0,0,.15)}.lp-theme .sw i:first-child{margin-left:0}";
+ document.head.appendChild(st);}
+})();
