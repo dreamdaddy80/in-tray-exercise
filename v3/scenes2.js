@@ -50,9 +50,19 @@ function SC_ALLOC(s){
  /* 줄일 칸의 순서를 실제로 고른다. 여력이 줄 때 이 순서대로 줄인다 */
  const CELLN={RUN:"운영(RUN)",AI:"AI 전환(AI)",GROW:"추가 제안(GROW)",SEC:"예방·보안(SEC)"};
  const dOrder=ord=>{paint("");
-  shell(`<div class="pane"><div class="eyebrow">4월 · 재검토 조건</div><h2>여력이 줄면 어느 칸부터 줄일까요?</h2><p class="note">먼저 줄일 칸부터 차례로 누르세요. 여력이 실제로 줄면 이 순서를 씁니다.</p>
-  <div class="opts">${Object.keys(CELLN).map(k=>{const i=ord.indexOf(k);return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${i>=0}" ${A(()=>{const o=ord.slice();if(i>=0)o.splice(i,1);else o.push(k);dOrder(o);})}><span class="k">${i>=0?i+1:""}</span><span>${CELLN[k]} · 지금 ${G.cells[k]}칸</span></button>`;}).join("")}</div>
-  <div class="foot"><span class="note num">${ord.length}/4</span><span class="btns"><button class="btn main" ${ord.length===4?"":"disabled"} ${A(()=>{G.time-=.5;G.tu.all+=.5;G.cutOrder=ord.slice();applyFx("`planb_alloc`");record("4-2순서",ord.join(">"));next();})}>이 순서로 적어 둔다</button>${BTN(next,"정하지 않는다")}</span></div></div>`);};
+  const stOf=n=>n>=3?["넉넉","var(--good)"]:n<=1?["부족","var(--bad)"]:["보통","var(--muted)"];
+  const pill=(n,pre)=>{const x=stOf(n);return `<small style="display:inline-block;font-size:11.5px;border:1px solid currentColor;border-radius:999px;padding:0 7px;color:${x[1]}">${pre}${n}칸 · ${x[0]}</small>`;};
+  const row=(k,i)=>{const n=G.cells[k],m=Math.max(0,n-1),a=stOf(n)[0],b=stOf(m)[0],I=(window.CELL_INFO||{})[k];
+   const after=n===0?"이미 0칸이라 이 칸 대신 다음으로 많은 칸에서 줄입니다":a===b?`한 칸 줄어도 ${b} 그대로입니다`:`한 칸 줄면 <strong style="color:var(--bad)">${a} → ${b}</strong>이 됩니다${m<=1&&I?`. ${I.lo.split(". ").slice(1).join(". ")}`:""}`;
+   return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${i>=0}" ${A(()=>{const o=ord.slice();if(i>=0)o.splice(i,1);else o.push(k);dOrder(o);})}><span class="k">${i>=0?i+1:""}</span><div style="min-width:0;text-align:left"><div><strong style="font-weight:700">${CELLN[k]}</strong> ${pill(n,"4월에 나눈 ")} <span style="color:var(--muted)">→</span> ${pill(m,"한 칸 줄면 ")}</div>${I?`<div style="font-size:13px;color:var(--muted);margin-top:3px;line-height:1.45">${I.what}</div>`:""}<div style="font-size:13px;margin-top:2px;line-height:1.45">${after}</div></div></button>`;};
+  shell(`<div class="pane"><div class="eyebrow">4월 · 재검토 조건</div><h2>여력이 줄면 어느 칸부터 줄일까요?</h2>
+  <div class="secbox" style="background:var(--sunk);border-radius:14px;padding:12px 14px;margin:6px 0 12px;font-size:13.5px;line-height:1.6"><b>무엇을 정하나요?</b> 방금 나눈 10칸은 앞으로 줄어들 수 있습니다. 예를 들어 본사가 팀 인력을 빼 가면 몇 칸이 사라집니다. 그때 어느 칸에서 뺄지를 지금 미리 적어 두는 단계입니다.<br>
+  <b>칸 수 읽는 법</b> '4월에 나눈 N칸'은 방금 확정한 배분이고, '한 칸 줄면'은 그 칸에서 1칸이 빠졌을 때입니다. 2칸이 보통, 3칸 이상이 넉넉, 1칸 이하가 부족입니다.<br>
+  <b>어떻게 쓰이나요?</b> 여력이 실제로 줄면 <b>1번부터</b> 한 칸씩 뺍니다. 몇 칸이 줄지는 그때 정해집니다. 고른 칸이 비어 있으면 다음으로 많은 칸에서 뺍니다.<br>
+  <b>적어 두면</b> 그 순간 회의 없이 이 순서대로 정리되고, 미리 정한 기준이라 리더들의 반발이 덜합니다. <b>정하지 않으면</b> 그때 리더 회의에서 어느 칸을 뺄지 정해야 하고, 반발이 더 큽니다.</div>
+  <p class="note">먼저 줄일 칸부터 차례로 누르세요. 다시 누르면 빠집니다.</p>
+  <div class="opts">${Object.keys(CELLN).map(k=>row(k,ord.indexOf(k))).join("")}</div>
+  <div class="foot"><span class="note num">${ord.length}/4${ord.length?` · ${ord.map((k,i)=>`${i+1}. ${k}`).join(" → ")}`:""}</span><span class="btns"><button class="btn main" ${ord.length===4?"":"disabled"} ${A(()=>{G.time-=.5;G.tu.all+=.5;G.cutOrder=ord.slice();applyFx("`planb_alloc`");record("4-2순서",ord.join(">"));next();})}>이 순서로 적어 둔다 · ⏳0.5</button>${BTN(next,"정하지 않는다")}</span></div></div>`);};
  const send=m=>{
   txt=$("nt").value;const three=["효과","비용","장애·보안 위험"].every(x=>crit.includes(x));
   G.written.notice={기준:[...crit],글:m==="none"?"미공지":txt,방식:m};G.goal3={three,sent:m==="full"};
@@ -67,7 +77,7 @@ function SC_ALLOC(s){
    if(m!=="none"&&crit.length&&tb.length&&!tb.some(x=>crit.includes(x))){G.f.notice_gap=true;G.cons.push({scene:"4-2",choice:"공지",why:crit.join("·"),fit:false});line=(line?line+"</p><p>":"")+`공지에는 "${crit.join(", ")}"(으)로 나눴다고 썼습니다. 토큰은 ${tn} 나눴습니다. 두 내용이 함께 팀에 남았습니다.`;}}
   paint("");
   shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>배분을 마쳤습니다</h2><div class="prose"><p>${m==="full"?"공지문을 팀 전체에 보냈습니다.":m==="num"?"배분 숫자를 알렸습니다.":"따로 알리지 않았습니다."}</p>${line?`<p>${line}</p>`:""}</div>
-  <div class="ask"><p>팀 여력이 갑자기 줄면 어느 칸부터 줄일지, 순서를 미리 정해 둘까요?</p><div class="btns"><button class="btn" ${G.time<.5?"disabled":""} ${A(()=>dOrder([]))}>순서를 정한다 ⏳0.5</button>${BTN(next,"정하지 않는다")}</div></div></div>`,live);
+  <div class="ask"><p>팀 여력이 갑자기 줄면(예: 본사가 팀 인력을 빼 가는 경우) 어느 칸부터 뺄지, 순서를 미리 적어 둘까요? 적어 두면 그때 이 순서대로 바로 정리되고, 정하지 않으면 그때 리더 회의에서 정합니다.</p><div class="btns"><button class="btn" ${G.time<.5?"disabled":""} ${A(()=>dOrder([]))}>순서를 정한다 ⏳0.5</button>${BTN(next,"정하지 않는다")}</div></div></div>`,live);
  };
  d1();
 }
