@@ -139,11 +139,11 @@ drawSide=function(live){
  const v=voice();const vp=G.voiceLast;const vd=vp?Math.round((v-vp)/Math.max(1,vp)*100):0;
  p.innerHTML=`<div><div class="label">모듈 리더 <span class="note" style="font-weight:400">· 얼굴을 누르면 프로필</span></div><div class="leaders">${LK.map(k=>`<button class="ld" style="text-align:left" onclick="openProfile('${k}')">${face(k,G.trust[k])}<div><b>${LD[k].n} <span class="num" style="font-weight:400;color:var(--muted)">${G.trust[k]}</span></b><small>${LD[k].m}</small><div class="tb"><i style="width:${G.trust[k]}%"></i></div>${statusLine(k)?`<div class="stl">${statusLine(k)}</div>`:""}</div>${dl(k)}</button>`).join("")}</div>${miniMap()}</div>
  <div><div class="label">계기판</div><div class="cards">${SCORES.map(k=>`<div class="card"><span>${SL(k)}</span><b>${G.score[k]}</b></div>`).join("")}<div class="card"><span>F사 만족</span><b>${G.fsat}</b><em>F사 기대 ${G.fexp??50}</em></div><div class="card"><span>팀 발언량</span><b>${v}</b><em>${vp&&vd?`<span style="color:${vd>0?"var(--good)":"var(--bad)"}">지난 장면 ${vd>0?"+":""}${vd}%</span>`:"주간 건수"}</em></div></div></div>
- <div><div class="label">모듈 업무량 · 스트레스</div><div class="mods">${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mod"><span>${LD[k].m}</span><div class="mbar" title="업무량 ${w} · 스트레스 ${st}"><i class="w" style="width:${w}%"></i><i class="s ${st>=80?"hot":st>=60?"warm":""}" style="width:${st}%"></i></div><b class="num">${st}</b>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext')" title="단기 외부 지원: 스트레스 −15, 재무 −2">지원</button><button onclick="v3mitigate('${k}','due')" title="마감 조정: 스트레스 −10, 고객 만족 또는 성과 −">조정</button></span>`:""}</div>`;}).join("")}</div><div class="note" style="font-size:11px">위 막대 업무량 · 아래 막대 스트레스${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</div></div>`;
+ <div><div class="label">모듈 업무량 · 스트레스</div><div class="mods">${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mod"><span>${LD[k].m}</span><div class="mbar" title="업무량 ${w} · 스트레스 ${st}"><i class="w" style="width:${w}%"></i><i class="s ${st>=80?"hot":st>=60?"warm":""}" style="width:${st}%"></i></div><b class="num">${st}</b>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext')" title="단기 외부 지원: 스트레스 −15, 재무 −2">지원</button><button onclick="v3mitigate('${k}','due')" title="마감 조정: 스트레스 −10, F사 만족 또는 고객 −">조정</button></span>`:""}</div>`;}).join("")}</div><div class="note" style="font-size:11px">위 막대 업무량 · 아래 막대 스트레스${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</div></div>`;
 };
 
 /* 배분 화면 안에도 모듈 막대를 띄운다 (칸을 옮기면 바로 움직인다) */
-function modPanel(){const M=MD(),can=((G.mitig||{})[G.round||1]||0)<3;return `<div class="modpanel"><div class="label">모듈 업무량 · 스트레스 <span class="note" style="font-weight:400">칸을 옮기면 바로 움직입니다${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</span></div>${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mrow"><span>${LD[k].m}</span><span class="note">업무량</span><div class="b3"><i style="width:${w}%;background:${w>=70?"var(--bad)":"var(--lav)"}"></i><span class="num">${w}</span></div><span class="note">스트레스</span><div class="b3"><i style="width:${st}%;background:${st>=80?"var(--bad)":st>=60?"var(--s4)":"var(--mint-bar)"}"></i><span class="num">${st}</span></div>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext');v3modRefresh()" title="스트레스 −15 · 업무량 −10 · 재무 −2">외부 지원</button><button onclick="v3mitigate('${k}','due');v3modRefresh()" title="스트레스 −10 · 고객 만족 또는 성과 −">마감 조정</button></span>`:""}</div>`;}).join("")}</div>`;}
+function modPanel(){const M=MD(),can=((G.mitig||{})[G.round||1]||0)<3;return `<div class="modpanel"><div class="label">모듈 업무량 · 스트레스 <span class="note" style="font-weight:400">칸을 옮기면 바로 움직입니다${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</span></div>${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mrow"><span>${LD[k].m}</span><span class="note">업무량</span><div class="b3"><i style="width:${w}%;background:${w>=70?"var(--bad)":"var(--lav)"}"></i><span class="num">${w}</span></div><span class="note">스트레스</span><div class="b3"><i style="width:${st}%;background:${st>=80?"var(--bad)":st>=60?"var(--s4)":"var(--mint-bar)"}"></i><span class="num">${st}</span></div>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext');v3modRefresh()" title="스트레스 −15 · 업무량 −10 · 재무 −2">외부 지원</button><button onclick="v3mitigate('${k}','due');v3modRefresh()" title="스트레스 −10 · F사 만족 또는 고객 −">마감 조정</button></span>`:""}</div>`;}).join("")}</div>`;}
 window.v3modRefresh=()=>{const e=document.querySelector('#view .modpanel');if(e)e.outerHTML=modPanel();};
 {const _sh=shell;shell=function(html,live,clock){const s=CONTENT[G.idx]||{};if(MITIG_AT.includes(s.id)&&typeof html==="string"&&html.includes('<div class="table">'))html=html.replace('<div class="table">',modPanel()+'<div class="table">');return _sh(html,live,clock);};}
 /* ===================== R3-0 배분 조정 (03-4) ===================== */
@@ -320,8 +320,14 @@ function evalRubric3(txt){
  const c2=/모듈|리더|팀원|구성원|부담|일정|야간|귀사|고객|임원|본부|현장|입장|걱정|노력|기여/.test(txt);
  const c3=/\d+\s*(월|일|주|분기|시간|%)|까지|다음\s*(주|달|분기|회의|미팅)|이번\s*(주|달)|내일|즉시|정리해|공유하|보고드리/.test(txt);
  const n=(c1?1:0)+(c2?1:0)+(c3?1:0);
- return {n,c1,c2,c3,badge:`${n}/3 충족 (①기준·원칙 ${c1?"○":"△"} · ②상대 맥락 ${c2?"○":"△"} · ③다음 행동·기한 ${c3?"○":"△"})`};
+ return {n,c1,c2,c3,badge:`${n}/3 충족 (①기준·원칙 ${c1?"○":"✕"} · ②상대 맥락 ${c2?"○":"✕"} · ③다음 행동·기한 ${c3?"○":"✕"})`};
 }
+/* 결과 코드용: 이번 라운드 서술형 답안의 3요소 충족 수 목록 (진행자 집계에서 평균을 본다) */
+window.v3RubricN=function(r){const W=G.written||{},out=[];const p=t=>{const x=evalRubric3(t);if(x)out.push(x.n);};
+ if(r===1&&Array.isArray(W.tasks)&&W.tasks.length)p(W.tasks.map(x=>x.근거||"").join(" "));
+ if(r===2){if(W.notice&&W.notice.글)p(W.notice.글);if(W.three&&W.three.직접&&W.three.직접.글)p(W.three.직접.글);}
+ if(r===3&&W["12-6"]){const w=W["12-6"];p(typeof w==="string"?w:(w.team||w.글||JSON.stringify(w)));}
+ return out.length?out:undefined;};
 window.v3RubricHtml=function(r){
  const items=[];
  if(r===1&&G.written&&Array.isArray(G.written.tasks)&&G.written.tasks.length){
@@ -337,7 +343,7 @@ window.v3RubricHtml=function(r){
   const rb=evalRubric3(txt);if(rb)items.push(["R3-6 연말 평가 결과 팀 공지",rb.badge]);
  }
  if(!items.length)return `<p class="note">이번 라운드에 작성한 서술형 답안이 없습니다.</p>`;
- return `<div class="rubric-box"><span class="label">서술형 답안 미리 보기 · 최종 점수는 강사가 채점</span><p class="note" style="margin:4px 0 6px">이번 라운드에 직접 쓴 글을 세 가지 요소로 자동 점검했습니다. ① 기준·원칙을 밝혔나 ② 상대의 맥락을 반영했나 ③ 다음 행동과 기한을 적었나. ○ 충족 · △ 일부 · ✕ 없음.</p>${items.map(x=>`<div><b>${x[0]}</b>: <span class="num">${x[1]}</span></div>`).join("")}</div>`;
+ return `<div class="rubric-box"><span class="label">서술형 답안 미리 보기 · 최종 점수는 강사가 채점</span><p class="note" style="margin:4px 0 6px">이번 라운드에 직접 쓴 글을 세 가지 요소로 자동 점검했습니다. ① 기준·원칙을 밝혔나 ② 상대의 맥락을 반영했나 ③ 다음 행동과 기한을 적었나. ○ 있음 · ✕ 없음.</p>${items.map(x=>`<div><b>${x[0]}</b>: <span class="num">${x[1]}</span></div>`).join("")}</div>`;
 };
 const SELF_COMMENTARY={
  1:"[Round 1 자율 학습 해설] 1라운드의 핵심은 '실무자 습관(직접 처리) 내려놓기'와 '연말 평가의 잣대가 될 기준을 미리 공개하기(규칙 ①)'입니다. R1-4에서 드러나지 않는 기여(예방·온보딩)를 기준에 넣고 전체 공개(A)했는지, R1-5에서 만나지 못한 리더가 자기 마음대로 KPI를 적어 온 균열을 확인해 보세요.",

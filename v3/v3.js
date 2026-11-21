@@ -255,7 +255,7 @@ function roundStart(r){
   G.time=Math.max(2,ROUND_TIME[r]+(prev.carry||0)+(prev.bonus||0)-(prev.pen||0));
   if(G.tokenCap)G.token=G.tokenCap;
  }
- G.rs=G.rs||{};G.rs[r]={score:{...G.score},fsat:G.fsat,trust:{...G.trust},safe:G.safe,sig:G.sig.length,dec:G.decisions.length,tok0:G.roundTok[r]||0,t0:Date.now(),fx0:(G.fxLog||[]).length,cons0:(G.cons||[]).length,md:(window.workload?{s:{...((G.mod||{}).s||{})},w:Object.fromEntries(Object.keys(LD).map(k=>[k,workload(k)]))}:null),voice0:window.voice?voice():null};
+ G.rs=G.rs||{};G.rs[r]={score:{...G.score},fsat:G.fsat,trust:{...G.trust},safe:G.safe,sig:G.sig.length,dec:G.decisions.length,tok0:G.roundTok[r]||0,t0:Date.now(),fx0:(G.fxLog||[]).length,cons0:(G.cons||[]).length,ds0:{f:(G.ds||{}).f||0,p:(G.ds||{}).p||0},md:(window.workload?{s:{...((G.mod||{}).s||{})},w:Object.fromEntries(Object.keys(LD).map(k=>[k,workload(k)]))}:null),voice0:window.voice?voice():null};
  (G.styleLog=G.styleLog||[]).push({r,style:G.style});
  if(G.style==="push")applyFx("안전-3");else if(G.style==="care")applyFx("안전+3");else G.time=Math.max(0,G.time-1);
  drawBar();
@@ -419,10 +419,10 @@ const AXN3={1:"① 일 맡기기",2:"② 평가하기",3:"③ 자원 나누기",
 function axRange(from){const a={1:{L:0,P:0},2:{L:0,P:0},3:{L:0,P:0},4:{L:0,P:0}};G.sig.slice(from).filter(x=>!x.forced).forEach(x=>{a[x.a][x.s]+=x.w;});const o={};for(const k in a){const t=a[k].L+a[k].P;o[k]=t?Math.round(a[k].L/t*100):null;}return o;}
 function lastChoice(id){const d=(G.decisions||[]).filter(x=>x.scene===id);return d.length?d[d.length-1].choice:null;}
 function resultCode(r){
- const ch={};["1-5","3-1","R1-pick","3-8","4-5","6-1","5-4","8-1a","R3-1a","R3-1b","9-4","6-4b","12-3a"].forEach(id=>{const c=lastChoice(id);if(c!=null)ch[id]=String(c).slice(0,12);});
+ const ch={};["M08","1-5","3-1","R1-pick","3-8","4-5","6-1","5-4","8-1a","R3-1a","R3-1b","9-4","6-4b","12-3a"].forEach(id=>{const c=lastChoice(id);if(c!=null)ch[id]=String(c).slice(0,12);});
  if(G.f.pub_full)ch.pub="A";else if(G.f.pub_items)ch.pub="B";else if(G.f.pub_leaders)ch.pub="C";
  if(G.cells)ch.cells=["RUN","AI","GROW","SEC"].map(k=>G.cells[k]||0).join("");
- const o={v:3,r,nick:G.nick||"",style:G.style||"bal",ch,kpi:[G.score.성과,G.score.재무,G.score.사람,G.score.안정,G.fsat],ax:{self:G.diag||null,act:axRange(0)},g2:G.goal2,t:Math.round((Date.now()-((G.rs||{})[r]||{}).t0)/1000)||0};
+ const o={v:3,r,nick:G.nick||"",style:G.style||"bal",ch,kpi:[G.score.성과,G.score.재무,G.score.사람,G.score.안정,G.fsat],ax:{self:G.diag||null,act:axRange(0)},g2:G.goal2,ib:(()=>{const st=(G.rs||{})[r]||{},nx=(G.rs||{})[r+1];const ms=(G.decisions||[]).slice(st.dec||0,nx?nx.dec:undefined).filter(x=>/^M\d+/.test(x.scene)).map(x=>String(x.choice).split(":")[0]);const n=k=>ms.filter(x=>x===k).length;const ds=(nx&&nx.ds0)||G.ds||{},d0=st.ds0||{};return [n("직접")+n("답장"),n("위임"),Math.max(0,(ds.f||0)-(d0.f||0)),n("코칭"),n("보류")+n("시간 초과(보류)")];})(),m39:r>=2?(G.f.got_M39?1:0):undefined,rb:window.v3RubricN?v3RubricN(r):undefined,tk:[(G.roundTok&&G.roundTok[r])||0,G.tokenCap||40],t:Math.round((Date.now()-((G.rs||{})[r]||{}).t0)/1000)||0};
  const b=btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
  let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;return `IT3-R${r}-${b}-${(h%65536).toString(16).padStart(4,"0")}`;
 }
@@ -478,7 +478,7 @@ SCENES.roundEnd=function(s){
  const mcount={};mails.forEach(x=>{const t=String(x.choice).split(":")[0];mcount[t]=(mcount[t]||0)+1;});
  const inboxAct=sumLog(e=>e.t==="받은편지함 처리");
  /* 판정 */
- cards.forEach(c=>{const co=C[c.id]||{};c.best=(co.bestCase&&co.bestCase[(G.cases||{})[c.id]])||co.best||[];c.match=c.mine!=null&&c.best.length?c.best.includes(c.mine):null;});
+ cards.forEach(c=>{const co=C[c.id]||{};c.best=(co.bestCase&&co.bestCase[(G.cases||{})[c.id]])||co.best||[];c.match=c.mine!=null&&c.best.length&&!(c.opts.length&&c.opts.every(o=>c.best.includes(o.k)))?c.best.includes(c.mine):null;});
  const judged=cards.filter(c=>c.match!=null),matchN=judged.filter(c=>c.match).length;
  /* 점수와 원인 */
  const K5=[["성과","고객","F사가 만족하는가, 약속한 서비스를 지켰는가"],["재무","재무","팀 손익: 매출, 운영비, 토큰 비용"],["사람","구성원","팀원 30명의 몰입과 목소리"],["안정","서비스 안정","시스템 가용성, 장애, 보안"],["F","F사 만족","F사가 우리 팀을 얼마나 만족스러워하는가"]];
