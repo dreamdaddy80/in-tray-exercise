@@ -900,8 +900,7 @@ if(!document.getElementById("sc-css")){const st=document.createElement("style");
 .sccard>span{font-weight:600;color:var(--ink)}
 .sccard .def{color:var(--muted);font-size:12px;line-height:1.45}
 .sccard .v{font-size:19px;margin-top:2px}
-.sccard .why{font-size:12px;line-height:1.55;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:auto}
-.chk{display:grid;gap:5px;margin-top:6px;font-size:14.5px;line-height:1.5}`;document.head.appendChild(st);}
+.sccard .why{font-size:12px;line-height:1.55;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:auto}`;document.head.appendChild(st);}
 
 /* 결과 코드 설명 (2026-11-20) */
 window.rcExplain=function(r){return `<div class="prose" style="font-size:14.5px"><p>아래 긴 글자 줄은 <b>이번 라운드 결과를 한 줄로 압축한 코드</b>입니다. 이 게임은 각자의 브라우저에서만 돌아가서, 결과가 강사에게 자동으로 모이지 않습니다. 그래서 이 코드를 강사에게 보내는 방식으로 반 전체 결과를 모읍니다.</p></div>
