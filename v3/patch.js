@@ -13,13 +13,13 @@ const wpos=(fx,m)=>fx.replace(/\+(\d+)/g,(_,n)=>"+"+Math.max(1,Math.round(+n*m))
 for(const id in DONE){let s;try{s=S(id);}catch(e){continue;}if(Array.isArray(s.options))s.options.forEach((o,i)=>{if(DONE[id][i])o.done=DONE[id][i];});}
 
 /* ===== 4월 ===== */
-ML("4-1","M22").self=()=>G.f.saw_gap?R("\"추정치이며 실측을 정리 중\"이라고 회신했습니다.","F사만족-1 `f_corrected`"):R("감사하다고 회신했습니다.","F사만족+1 `f_140`");
+ML("4-1","M22").self=()=>G.f.saw_gap?R("\"추정치이며 실측을 정리 중\"이라고 회신했습니다.","헬씨푸드만족-1 `f_corrected`"):R("감사하다고 회신했습니다.","헬씨푸드만족+1 `f_140`");
 S("4-3").rel="mfg";OP("4-3","B").dis=g=>g.f.alloc_notice?"":"공지한 기준이 없어 고를 수 없습니다.";
 S("4-4").rel="mkt";OP("4-4","A").tw=[T(g=>g.f.yoon_rumor?45:30,"\"팀장이 또 글쓴이를 찾는다\"는 말이 돌았습니다.","안전-3 소문1")];
 S("4-5").rel="mkt";
-OP("4-5","B").tw=[T(35,"본사 재무가 \"2년 약정은 팀장 권한 밖\"이라고 합니다.","재무-1 `r2_out`"),T(20,"2년 약정 얘기가 F사 쪽에서 긍정적으로 돌고 있습니다.","`r2_good`")];
+OP("4-5","B").tw=[T(35,"본사 재무가 \"2년 약정은 팀장 권한 밖\"이라고 합니다.","재무-1 `r2_out`"),T(20,"2년 약정 얘기가 헬씨푸드 쪽에서 긍정적으로 돌고 있습니다.","`r2_good`")];
 OP("4-5","C").tw=[T(g=>cell(g,"GROW")>=3?25:0,"신규 과제가 수익이 됐습니다.","재무+3")];
-S("4-5").xfx=(S("4-5").xfx||[]).concat([{c:g=>g.f.demo_ready,o:"C",fx:"F사만족+1"}]);
+S("4-5").xfx=(S("4-5").xfx||[]).concat([{c:g=>g.f.demo_ready,o:"C",fx:"헬씨푸드만족+1"}]);
 S("4-6").intro=[g=>"장기 미사용 계정 9건, 과다 권한 3건. 시정 기한 2주."+(g.f.acct_open?" 전배자 계정 2건, 전배 후 접속 이력 1회.":""),"문지원: \"이 일정이면 이번 달 다른 일이 다 밀립니다.\""];
 S("4-6").enter=g=>[(g.f.acct_open?"안정-3":""),(g.f.audit_late?"안정-1":""),(g.f.audit_ease?"안정+3":""),(g.f.sec_breach_caught?"안정-2":"")].join(" ");
 S("4-6").conds=[C(g=>g.f.acct_fixed,"지적 건수에 전배자 항목은 없습니다."),C(g=>g.f.audit_late,"정보보안팀의 어조가 강합니다."),C(g=>g.f.audit_ease,"지적이 절반으로 줄었습니다."),C(g=>g.f.sec_breach_caught,"\"3월 건과 묶어 재점검합니다.\"")];
@@ -33,8 +33,8 @@ IV("4-7","kim").line=g=>g.f.night_open?"요즘 잠을 자요.":"괜찮아요. �
 
 /* ===== 5월 ===== */
 const a51=S("5-1a");
-a51.say=g=>g.f.mfg_bloc?a51._say.filter(x=>x[0]!=="mfg"&&x[0]!=="src"):a51._say;a51._say=a51.say0||[["mkt","6월에 F사 앞에 보여 줄 게 있어야 해요. 데모가 없으면 3차 협상은 가격 얘기만 합니다."],["rd","3명이 8주면 됩니다."],["mfg","야간 경고는 그대로고 감사 후속도 안 끝났어. 돌아가는 게 먼저지."],["src","지적받은 건이 남아 있으면 다음 감사 때 더 크게 돌아옵니다."],["prc","점검표가 47개 항목이에요. 한 사람이 다 보면 여섯 시간이고요. 여기 한 명만 주세요."],["mfg","또 점검표야?"]];
-a51.conds=[C(g=>g.f.mfg_bloc,"강태식과 문지원의 자리가 비어 있다. \"일정상 어렵습니다\" 한 줄이 왔다."),C(g=>g.f.r2_measure,"F사와 6월까지 실측 방법을 정하기로 했습니다. 이 일에도 사람이 필요합니다."),C(g=>g.f.r2_more,"F사에 약속한 신규 과제가 데모와 같은 인력을 씁니다."),C(g=>g.f.know_oh_risk,"\"체크리스트를 다 못 본다\"는 말이 떠오른다.")];
+a51.say=g=>g.f.mfg_bloc?a51._say.filter(x=>x[0]!=="mfg"&&x[0]!=="src"):a51._say;a51._say=a51.say0||[["mkt","6월에 헬씨푸드 앞에 보여 줄 게 있어야 해요. 데모가 없으면 3차 협상은 가격 얘기만 합니다."],["rd","3명이 8주면 됩니다."],["mfg","야간 경고는 그대로고 감사 후속도 안 끝났어. 돌아가는 게 먼저지."],["src","지적받은 건이 남아 있으면 다음 감사 때 더 크게 돌아옵니다."],["prc","점검표가 47개 항목이에요. 한 사람이 다 보면 여섯 시간이고요. 여기 한 명만 주세요."],["mfg","또 점검표야?"]];
+a51.conds=[C(g=>g.f.mfg_bloc,"강태식과 문지원의 자리가 비어 있다. \"일정상 어렵습니다\" 한 줄이 왔다."),C(g=>g.f.r2_measure,"헬씨푸드와 6월까지 실측 방법을 정하기로 했습니다. 이 일에도 사람이 필요합니다."),C(g=>g.f.r2_more,"헬씨푸드에 약속한 신규 과제가 데모와 같은 인력을 씁니다."),C(g=>g.f.know_oh_risk,"\"체크리스트를 다 못 본다\"는 말이 떠오른다.")];
 OP("5-1a","A").tw=[T(40,"목소리 큰 동맹 쪽으로 기울었습니다.","",{nextMult:1.5}),T(25,"이수진이 점검 시간표를 꺼내자 강태식이 처음으로 물었습니다.","mfg+1 prc+2")];
 OP("5-1a","B").fx=g=>g.f.alloc_notice?"":"mfg-2";
 OP("5-1a","B").onDone=(g,hit)=>{if(g.f.alloc_notice)g.nextMult=g.f.mfg_bloc?.75:.5;};
@@ -46,10 +46,10 @@ OP("5-1b","B").fx=g=>"`q2_stable` "+(g.f.mfg_bloc?"mfg+1 src+1":"mfg+3 src+3")+"
 OP("5-1b","B").says=g=>g.f.mfg_bloc?[["mfg","자리에 없었는데 뭘."]]:[];
 OP("5-1b","B").tw=[T(35,"6월에 들고 갈 것이 화면 시안뿐입니다.","`demo_none`"),T(25,"야간 경고가 줄어 대기가 조용해졌습니다.","이야기:kim+ `night_less`")];
 S("5-1b").rel="mfg";
-S("5-2").rel="prc";S("5-2").enter=g=>g.f.q2_prevent?"안정-2 F사만족-2":"안정-3 F사만족-3";
+S("5-2").rel="prc";S("5-2").enter=g=>g.f.q2_prevent?"안정-2 헬씨푸드만족-2":"안정-3 헬씨푸드만족-3";
 S("5-2").enter2=null;
 OP("5-2","A").tw=[T(g=>g.safe<40?60:30,"아무도 입을 열지 않고 \"시스템 문제\"로 끝났습니다.","`pm_empty` 안전-3 안정-1"),T(g=>(g.safe>=60||g.f.know_oh_risk)?100:0,"\"47개를 다 보면 하루가 끝나요. 다들 표시만 해요.\"","`pm_root` 안정+3 이야기:oh+")];
-OP("5-2","A").tw2=[{p:30,t:"유 과장: \"그래서 담당자 조치는요?\"",fx:"F사만족-3"}];
+OP("5-2","A").tw2=[{p:30,t:"유 과장: \"그래서 담당자 조치는요?\"",fx:"헬씨푸드만족-3"}];
 S("5-3").rel="prc";
 S("5-3").options.forEach(o=>{o.onDone=g=>{if((o.k==="C"||g.f.pm_blame)&&g.safe<40){const m="오 사원은 6월에 표시하지 못한 항목을 말하려다 보내지 않았습니다.";if(!g.unsent.includes(m))g.unsent.push(m);}};});
 const m54=S("5-4");m54.pair=["mfg","prc"];m54.rel="mfg";m54.enter=g=>g.f.prevent_doubt?"mfg-2 prc-2":"";
@@ -67,7 +67,7 @@ OP("5-6_2","C").tw=[T(30,"유 과장이 \"장애부터 챙기시네요\"라고 �
 
 /* ===== 6월 ===== */
 const s61=S("6-1");s61.rel="mkt";
-s61.enter=g=>[(g.f.q2_demo&&!g.f["c_5-6_B"]?"F사만족+2":""),(g.f.q2_demo&&g.f["c_5-6_B"]?"F사만족-1":""),(g.f.pm_root?"F사만족+2":""),(g.f.pm_blame?"F사만족+1":""),((g.f.small_win||g.f.small_scoped)?"F사만족+1":""),(g.f.sla_met?"F사만족+4":""),(g.f.r2_out?"F사만족-2":""),(g.f.r2_good?"재무+3":""),(g.f.small_c_good?"F사만족+3":"")].join(" ");
+s61.enter=g=>[(g.f.q2_demo&&!g.f["c_5-6_B"]?"헬씨푸드만족+2":""),(g.f.q2_demo&&g.f["c_5-6_B"]?"헬씨푸드만족-1":""),(g.f.pm_root?"헬씨푸드만족+2":""),(g.f.pm_blame?"헬씨푸드만족+1":""),((g.f.small_win||g.f.small_scoped)?"헬씨푸드만족+1":""),(g.f.sla_met?"헬씨푸드만족+4":""),(g.f.r2_out?"헬씨푸드만족-2":""),(g.f.r2_good?"재무+3":""),(g.f.small_c_good?"헬씨푸드만족+3":"")].join(" ");
 s61.conds=s61.conds.filter(c=>!/데모를 띄울 수/.test(c.t)).concat([C(g=>g.f.q2_demo&&!g.f["c_5-6_B"],"데모를 띄울 수 있습니다.")]);
 OP("6-1","B").tw=[T(g=>g.f.r2_out?55:35,"본사 재무가 인하분을 어디서 메울지 묻습니다.","재무-2 다음분기⏳-1"),T(25,"우선 협상권이 10-1 대형 수주에서 유리한 조건이 될 것 같습니다.","`ct_first`")];
 OP("6-3_1","C").tw=[T(50,"\"괜찮습니다\"로 끝났습니다.","`kim_fragile` B7+20"),T(30,"이틀 쉬겠다며 동료와 순서를 바꿔 왔습니다.","`kim_rest` 사람+2 안전+2")];
@@ -88,7 +88,7 @@ const pulseA=(scene)=>{OP(scene,"A").tw=[T(30,"고칠 항목에서 빠진 쪽이
 pulseA("6-7");pulseA("9-7");pulseA("12-1");
 
 /* ===== 7월: 침묵하는 세계 ===== */
-const SIL={M36:[8,"강태식은 9월 야간 인력이 3명 모자란다고 쓰다가 지웠습니다."],M37:[22,"이수진은 실적 보고서에서 모듈 이름이 빠진 일을 물어보려다 보내지 않았습니다."],M38:[36,"윤 책임은 문지원이 병원에 다닌다는 말을 전하려다 보내지 않았습니다."],M39:[50,"김 사원은 근태가 찍히지 않게 야간 경고를 보고 있다고 말하려다 보내지 않았습니다."],M40:[65,"오 사원은 완료율 100%가 사실이 아니라고 말하려다 보내지 않았습니다."],M41:[79,"한 선임은 개인 계정 외부 AI에 F사 문서를 넣은 일을 털어놓으려다 보내지 않았습니다."],M42:[93,"배 책임은 6월 계약이 틀렸다는 의견을 실명으로 쓰다가 지웠습니다."]};
+const SIL={M36:[8,"강태식은 9월 야간 인력이 3명 모자란다고 쓰다가 지웠습니다."],M37:[22,"이수진은 실적 보고서에서 모듈 이름이 빠진 일을 물어보려다 보내지 않았습니다."],M38:[36,"윤 책임은 문지원이 병원에 다닌다는 말을 전하려다 보내지 않았습니다."],M39:[50,"김 사원은 근태가 찍히지 않게 야간 경고를 보고 있다고 말하려다 보내지 않았습니다."],M40:[65,"오 사원은 완료율 100%가 사실이 아니라고 말하려다 보내지 않았습니다."],M41:[79,"한 선임은 개인 계정 외부 AI에 헬씨푸드 문서를 넣은 일을 털어놓으려다 보내지 않았습니다."],M42:[93,"배 책임은 6월 계약이 틀렸다는 의견을 실명으로 쓰다가 지웠습니다."]};
 for(const k in SIL){const m=ML("7-1",k);m.need=SIL[k][0];m.unsent=SIL[k][1];}
 const i71=S("7-1");i71.title="7월 받은편지함";i71.lead="성수기 첫 월요일입니다. 메시지를 열면 시간이 흐르기 시작합니다.";
 i71.onStart=(g,s)=>{const n=s.mail.length;if(n<=8)g.f.quiet_inbox=true;if(n===12){g.f.loud_inbox=true;ach("시끄러운 팀");}if(!s.mail.find(x=>x.id==="M41"))g.f.sec_unknown=true;if(!s.mail.find(x=>x.id==="M40"))g.f.m40_gone=true;};
@@ -110,7 +110,7 @@ S("7-3_1").rel="prc";S("7-3_2").rel="prc";
 /* 7-4 RUN 효과(두 경우 공통) */
 ["7-4_1","7-4_2"].forEach(id=>{const s=S(id);s.tellNote="병명과 사유는 넣지 않습니다.";s.conds=s.conds.filter(c=>!/운영 칸에 여유|어느 선택이든/.test(c.t));
  s.conds.unshift(C(g=>cell(g,"RUN")>=3,"운영 칸에 여유가 있어 빈자리에 사람을 바로 붙일 수 있었습니다."),C(g=>cell(g,"RUN")<=1,"운영 칸이 비어 있습니다."));
- s.options.forEach(o=>{o.tw2=[{p:g=>cell(g,"RUN")<=1?30:0,t:"공백 중 처리 오류가 났습니다.",fx:"안정-2 F사만족-1"}];});});
+ s.options.forEach(o=>{o.tw2=[{p:g=>cell(g,"RUN")<=1?30:0,t:"공백 중 처리 오류가 났습니다.",fx:"안정-2 헬씨푸드만족-1"}];});});
 {const e1=S("7-4_1");e1.rel="src";e1.enter=g=>"`case_src`"+(cell(g,"RUN")>=3?" 안정+1":"");}
 {const e2=S("7-4_2");e2.rel="mfg";e2.enter=g=>"안전-3 `kim_sick` `~kim_fragile`"+(cell(g,"RUN")>=3?" 안정+1":"");
  e2.intro=[g=>(g.f.got_M38?"문지원의 병원 일은 \"검사 결과는 괜찮답니다\" 한 줄로 끝났습니다. ":"")+"강태식의 전화. 새벽 5시."];
@@ -177,14 +177,14 @@ OP("8-3_2","B").fx=g=>{if(g.f.cha_counter){}if(Math.random()<.5){P5OK();return (
 OP("8-3_2","B").done=g=>g.f.cha_left?"다시 붙잡아 봤지만 떠나기로 했습니다.":"연봉 조정과 설계 자리를 받아들였습니다.";
 const s84=S("8-4");s84.rel="mkt";
 {const dm=s84.intro[0];s84.intro=["정다은의 DM."];s84.say=g=>[["mkt",dm+(g.f.prop_gap?" 제안서에 이미 썼잖아요.":"")]];}
-OP("8-4","C").tw=[T(55,"정보보안팀이 뒤늦게 알았습니다.","안정-8 F사만족-6 src-4 mkt-3 `sec_data_found`"),T(45,"아무도 묻지 않았습니다.","")];
+OP("8-4","C").tw=[T(55,"정보보안팀이 뒤늦게 알았습니다.","안정-8 헬씨푸드만족-6 src-4 mkt-3 `sec_data_found`"),T(45,"아무도 묻지 않았습니다.","")];
 s84.conds=[C(g=>g.f.sec_breach,"3월의 건이 정보보안팀 기록에 남아 있다."),C(g=>g.f.rd_drafts_rule,"R&D가 쓴 사용 규칙에 마스킹 절차가 있습니다."),C(g=>g.f.prop_gap,"제안서에 쓴 \"지난 3년치 실측\"을 채워야 한다."),C(g=>g.f.ct_first,"우선 협상권이 있습니다. PT 일정을 2주 미룰 여지가 있습니다."),C(g=>cell(g,"SEC")>=3,"보안 칸에 여유가 있어 심사 자료를 바로 낼 수 있습니다."),C(g=>cell(g,"SEC")<=1,"보안 칸이 비어 있습니다.")];
 s84.top=()=>`<details class="ref"><summary>규정집</summary><p style="margin-top:6px">고객 데이터의 외부 서비스 입력은 정보보안팀의 사전 승인이 있어야 한다. 식별자 제거만으로 예외가 되지 않는다.</p></details>`;
-OP("8-4","B").fx=g=>{let p=40+(g.f.rd_drafts_rule?10:0)+(cell(g,"SEC")>=3?20:0)-(cell(g,"SEC")<=1?20:0);const ok=Math.random()*100<p;g.f.data_ok=ok;return "`data_fast` src+1 "+(ok?"성과+2 mkt+2":"mkt-3 성과-2 F사만족-1");};
+OP("8-4","B").fx=g=>{let p=40+(g.f.rd_drafts_rule?10:0)+(cell(g,"SEC")>=3?20:0)-(cell(g,"SEC")<=1?20:0);const ok=Math.random()*100<p;g.f.data_ok=ok;return "`data_fast` src+1 "+(ok?"성과+2 mkt+2":"mkt-3 성과-2 헬씨푸드만족-1");};
 OP("8-4","B").done=g=>g.f.data_ok?"긴급 심사가 승인됐습니다.":"긴급 심사가 통과하지 못했습니다. 분석 없이 PT를 준비합니다.";
 OP("8-4","B").tw=[T(30,"심사 과정에서 정보보안팀이 다른 제안 문서도 보자고 합니다.","`sec_probe`")];
 s84.harm=[{c:g=>g.f.sec_breach,o:"C",m:1.5},{c:g=>cell(g,"SEC")<=1,o:"C",m:1.5}];
-s84.tail=g=>{const half=g.f.sec_gap_asked,pb=g.f.sec_probe?20:0;if(g.f.sec_reported)return{who:"src",t:"정보보안팀: 7월 신고 건은 조치 완료로 닫았습니다.",fx:"안정+1"};if(g.f.sec_hidden&&Math.random()*100<60+pb)return{who:"src",t:"정보보안팀이 6월의 외부 입력을 발견했습니다. \"알고 있던 분이 계셨나요?\"",fx:(half?"안정-2 F사만족-2 mkt-2":"안정-4 F사만족-3 mkt-3")+" 안전-2 `sec_found`"};if(g.f.sec_unknown&&Math.random()*100<50+pb)return{who:"src",t:"정보보안팀이 6월의 외부 입력을 발견했습니다.",fx:(half?"안정-2 F사만족-2 mkt-1":"안정-4 F사만족-3 mkt-2")+" `sec_found`"};return null;};
+s84.tail=g=>{const half=g.f.sec_gap_asked,pb=g.f.sec_probe?20:0;if(g.f.sec_reported)return{who:"src",t:"정보보안팀: 7월 신고 건은 조치 완료로 닫았습니다.",fx:"안정+1"};if(g.f.sec_hidden&&Math.random()*100<60+pb)return{who:"src",t:"정보보안팀이 6월의 외부 입력을 발견했습니다. \"알고 있던 분이 계셨나요?\"",fx:(half?"안정-2 헬씨푸드만족-2 mkt-2":"안정-4 헬씨푸드만족-3 mkt-3")+" 안전-2 `sec_found`"};if(g.f.sec_unknown&&Math.random()*100<50+pb)return{who:"src",t:"정보보안팀이 6월의 외부 입력을 발견했습니다.",fx:(half?"안정-2 헬씨푸드만족-2 mkt-1":"안정-4 헬씨푸드만족-3 mkt-2")+" `sec_found`"};return null;};
 const s85=S("8-5");s85.rel="rd";
 s85.boost=[{c:g=>cell(g,"AI")>=3,o:"AB",m:1.5},{c:g=>g.f.src_drift,o:"AB",m:.5}];
 s85.enter=g=>cell(g,"AI")>=3?"이야기:yoon+":"";
@@ -194,7 +194,7 @@ S("8-6_2").intro=[g=>"사내 공모 시스템 알림: \"귀 팀 한 선임이 �
 
 /* ===== 9월 ===== */
 const s91=S("9-1");s91.rel="mfg";
-s91.enter=g=>{let p=20+(g.f.m40_gone?10:0)+(g.f.run_thin?15:0)+(cell(g,"SEC")<=1?15:0)+(cell(g,"RUN")<=1?10:0)+(g.f.borrow_miss?10:0)-(g.f.know_line?10:0)-(cell(g,"SEC")>=3?10:0);const big=Math.random()*100<p;const cp=g.f.check_truth||g.f.check_sampled?10:g.f.check_showcase?50:25;const prc=Math.random()*100<cp;return "안정-3 F사만족-2"+(big?" 안정-3 F사만족-3 `inc_big`":"")+(prc?" `inc_prc`":"")+(prc&&g.f.check_showcase?" 성과-2 `showcase_pulled`":"");};
+s91.enter=g=>{let p=20+(g.f.m40_gone?10:0)+(g.f.run_thin?15:0)+(cell(g,"SEC")<=1?15:0)+(cell(g,"RUN")<=1?10:0)+(g.f.borrow_miss?10:0)-(g.f.know_line?10:0)-(cell(g,"SEC")>=3?10:0);const big=Math.random()*100<p;const cp=g.f.check_truth||g.f.check_sampled?10:g.f.check_showcase?50:25;const prc=Math.random()*100<cp;return "안정-3 헬씨푸드만족-2"+(big?" 안정-3 헬씨푸드만족-3 `inc_big`":"")+(prc?" `inc_prc`":"")+(prc&&g.f.check_showcase?" 성과-2 `showcase_pulled`":"");};
 s91.conds=s91.conds.map(c=>/복구 시간/.test(c.t)?C(c.c,"야간 당번이 경고를 바로 올렸다."):c);
 const recov=h=>g=>{let m=h*60+(g.f.inc_big?120:0)-((g.f.night_rotate||g.f.night_auto)?30:0);return (Math.floor(m/60))+"시간"+(m%60?" "+m%60+"분":"");};
 OP("9-1","A").recover=recov(4);OP("9-1","B").recover=recov(3);OP("9-1","C").recover=recov(2);
@@ -238,14 +238,14 @@ OP("10-3_2","B").tw=[T(40,"문지원: \"말려 봤는데요.\" 그대로 떠났�
 const m104=S("10-4");m104.pair=["mfg","mkt"];m104.rel="mfg";m104.multX=g=>g.f.mfg_bloc?1.5:1;
 m104._say=m104.say;m104.say=g=>m104._say.map(x=>x[0]==="mfg"&&g.f.mfg_ally?["mfg",x[1]+" …말은 이렇게 해도, 숫자는 보겠습니다."]:x[0]==="mfg"&&g.f.mfg_exit?["mfg","(메일로만 의견을 보냈습니다) "+x[1]]:x);
 m104.intro=(m104.intro||[]).concat([g=>g.f.mfg_bloc?"강태식·문지원 쪽이 함께 서명한 문서를 냈다.":""]);
-m104.conds2=[C(g=>g.f.alloc_notice,"4월 공지문의 세 가지 잣대가 옆에 표시된다."),C(g=>g.f.scope_full,"수주 이행에 들어갈 돈이 이미 잡혀 있습니다."),C(g=>g.f.inc_big,"지난달 라인이 6시간 섰다."),C(g=>g.bills.includes("B6"),"F사가 내년 8% 인하를 전제로 하고 있습니다.")];
+m104.conds2=[C(g=>g.f.alloc_notice,"4월 공지문의 세 가지 잣대가 옆에 표시된다."),C(g=>g.f.scope_full,"수주 이행에 들어갈 돈이 이미 잡혀 있습니다."),C(g=>g.f.inc_big,"지난달 라인이 6시간 섰다."),C(g=>g.bills.includes("B6"),"헬씨푸드가 내년 8% 인하를 전제로 하고 있습니다.")];
 m104.enter2=g=>{g.pre104={a:g.trust.mfg+g.trust.src,b:g.trust.mkt+g.trust.rd};return "";};
 m104.xfx=(m104.xfx||[]).filter(x=>x.o!=="C").concat([{c:g=>!g.f.alloc_notice,o:"C",fx:"mfg-2 mkt-2"}]);
 OP("10-4","C").says=g=>g.f.alloc_notice?[]:[["mfg","처음 듣는 표네요."]];
 m104.options.forEach(o=>{const f=o.onDone;o.onDone=(g,h)=>{if(f)f(g,h);if(g.pre104&&g.trust.mfg+g.trust.src>=g.pre104.a&&g.trust.mkt+g.trust.rd>=g.pre104.b)ach("동맹의 중재자");};});
 const s105=S("10-5");s105.rel="mkt";
 s105.conds=s105.conds.map(c=>/실측 절감만 내년/.test(c.t)?C(c.c,"6월에 실측 절감만 내년 단가에 반영하기로 했습니다."):c);
-s105.xfx=[{c:g=>g.f.ct_measure,o:"BC",fx:"F사만족-2"},{c:g=>g.f.ct_cut,o:"C",fx:"재무-3"}];
+s105.xfx=[{c:g=>g.f.ct_measure,o:"BC",fx:"헬씨푸드만족-2"},{c:g=>g.f.ct_cut,o:"C",fx:"재무-3"}];
 S("10-6_1").rel="prc";S("10-6_2").rel="prc";
 ["10-6_1","10-6_2"].forEach(id=>{S(id).intro=[g=>g.prom.P6?"7월에 약속했습니다. 10월에는 오 사원이 E-417을 고치기로 했습니다.":""].concat(S(id).intro||[]);});
 OP("10-6_1","B").settle=null;OP("10-6_1","B").onDone=()=>{if(G.prom.P6)settle("P6",Math.random()>.4,"oh");};
@@ -301,9 +301,9 @@ S("11-8").members=["kim","yoon","oh","han","cha","bae"].map(k=>({k,line:g=>g.end
 S("12-1").top0=true;
 const s122=S("12-2");s122.rel="mfg";
 s122.conds=s122.conds.map(c=>/장애 효과 2배/.test(c.t)?C(c.c,"운영 칸이 비어 있습니다."):c);
-s122.enter=g=>(cell(g,"RUN")<=1?"안정-4 F사만족-4":"안정-2 F사만족-2")+(g.f.scope_risk?" F사만족-1":"");
-OP("12-2","A").tw=[T(35,"복구가 늦어져 유 과장이 임원에게 올렸습니다.","F사만족-3"),T(25,"맡은 리더가 복구 보고까지 끝냈습니다.","mfg+3")];
-OP("12-2","B").fx="`dec_extend` 안정+1 F사만족+2 mfg-3";
+s122.enter=g=>(cell(g,"RUN")<=1?"안정-4 헬씨푸드만족-4":"안정-2 헬씨푸드만족-2")+(g.f.scope_risk?" 헬씨푸드만족-1":"");
+OP("12-2","A").tw=[T(35,"복구가 늦어져 유 과장이 임원에게 올렸습니다.","헬씨푸드만족-3"),T(25,"맡은 리더가 복구 보고까지 끝냈습니다.","mfg+3")];
+OP("12-2","B").fx="`dec_extend` 안정+1 헬씨푸드만족+2 mfg-3";
 OP("12-2","B").done="평가 연장 사유서를 냈습니다. 이틀간 복구를 지휘했고, 평가는 이틀 늦어집니다.";
 OP("12-2","C").tw=[T(40,"\"결국 리더 평가네요.\"","안전-3"),T(30,"리더들이 의견서에 관찰 사실을 적어 왔습니다.","안전+1 `dec_half`")];
 const i123=GEN.findIndex(x=>x&&x.id==="12-3");
@@ -333,10 +333,10 @@ a111.say=g=>(g.f.mfg_ally?a111._say.map(x=>x[0]==="mfg"?["mfg",x[1].replace(/^"|
 /* 원고의 괄호 메모를 규칙으로: 5-5 C의 "8-3 선택지 효과 상승", 9-1 C의 "결산에서 처음 밝힌다" */
 {const t=OP("5-5","C").tw;t[1]={p:30,t:"실제 제안이 오면 일주일 안에 답할 수 있도록 미리 정리해 두었습니다.",fx:"`cha_ready`"};
  ["8-3_1","8-3_2"].forEach(id=>{const s=S(id);s.boost=(s.boost||[]).concat([{c:g=>g.f.cha_ready,o:"ABC",m:1.5}]);});
- OP("7-2b","C").tw[0]={...OP("7-2b","C").tw[0],t:"컨설턴트에게 줄 F사 자료가 보안 심사에 걸려 일정이 2주 늦어졌습니다."};
+ OP("7-2b","C").tw[0]={...OP("7-2b","C").tw[0],t:"컨설턴트에게 줄 헬씨푸드 자료가 보안 심사에 걸려 일정이 2주 늦어졌습니다."};
  OP("11-4_1","C").ending="강태식은 다른 팀 팀장 후보로 올라갔습니다. 운영 쪽 내년 인계자는 아직 정해지지 않았습니다.";
  {const a=S("12-3a").options[0];a.cost=g=>g.f.dec_extend?0:2;}
- OP("9-1","C").tw=[T(50,"사후 감사에서 드러났습니다.","안정-8 F사만족-4 src-4 `inc_found`"),T(50,"아무도 묻지 않았습니다.","")];}
+ OP("9-1","C").tw=[T(50,"사후 감사에서 드러났습니다.","안정-8 헬씨푸드만족-4 src-4 `inc_found`"),T(50,"아무도 묻지 않았습니다.","")];}
 /* 약속 판정을 형식이 아니라 결과로: P2는 7월에 다시 본다 */
 {const i=S("7-1"),f0=i.onStart;i.onStart=(g,s)=>{if(f0)f0(g,s);const p=g.prom.P2;if(p&&p.status==="이행"&&(!g.f.night_open||kimHard())){p.status="형식 이행";p.note=kimHard()?"표는 바뀌었지만 김 사원은 아직 집에서 경고를 봅니다.":"표는 바뀌었지만 대기는 다른 저연차에게 옮겨 갔습니다.";g.f.p2_hollow=true;}};}
 /* ===== 화면에 새던 원고 메모 정리 (효과는 위에서 이미 enter/say로 처리됨) ===== */
@@ -388,7 +388,7 @@ const REF_TEXT={"1-3": "<b>Charan 외(2011), 리더십 파이프라인</b><br>�
 
 /* ===== 결정 근거 판정 보완 =====
    검토 원칙: 결정 문장에 들어 있거나 결정의 직접 목적인 기준은 맞는 근거로 본다.
-   원고에서 온 판정(등급 기준 이름)에 회사 원칙과 팀 규칙 이름을 더한다. 값이 없는 선택지(3-8 B, 8-4 C)는 어떤 기준으로도 설명할 수 없는 결정이다 */
+   원고에서 온 판정(등급 기준 이름)에 퓨쳐테크 원칙과 팀 규칙 이름을 더한다. 값이 없는 선택지(3-8 B, 8-4 C)는 어떤 기준으로도 설명할 수 없는 결정이다 */
 {const R="장애 없는 운영",SC="절차와 보안 준수",CU="고객과의 약속",HU="사람 지속가능성",MO="비용 책임",EF="효과",AI="AI 활용 효과",RV="추가 과제 매출 기여";
  const TR_CREDIT="표지에 작성자와 기여자 적기",TR_MASK="외부 AI에 넣기 전 마스킹하기",TR_AWARD="포상에 예방과 복구를 함께 적기";
  const FITFIX={
@@ -439,9 +439,9 @@ const REF_TEXT={"1-3": "<b>Charan 외(2011), 리더십 파이프라인</b><br>�
 /* 4. 7월 범위 재협상의 결과를 보여 주고, 10월 본계약 초안에 잇는다 */
 {const a=OP("7-2a","A");const f=a.onDone;
  a.onDone=(g,hit)=>{if(hit&&/다른 업체는 전 품목/.test(val(hit.t)))g.f.prop_narrow_no=true;else g.f.prop_narrow_ok=true;if(f)f(g,hit);};
- a.done=g=>g.f.prop_narrow_no?"한 품목으로 줄이자고 임원과 다시 협상했습니다. F사는 받아들이지 않았습니다. 한 품목 제안서를 내되, 전 품목 일정표를 붙이기로 했습니다.":"한 품목으로 줄이자고 임원과 다시 협상했습니다. F사가 받아들였습니다. 제안은 한 품목으로 내고, 본계약 범위는 10월에 다시 정하기로 했습니다.";
+ a.done=g=>g.f.prop_narrow_no?"한 품목으로 줄이자고 임원과 다시 협상했습니다. 헬씨푸드는 받아들이지 않았습니다. 한 품목 제안서를 내되, 전 품목 일정표를 붙이기로 했습니다.":"한 품목으로 줄이자고 임원과 다시 협상했습니다. 헬씨푸드가 받아들였습니다. 제안은 한 품목으로 내고, 본계약 범위는 10월에 다시 정하기로 했습니다.";
  const s1=S("10-1");const i1=s1.intro[0];s1.intro=[g=>val(i1)+(g.f.prop_narrow_no?" 메일 끝줄: \"7월에 말씀드린 대로 범위는 전 품목입니다.\"":g.f.prop_narrow?" 메일 끝줄: \"7월의 한 품목 제안을 잘 봤습니다. 본계약은 전 품목으로 넓히고 싶습니다.\"":"")];
- S("10-2").intro=[g=>g.f.prop_narrow_no?"계약서 초안이 왔다. 7월에 F사가 물러서지 않은 그대로다. 전 품목, 일 단위, 1월 착수.":g.f.prop_narrow?"계약서 초안이 왔다. 7월에 한 품목으로 줄였던 범위가 본계약에서는 전 품목으로 넓어져 있다. 일 단위, 1월 착수.":"계약서 초안이 왔다. 전 품목, 일 단위, 1월 착수."];}
+ S("10-2").intro=[g=>g.f.prop_narrow_no?"계약서 초안이 왔다. 7월에 헬씨푸드가 물러서지 않은 그대로다. 전 품목, 일 단위, 1월 착수.":g.f.prop_narrow?"계약서 초안이 왔다. 7월에 한 품목으로 줄였던 범위가 본계약에서는 전 품목으로 넓어져 있다. 일 단위, 1월 착수.":"계약서 초안이 왔다. 전 품목, 일 단위, 1월 착수."];}
 /* 5. 10월 AI 검토에서 "50%는 저희 숫자가 아니다"를 들었다면 서하준이 "절반"이라고 말하지 않는다 */
 {const s=S("10-2");const f=s.say;const heard=g=>g.f.ai10_hold||((g.ver||[]).find(x=>x.id==="AI10")||{}).asked;
  s.say=g=>f(g).map(x=>x[0]==="rd"&&heard(g)?["rd",x[1].replace("데이터 정리는 아직 절반이에요.","데이터 정리가 어디까지 됐는지 아직 못 셌어요. 절반이라는 숫자는 저희가 낸 게 아니고요.")]:x);}
@@ -453,18 +453,18 @@ const REF_TEXT={"1-3": "<b>Charan 외(2011), 리더십 파이프라인</b><br>�
  D("B","자동화를 넣되 긴급 발주 구간은 사람이 검수하고, 오류가 줄어드는 대로 단계를 뺀다.","자동화를 넣고 긴급 발주 구간에 사람 검수를 두었습니다.");
  D("C","8월에 정한 대로 10월까지 기다리고, 그동안 수작업 분류의 원인과 위험을 전부 확인한다.","8월에 정한 대로 10월까지 기다리기로 했습니다.");
  {const t=OP("9-5","A").tw[1],t0=t.t;t.t=g=>g.f.auto_defer?"분류 오류가 1%로 떨어졌습니다.":t0;}
- {const t=OP("9-5","C").tw[0],t0=t.t;t.t=g=>g.f.auto_defer?"기다리는 사이 수작업 분류가 밀려 F사 납품 리포트가 늦어졌습니다.":t0;}
+ {const t=OP("9-5","C").tw[0],t0=t.t;t.t=g=>g.f.auto_defer?"기다리는 사이 수작업 분류가 밀려 헬씨푸드 납품 리포트가 늦어졌습니다.":t0;}
  s.title2=g=>g.f.auto_defer?"미뤄 둔 자동화를 어떻게 할까요?":"자동화를 어떻게 할까요?";
  /* 9월에 이미 넣기로 했다면 10월에 "다시 보자고 하셨죠"가 나오지 않는다 */
  S("10S").pick=g=>g.f.auto_defer&&!(g.f.fp_keep||g.f.fp_gate)?0:g.f.fp_stop&&!g.f.auto_defer?1:2;}
-/* 8. F사 클레임: 직전 도장 장면의 쟁점은 계획 정비를 중단 시간에 넣느냐(정의 차이)였다. 우리 오류를 전제하지 않는 선택지를 둔다 */
+/* 8. 헬씨푸드 클레임: 직전 도장 장면의 쟁점은 계획 정비를 중단 시간에 넣느냐(정의 차이)였다. 우리 오류를 전제하지 않는 선택지를 둔다 */
 {const s=S("9-4");const stamp=g=>((g.ver||[]).find(x=>x.id==="AI9")||{}).stamp;
- s.options.push({k:"D",cost:1,t:"계획 정비를 중단 시간에 넣을지, 계약 부속서의 산식 정의부터 양쪽이 맞추자고 한다.",sig:"④L",fx:"`claim_define` F사만족-1 안정+1",done:"산식 정의부터 맞추기로 했습니다. 조건 논의는 그 뒤에 합니다.",
+ s.options.push({k:"D",cost:1,t:"계획 정비를 중단 시간에 넣을지, 계약 부속서의 산식 정의부터 양쪽이 맞추자고 한다.",sig:"④L",fx:"`claim_define` 헬씨푸드만족-1 안정+1",done:"산식 정의부터 맞추기로 했습니다. 조건 논의는 그 뒤에 합니다.",
   tagText:g=>stamp(g)==="unv"?"검증 불가로 찍은 쟁점":"",dis:g=>g.f.ai9_accepted?"재산정 수치를 받아들인다고 이미 회신해서 고를 수 없습니다.":"",
-  tw:[T(g=>g.f.ai9_fixed||g.f.know_metric?55:35,"부속서대로 계획 정비를 빼니 99.4%였습니다. F사가 재산정을 거둬들였습니다.","F사만족+3 재무+1"),T(25,"F사 임원: \"정의 얘기로 시간을 끄시는군요.\"","F사만족-2")]});
+  tw:[T(g=>g.f.ai9_fixed||g.f.know_metric?55:35,"부속서대로 계획 정비를 빼니 99.4%였습니다. 헬씨푸드가 재산정을 거둬들였습니다.","헬씨푸드만족+3 재무+1"),T(25,"헬씨푸드 임원: \"정의 얘기로 시간을 끄시는군요.\"","헬씨푸드만족-2")]});
  s.conds.push(C(g=>stamp(g)==="unv","AI 재산정에 '검증 불가' 도장을 찍었다. 무엇을 중단 시간으로 세는지부터 정해지지 않았다."),C(g=>stamp(g)==="ok"&&!g.f.ai9_accepted,"AI 재산정에 '확인' 도장을 찍었다."));
  s.common=s.common||{};s.common.fit=s.common.fit||{};s.common.fit.D=["고객과의 약속","절차와 보안 준수"];
- const m=S("10-5");if(m&&m.conds)m.conds.push(C(g=>g.f.claim_define,"9월에 F사와 가용성 산식 정의를 다시 맞췄습니다."));}
+ const m=S("10-5");if(m&&m.conds)m.conds.push(C(g=>g.f.claim_define,"9월에 헬씨푸드와 가용성 산식 정의를 다시 맞췄습니다."));}
 /* 9. 문지원이 입원한 달에는 면담할 수 없다. 원고의 "경우 2" 표기가 대사에 섞여 있던 것도 나눈다 */
 {const r=IV("7-6","src");r.off=g=>g.cases&&g.cases["7-4"]===0?"입원 중이라 이번 달은 만날 수 없습니다":"";
  r.line=g=>g.cases&&g.cases["7-4"]===0?(g.f.mfg_acting?"제 결재선이 바뀌어 있던데요.":"자리 비운 동안 고맙습니다."):"본사가 사람을 달라고 할 겁니다.";}
@@ -508,6 +508,6 @@ const REF_TEXT={"1-3": "<b>Charan 외(2011), 리더십 파이프라인</b><br>�
  /* 6. 6월에 적어 둔 협상선의 값을 9월 클레임에서 쓴다 */
  {const s=S("9-4");const c=s.conds.find(x=>/협상선이 있습니다/.test(String(x.t)));if(c)c.t=g=>"6월에 적어 둔 협상선이 있습니다. 운영비 인하는 "+(g.planbFloor==null?"정한 범위":g.planbFloor+"%")+"까지입니다."+(g.planbFloor===0?" 운영비를 깎아 주는 안은 이 선을 넘습니다.":"");
   const b=OP("9-4","B");b.tagText=g=>g.f.planb_contract&&g.planbFloor===0?"적어 둔 협상선 밖":"";
-  s.xfx=(s.xfx||[]).concat([{c:g=>g.f.planb_contract&&g.planbFloor===0,o:"B",fx:"재무-1 안전-1"},{c:g=>g.f.planb_contract&&g.planbFloor>=3,o:"B",fx:"F사만족+1"}]);
-  const e0=s.enter;s.enter=g=>val(e0)+(g.f.planb_contract&&g.planbFloor===5?" F사만족+1":"");}
+  s.xfx=(s.xfx||[]).concat([{c:g=>g.f.planb_contract&&g.planbFloor===0,o:"B",fx:"재무-1 안전-1"},{c:g=>g.f.planb_contract&&g.planbFloor>=3,o:"B",fx:"헬씨푸드만족+1"}]);
+  const e0=s.enter;s.enter=g=>val(e0)+(g.f.planb_contract&&g.planbFloor===5?" 헬씨푸드만족+1":"");}
 }

@@ -21,6 +21,24 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:5px 6px
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .present .nick{filter:blur(6px)}
 </style>
+<style id="theme-v4">
+/* 톤앤매너 v4 (2026-11-21): 게임 화면과 같은 크림·오렌지 톤 */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+:root{--bg:#FBF6EF;--panel:#FFFFFF;--sunk:#FAF3EA;--ink:#2E2925;--muted:#7A6F67;--line:#EFE5DA;--accent:#E8772E;--accent-soft:#FDEEDF;--accent-ink:#B9561A;--s1:#E8772E;--s2:#5B8FD6;--s3:#3FA88A;--s4:#E2B23C}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1C1815;--panel:#262120;--sunk:#2E2825;--ink:#F3ECE4;--muted:#B3A69B;--line:#3A322D;--accent:#F08A45;--accent-soft:#3B2A1E;--accent-ink:#F6B27F}}
+body{font-family:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,sans-serif;letter-spacing:-.01em}
+h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.card{border:0;border-radius:22px;box-shadow:0 1px 2px rgba(80,50,20,.04),0 8px 24px rgba(80,50,20,.06);padding:18px 20px}
+textarea{border:0;box-shadow:inset 0 0 0 1.5px var(--line);border-radius:16px}
+textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--accent)}
+button{border:0;box-shadow:inset 0 0 0 1.5px var(--line);font-weight:600;padding:8px 16px}
+button:hover{box-shadow:inset 0 0 0 1.5px #E9B48C}
+button.main{background:var(--accent);color:#fff;box-shadow:0 6px 14px rgba(232,119,46,.28)}
+button.main:hover{background:#D4651D}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+th,td{border-top-color:var(--line)}
+.bar{border-radius:999px}
+</style>
 <div class="wrap">
  <h1>진행자 집계 · In-Tray v3</h1>
  <p class="note">학습자가 라운드 성적표나 결산에서 복사한 결과 코드(<code>IT3-R…</code>)를 한 줄에 하나씩 붙여 넣으세요. 코드에는 별칭, 스타일, 핵심 선택, 지표, 습관 점수만 들어 있고 쓴 글은 없습니다. 계산은 이 브라우저 안에서만 합니다.</p>
@@ -30,8 +48,8 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:5px 6px
 </div>
 <script>
 const $=id=>document.getElementById(id);
-const KEYS={"M08":["M08 강태식 전화 (해외 공장 경고)",{"직":"직접 처리 (로그를 직접 봄)","답":"답장만","위":"맡김","코":"코칭","보":"보류","시":"시간 초과"}],"1-5":["첫 주간 회의",{A:"보고형",B:"토론형",C:"격주+1:1"}],pub:["KPI 기준 공개 수준",{A:"전체 공개",B:"항목만",C:"리더에게만"}],"3-8":["승인 안 된 AI 도구",{A:"즉시 신고",B:"먼저 파악 후 신고",C:"공개 조치 후 신고"}],"4-5":["F사 운영비 요구 1단계",{A:"추정치라 밝힘",B:"3% + 2년",C:"신규 과제로 대신"}],"6-1":["하반기 계약",{A:"동결 + 실측",B:"5% 인하 + 우선 협상권",C:"동결 + 신규 2건"}],"5-4":["장애 공로 추천",{A:"생산",B:"두 모듈",C:"보류"}],"8-1a":["본사 차출 대응",{A:"그대로 보냄",B:"1명으로 협상",C:"파견으로"}],"R3-1a":["새벽 지휘",{A:"강태식 지휘",B:"직접 원격 지휘"}],"R3-1b":["3번 라인",{A:"정지 + 절차",B:"부분 가동",C:"우회 승인"}],"9-4":["F사 재협상",{A:"오류 인정 + 검증",B:"운영비 깎아 줌",C:"조사 후 답",D:"산식부터"}],"6-4b":["지침 변경 알림",{A:"전원 재공지",B:"리더 통해",C:"평가 때"}],"12-3a":["나머지 구성원 평가",{A:"관찰 확인",B:"리더 의견대로",C:"KPI 순서"}]};
-const STY={push:"추진형",care:"배려형",bal:"균형형"};const KPI=["고객","재무","구성원","서비스 안정","F사 만족"];const AX=["① 맡기기","② 평가","③ 자원","④ 설명"];
+const KEYS={"M08":["M08 강태식 전화 (해외 공장 경고)",{"직":"직접 처리 (로그를 직접 봄)","답":"답장만","위":"맡김","코":"코칭","보":"보류","시":"시간 초과"}],"1-5":["첫 주간 회의",{A:"보고형",B:"토론형",C:"격주+1:1"}],pub:["KPI 기준 공개 수준",{A:"전체 공개",B:"항목만",C:"리더에게만"}],"3-8":["승인 안 된 AI 도구",{A:"즉시 신고",B:"먼저 파악 후 신고",C:"공개 조치 후 신고"}],"4-5":["헬씨푸드 운영비 요구 1단계",{A:"추정치라 밝힘",B:"3% + 2년",C:"신규 과제로 대신"}],"6-1":["하반기 계약",{A:"동결 + 실측",B:"5% 인하 + 우선 협상권",C:"동결 + 신규 2건"}],"5-4":["장애 공로 추천",{A:"생산",B:"두 모듈",C:"보류"}],"8-1a":["본사 차출 대응",{A:"그대로 보냄",B:"1명으로 협상",C:"파견으로"}],"R3-1a":["새벽 지휘",{A:"강태식 지휘",B:"직접 원격 지휘"}],"R3-1b":["3번 라인",{A:"정지 + 절차",B:"부분 가동",C:"우회 승인"}],"9-4":["헬씨푸드 재협상",{A:"오류 인정 + 검증",B:"운영비 깎아 줌",C:"조사 후 답",D:"산식부터"}],"6-4b":["지침 변경 알림",{A:"전원 재공지",B:"리더 통해",C:"평가 때"}],"12-3a":["나머지 구성원 평가",{A:"관찰 확인",B:"리더 의견대로",C:"KPI 순서"}]};
+const STY={push:"추진형",care:"배려형",bal:"균형형"};const KPI=["고객","재무","구성원","서비스 안정","헬씨푸드 만족"];const AX=["① 맡기기","② 평가","③ 자원","④ 설명"];
 function decode(line){const m=line.trim().match(/^IT3-R(\d)-([A-Za-z0-9_-]+)-([0-9a-f]{4})$/);if(!m)return null;const b=m[2];let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;if((h%65536).toString(16).padStart(4,"0")!==m[3])return{bad:"검사 값 불일치"};
  try{const j=JSON.parse(decodeURIComponent(escape(atob(b.replace(/-/g,"+").replace(/_/g,"/")))));j.r=+m[1];return j;}catch(e){return{bad:"해석 실패"};}}
 const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):"—";const med=a=>{if(!a.length)return "—";const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)];};

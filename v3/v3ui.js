@@ -45,7 +45,7 @@ const PROFILE={
  src:{trait:"무엇이든 한 번 더 확인하는, 규정과 안정의 관리자",comm:"문서와 근거. 회의 전에 미리 의논해 주는 것을 좋아한다",rel:"강태식과 동맹 · 서하준과 갈등",val:"절차가 지켜지는 것. 팀원들의 고용 안정",hate:"갑작스러운 변경, 규정 밖 예외를 \"이번만\"이라고 하는 것",below:"\"리더님은 저희를 지켜 주세요. 근데 AI 얘기만 나오면 대화가 끝나요.\" (윤 책임)",worry:["보안 점검표에 외부 AI 사용 현황이 새로 들어갔는데, R&D가 걱정된다","윤 책임이 AI 때문에 자기 일이 없어질까 불안해한다. 감사 준비에도 윤 책임이 필요하다","위기 때 절차를 건너뛰자는 목소리가 커질까 봐"]},
  mfg:{trait:"불을 끄는 해결사. 입사 2년 선배이자 이번 팀장 자리의 유력 후보였다",comm:"대면, 짧고 직설적으로. 회의에서 공개적으로 지적받는 것을 싫어한다",rel:"문지원과 동맹 · 이수진과 갈등",val:"현장의 자율. 선배로서의 체면",hate:"현장을 모르는 지시, 여러 사람 앞에서의 지적",below:"\"리더님이 제일 많이 대기를 서세요. 그래서 힘들다는 말을 못 해요.\" (김 사원)",worry:["후배 팀장이 생산 모듈 숫자를 새로 짤까 봐","AI 배분에서 생산이 밀리면 야간 대기가 더 몰린다","이번 위기 대응이 팀장의 공으로만 남을까 봐. 내년에도 이 팀에 있을지"]},
  prc:{trait:"불이 나기 전에 막는 예방자. 어제까지 당신의 같은 모듈 동료",comm:"차분한 1:1. 숫자와 점검 기록으로 말한다",rel:"강태식과 갈등 · 정다은과 갈등 · 팀장과 특수 관계",val:"드러나지 않는 기여가 인정받는 것",hate:"팀장과 가깝다는 이유로 편애를 의심받는 일. 해결사만 칭찬받는 분위기",below:"\"점검을 꼼꼼하게 하라고 하시는데, 그게 평가에 들어가는지는 모르겠어요.\" (오 사원)",worry:["작년 평가표에 예방이 아예 없었다. 올해도 그럴까","불 끈 사람과 불 막은 사람, 누가 공을 갖는지 이번엔 정해질까","평가에서 옛 동료라 봐준다는 말이 나올까 봐 오히려 낮게 받을 것 같다"]},
- mkt:{trait:"F사 임원들 앞에서 가장 빛나는 수주형 리더",comm:"결론 먼저. 발표 자료로 이야기한다",rel:"서하준과 동맹 · 이수진과 갈등",val:"수주와 고객의 인정. 결과로 보여주는 것",hate:"성과 귀속 문제를 여러 사람 앞에서 따지는 것",below:"\"제안서는 제가 쓰는데 발표는 늘 리더님이 하세요. 이름 한 줄이면 되는데.\" (한 선임)",worry:["내일 F사 임원 보고. 제안서 수치가 맞는지","F사가 AI 효율을 이유로 운영비를 깎자고 하면 추가 수주가 막힌다","올해 수주 성과가 평가에서 다른 기준에 묻힐까 봐"]}};
+ mkt:{trait:"헬씨푸드 임원들 앞에서 가장 빛나는 수주형 리더",comm:"결론 먼저. 발표 자료로 이야기한다",rel:"서하준과 동맹 · 이수진과 갈등",val:"수주와 고객의 인정. 결과로 보여주는 것",hate:"성과 귀속 문제를 여러 사람 앞에서 따지는 것",below:"\"제안서는 제가 쓰는데 발표는 늘 리더님이 하세요. 이름 한 줄이면 되는데.\" (한 선임)",worry:["내일 헬씨푸드 임원 보고. 제안서 수치가 맞는지","헬씨푸드가 AI 효율을 이유로 운영비를 깎자고 하면 추가 수주가 막힌다","올해 수주 성과가 평가에서 다른 기준에 묻힐까 봐"]}};
 const KN=()=>(G.known=G.known||{});
 const kn=k=>(KN()[k]=KN()[k]||{});
 /* 해금 (02-3 D-1). 직접 대화한 기록에서 계산하고, 사건으로 열린 칸은 G.known에 남긴다 */
@@ -127,7 +127,7 @@ const MITIG_AT=["4-2","R3-0"];
 function mitigate(k,kind){const M=MD(),r=G.round||1;G.mitig=G.mitig||{};if((G.mitig[r]||0)>=3)return;G.mitig[r]=(G.mitig[r]||0)+1;
  const hi=M.s[k]>=80;let live={};
  if(kind==="ext"){M.s[k]=clamp(M.s[k]-15,0,100);modAdd(k,-10);live=applyFx("재무-2");}
- else{M.s[k]=clamp(M.s[k]-10,0,100);live=applyFx(k==="mkt"||k==="rd"?"F사만족-2":"성과-1");}
+ else{M.s[k]=clamp(M.s[k]-10,0,100);live=applyFx(k==="mkt"||k==="rd"?"헬씨푸드만족-2":"성과-1");}
  if(hi)applySig("③L",1,(CONTENT[G.idx]||{}).id,"완화:"+LD[k].n);
  record("완화",LD[k].n+":"+(kind==="ext"?"외부 지원":"마감 조정"));beep(500,.05);drawSide(live);}
 window.v3mitigate=mitigate;
@@ -138,15 +138,15 @@ drawSide=function(live){
  const M=MD(),can=s&&MITIG_AT.includes(s.id)&&((G.mitig||{})[G.round||1]||0)<3;
  const v=voice();const vp=G.voiceLast;const vd=vp?Math.round((v-vp)/Math.max(1,vp)*100):0;
  p.innerHTML=`<div><div class="label">모듈 리더 <span class="note" style="font-weight:400">· 얼굴을 누르면 프로필</span></div><div class="leaders">${LK.map(k=>`<button class="ld" style="text-align:left" onclick="openProfile('${k}')">${face(k,G.trust[k])}<div><b>${LD[k].n} <span class="num" style="font-weight:400;color:var(--muted)">${G.trust[k]}</span></b><small>${LD[k].m}</small><div class="tb"><i style="width:${G.trust[k]}%"></i></div>${statusLine(k)?`<div class="stl">${statusLine(k)}</div>`:""}</div>${dl(k)}</button>`).join("")}</div>${miniMap()}</div>
- <div><div class="label">계기판</div><div class="cards">${SCORES.map(k=>`<div class="card"><span>${SL(k)}</span><b>${G.score[k]}</b></div>`).join("")}<div class="card"><span>F사 만족</span><b>${G.fsat}</b><em>F사 기대 ${G.fexp??50}</em></div><div class="card"><span>팀 발언량</span><b>${v}</b><em>${vp&&vd?`<span style="color:${vd>0?"var(--good)":"var(--bad)"}">지난 장면 ${vd>0?"+":""}${vd}%</span>`:"주간 건수"}</em></div></div></div>
- <div><div class="label">모듈 업무량 · 스트레스</div><div class="mods">${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mod"><span>${LD[k].m}</span><div class="mbar" title="업무량 ${w} · 스트레스 ${st}"><i class="w" style="width:${w}%"></i><i class="s ${st>=80?"hot":st>=60?"warm":""}" style="width:${st}%"></i></div><b class="num">${st}</b>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext')" title="단기 외부 지원: 스트레스 −15, 재무 −2">지원</button><button onclick="v3mitigate('${k}','due')" title="마감 조정: 스트레스 −10, F사 만족 또는 고객 −">조정</button></span>`:""}</div>`;}).join("")}</div><div class="note" style="font-size:11px">위 막대 업무량 · 아래 막대 스트레스${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</div></div>`;
+ <div><div class="label">계기판</div><div class="cards">${SCORES.map(k=>`<div class="card"><span>${SL(k)}</span><b>${G.score[k]}</b></div>`).join("")}<div class="card"><span style="white-space:nowrap;letter-spacing:-.03em">헬씨푸드 만족</span><b>${G.fsat}</b><em>기대 ${G.fexp??50}</em></div><div class="card"><span>팀 발언량</span><b>${v}</b><em>${vp&&vd?`<span style="color:${vd>0?"var(--good)":"var(--bad)"}">지난 장면 ${vd>0?"+":""}${vd}%</span>`:"주간 건수"}</em></div></div></div>
+ <div><div class="label">모듈 업무량 · 스트레스</div><div class="mods">${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mod"><span>${LD[k].m}</span><div class="mbar" title="업무량 ${w} · 스트레스 ${st}"><i class="w" style="width:${w}%"></i><i class="s ${st>=80?"hot":st>=60?"warm":""}" style="width:${st}%"></i></div><b class="num">${st}</b>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext')" title="단기 외부 지원: 스트레스 −15, 재무 −2">지원</button><button onclick="v3mitigate('${k}','due')" title="마감 조정: 스트레스 −10, 헬씨푸드 만족 또는 고객 −">조정</button></span>`:""}</div>`;}).join("")}</div><div class="note" style="font-size:11px">위 막대 업무량 · 아래 막대 스트레스${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</div></div>`;
 };
 
 /* 여력 칸 설명 (2026-11-21). 02-2 ③ "칸의 뜻"과 "배분이 뒤 결정을 좌우" 표, 실제 코드의 효과 방향만 쓴다. 크기와 시점은 숨긴다 */
 const CELL_INFO={
- RUN:{n:"RUN 기존 운영",what:"지금 돌아가는 F사 운영과 야간 대기를 지키는 인력",mods:"생산 · 가공",hi:"강태식(생산)과 문지원(조달)이 반깁니다. 야간 운영에 여유가 생깁니다.",lo:"강태식과 문지원의 신뢰가 크게 떨어집니다. 야간 대기가 몇 사람에게 쏠리고, 새벽에 장애가 나면 당번이 혼자 남습니다."},
+ RUN:{n:"RUN 기존 운영",what:"지금 돌아가는 헬씨푸드 운영과 야간 대기를 지키는 인력",mods:"생산 · 가공",hi:"강태식(생산)과 문지원(조달)이 반깁니다. 야간 운영에 여유가 생깁니다.",lo:"강태식과 문지원의 신뢰가 크게 떨어집니다. 야간 대기가 몇 사람에게 쏠리고, 새벽에 장애가 나면 당번이 혼자 남습니다."},
  AI:{n:"AI 전환",what:"AI 도구 도입, 교육, 자동화에 쓰는 인력",mods:"R&D · 조달",hi:"서하준(R&D)이 반깁니다. AI 활용 성과가 쌓여 연말 평가의 근거가 됩니다.",lo:"서하준의 신뢰가 크게 떨어집니다. AI 전환이 R&D 혼자 밀어붙이는 일로 남습니다."},
- GROW:{n:"GROW 추가 제안",what:"F사에 새 과제를 제안하고, 더 요구받은 일을 받아 매출을 만드는 인력",mods:"마케팅 · R&D",hi:"정다은(마케팅)이 반깁니다. F사에 새 일을 더 받아 줄 때 수익으로 이어질 여지가 생깁니다.",lo:"정다은의 신뢰가 떨어집니다. F사가 일을 더 요구할 때 받아 줄 칸이 없어, 받으면 곧바로 초과 부하가 됩니다."},
+ GROW:{n:"GROW 추가 제안",what:"헬씨푸드에 새 과제를 제안하고, 더 요구받은 일을 받아 매출을 만드는 인력",mods:"마케팅 · R&D",hi:"정다은(마케팅)이 반깁니다. 헬씨푸드에 새 일을 더 받아 줄 때 수익으로 이어질 여지가 생깁니다.",lo:"정다은의 신뢰가 떨어집니다. 헬씨푸드가 일을 더 요구할 때 받아 줄 칸이 없어, 받으면 곧바로 초과 부하가 됩니다."},
  SEC:{n:"SEC 예방·보안",what:"점검, 개선, 보안 교육처럼 사고를 미리 막는 인력",mods:"가공 · 조달",hi:"이수진(가공)과 문지원이 반깁니다. 사고가 나도 피해가 줄고, 새벽 장애 때 예방 인력이 원인 기록을 바로 뽑습니다.",lo:"이수진의 신뢰가 떨어집니다. 사고가 나면 피해가 커집니다."}};
 window.CELL_INFO=CELL_INFO;
 window.cellRowInfo=function(k,n){const I=CELL_INFO[k];if(!I)return k;const st=n>=3?["넉넉","var(--good)"]:n<=1?["부족","var(--bad)"]:["보통","var(--muted)"];
@@ -165,7 +165,7 @@ window.cellGuideHtml=function(r3){const L=r3?[
  "8월에 본사가 인력을 빼 가면 어느 칸에서 줄일지 다시 정하고, 10월(Round 3 시작)에는 2칸이 새로 생겨 다시 조정합니다."];
  return `<details class="ref"${r3?"":" open"}><summary>칸을 어떻게 읽나요?</summary><ul style="margin:6px 0 0;padding-left:18px;font-size:13.5px;line-height:1.55">${L.map(x=>`<li>${x}</li>`).join("")}</ul></details>`;};
 /* 배분 화면 안에도 모듈 막대를 띄운다 (칸을 옮기면 바로 움직인다) */
-function modPanel(){const M=MD(),can=((G.mitig||{})[G.round||1]||0)<3;return `<div class="modpanel"><div class="label">모듈 업무량 · 스트레스 <span class="note" style="font-weight:400">칸을 옮기면 바로 움직입니다${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</span></div>${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mrow"><span>${LD[k].m}</span><span class="note">업무량</span><div class="b3"><i style="width:${w}%;background:${w>=70?"var(--bad)":"var(--lav)"}"></i><span class="num">${w}</span></div><span class="note">스트레스</span><div class="b3"><i style="width:${st}%;background:${st>=80?"var(--bad)":st>=60?"var(--s4)":"var(--mint-bar)"}"></i><span class="num">${st}</span></div>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext');v3modRefresh()" title="스트레스 −15 · 업무량 −10 · 재무 −2">외부 지원</button><button onclick="v3mitigate('${k}','due');v3modRefresh()" title="스트레스 −10 · F사 만족 또는 고객 −">마감 조정</button></span>`:""}</div>`;}).join("")}</div>`;}
+function modPanel(){const M=MD(),can=((G.mitig||{})[G.round||1]||0)<3;return `<div class="modpanel"><div class="label">모듈 업무량 · 스트레스 <span class="note" style="font-weight:400">칸을 옮기면 바로 움직입니다${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</span></div>${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mrow"><span>${LD[k].m}</span><span class="note">업무량</span><div class="b3"><i style="width:${w}%;background:${w>=70?"var(--bad)":"var(--lav)"}"></i><span class="num">${w}</span></div><span class="note">스트레스</span><div class="b3"><i style="width:${st}%;background:${st>=80?"var(--bad)":st>=60?"var(--s4)":"var(--mint-bar)"}"></i><span class="num">${st}</span></div>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext');v3modRefresh()" title="스트레스 −15 · 업무량 −10 · 재무 −2">외부 지원</button><button onclick="v3mitigate('${k}','due');v3modRefresh()" title="스트레스 −10 · 헬씨푸드 만족 또는 고객 −">마감 조정</button></span>`:""}</div>`;}).join("")}</div>`;}
 window.v3modRefresh=()=>{const e=document.querySelector('#view .modpanel');if(e)e.outerHTML=modPanel();};
 {const _sh=shell;shell=function(html,live,clock){const s=CONTENT[G.idx]||{};if(MITIG_AT.includes(s.id)&&typeof html==="string"&&html.includes('<div class="table">'))html=html.replace('<div class="table">',modPanel()+'<div class="table">');return _sh(html,live,clock);};}
 /* ===================== R3-0 배분 조정 (03-4) ===================== */
@@ -185,19 +185,19 @@ SCENES.realloc=function(s){
 /* ===================== R2-7 세 개의 설명 (03-3) ===================== */
 const SENT={
  measure:{f:[["운영비는 동결하되, 귀사 납품 데이터로 실측한 절감만 내년 단가에 반영하겠습니다. 측정 방식은 이달 말까지 유 과장님과 정하겠습니다.",3],["운영비는 동결하고, 실측으로 확인된 절감은 내년 단가에 반영하겠습니다. 귀사와 함께 확인하겠습니다.",2],["하반기 운영비는 현 수준을 유지하기로 했습니다. 앞으로도 최선을 다하겠습니다.",1]],
-  b:[["근거 없는 인하를 막고 실측 기준으로 바꿨습니다. F사 불만 위험은 있어, 다음 달 실측 1차 결과로 다시 보고드리겠습니다.",3],["운영비를 지키고 실측 기준으로 바꿨습니다. F사 반응은 지켜봐야 합니다.",2],["F사와 하반기 계약 방향을 정리했습니다. 세부 사항은 따로 보고드리겠습니다.",1]],
+  b:[["근거 없는 인하를 막고 실측 기준으로 바꿨습니다. 헬씨푸드 불만 위험은 있어, 다음 달 실측 1차 결과로 다시 보고드리겠습니다.",3],["운영비를 지키고 실측 기준으로 바꿨습니다. 헬씨푸드 반응은 지켜봐야 합니다.",2],["헬씨푸드와 하반기 계약 방향을 정리했습니다. 세부 사항은 따로 보고드리겠습니다.",1]],
   t:[["운영비는 지켰고, 절감은 실측한 만큼만 인정받기로 했습니다. 기록 부담이 늘지 않게 측정 항목은 다음 주까지 모듈별로 정하겠습니다.",3],["운영비는 지켰고, 절감은 실측한 만큼만 인정받기로 했습니다. 측정은 모듈과 함께 정하겠습니다.",2],["하반기 계약이 정해졌습니다. 모두 수고 많으셨습니다.",1]]},
  cut:{f:[["귀사 요청대로 운영비를 5% 낮추고, 신규 과제 우선 협상권을 계약에 넣었습니다. 첫 과제 후보는 다음 달 미팅에서 제안드리겠습니다.",3],["운영비를 5% 낮추고 신규 과제 우선 협상권을 넣었습니다. 귀사와의 관계를 길게 보겠습니다.",2],["하반기 운영비를 조정했습니다. 앞으로도 잘 부탁드립니다.",1]],
-  b:[["5% 인하로 이익은 줄지만 우선 협상권으로 추가 매출 기회를 확보했습니다. 인하분 보전 계획은 이번 달 안에 올리겠습니다.",3],["5% 인하 대신 우선 협상권을 받았습니다. 추가 매출로 메울 계획입니다.",2],["F사와 하반기 계약을 마무리했습니다. 결과를 공유드립니다.",1]],
+  b:[["5% 인하로 이익은 줄지만 우선 협상권으로 추가 매출 기회를 확보했습니다. 인하분 보전 계획은 이번 달 안에 올리겠습니다.",3],["5% 인하 대신 우선 협상권을 받았습니다. 추가 매출로 메울 계획입니다.",2],["헬씨푸드와 하반기 계약을 마무리했습니다. 결과를 공유드립니다.",1]],
   t:[["운영비를 5% 낮추는 대신 새 과제를 먼저 협상할 권리를 받았습니다. 비용을 사람으로 메우지 않도록 다음 배분 때 기준을 먼저 알리겠습니다.",3],["운영비를 5% 낮추는 대신 새 과제 우선 협상권을 받았습니다. 인력 걱정은 이해합니다.",2],["하반기 계약이 정해졌습니다. 다들 고생 많으셨습니다.",1]]},
  more:{f:[["운영비는 그대로 두고 귀사 수요예측 등 신규 과제 2건을 하반기에 더하겠습니다. 첫 결과물은 9월 둘째 주에 보여드리겠습니다.",3],["운영비는 그대로 두고 신규 과제 2건을 더하겠습니다. 귀사 일정에 맞추겠습니다.",2],["하반기에 더 많은 가치를 드리기로 했습니다. 기대해 주십시오.",1]],
-  b:[["운영비를 지키고 신규 2건으로 매출을 늘렸습니다. 인력이 빠듯해 9월 야간 계획은 다음 주까지 따로 보고드리겠습니다.",3],["운영비를 지키고 신규 2건을 더했습니다. 인력은 빠듯합니다.",2],["F사와 하반기 계약을 정리했습니다. 잘 진행하겠습니다.",1]],
+  b:[["운영비를 지키고 신규 2건으로 매출을 늘렸습니다. 인력이 빠듯해 9월 야간 계획은 다음 주까지 따로 보고드리겠습니다.",3],["운영비를 지키고 신규 2건을 더했습니다. 인력은 빠듯합니다.",2],["헬씨푸드와 하반기 계약을 정리했습니다. 잘 진행하겠습니다.",1]],
   t:[["운영비를 지키는 대신 신규 과제 2건을 받았습니다. 일이 늘어나는 만큼 무엇을 내려놓을지 이번 주 리더 회의에서 정해 알리겠습니다.",3],["운영비를 지키는 대신 신규 과제 2건을 받았습니다. 일이 늘어나는 것 압니다.",2],["하반기 계약이 정해졌습니다. 함께 잘 해 봅시다.",1]]}};
 if(SPEC["6-2"])SPEC["6-2"].targets.forEach(t=>{if(t.n==="사업부장")t.n="본부장";});
 SCENES.write3=function(s){
  const spec=SPEC["6-2"],ct=G.f.ct_cut?"cut":G.f.ct_more?"more":"measure",T=spec.targets,list=principleList().concat(gradeList());
  let why=null,direct=null,text="",pick={};G.ord3=G.ord3||{};
- const d1=()=>{paint("");shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>하반기 계약을 세 사람에게</h2><div class="prose"><p>F사 협상에서 정한 계약을 F사 임원, 본부장, 팀 전체에게 알립니다. <b>한 사람에게는 직접 쓰고</b>, 나머지 둘에게는 준비된 문장 중에서 고릅니다.</p></div>${condLines(spec)}<p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}
+ const d1=()=>{paint("");shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>하반기 계약을 세 사람에게</h2><div class="prose"><p>헬씨푸드 협상에서 정한 계약을 헬씨푸드 임원, 본부장, 팀 전체에게 알립니다. <b>한 사람에게는 직접 쓰고</b>, 나머지 둘에게는 준비된 문장 중에서 고릅니다.</p></div>${condLines(spec)}<p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}
   <p><b>누구에게 직접 쓸까요?</b></p><div class="btns">${T.map(t=>`<button class="btn ${direct===t.k?"main":""}" ${A(()=>{direct=t.k;d1();})}>${val(t.n)}</button>`).join("")}</div>
   <div class="foot"><span></span><button class="btn main" ${(why||!list.length)&&direct?"":"disabled"} ${A(d2)}>다음</button></div></div>`);};
  const d2=()=>{paint("");const t=T.find(x=>x.k===direct);
@@ -217,7 +217,7 @@ SCENES.write3=function(s){
 
 /* ===================== 인생극장 (02-5 D) ===================== */
 const CINE_POST={"3-1":"R1","4-2":"R2","R3-1b":"R3"};
-function metricsNow(g){g=g||G;return{성과:g.score.성과,재무:g.score.재무,사람:g.score.사람,안정:g.score.안정,F사:g.fsat,발언량:voice(g),trust:{...g.trust},cells:g.cells?{...g.cells}:null,maxW:Math.max(...LK.map(k=>workload(k,g.cells))),avgT:Math.round(LK.reduce((a,k)=>a+g.trust[k],0)/5)};}
+function metricsNow(g){g=g||G;return{성과:g.score.성과,재무:g.score.재무,사람:g.score.사람,안정:g.score.안정,헬씨푸드:g.fsat,발언량:voice(g),trust:{...g.trust},cells:g.cells?{...g.cells}:null,maxW:Math.max(...LK.map(k=>workload(k,g.cells))),avgT:Math.round(LK.reduce((a,k)=>a+g.trust[k],0)/5)};}
 window.v3TopupToken=function(){
  G.token=(G.token||0)+40;G.f.token_drain=true;applyFx("재무-2");
  record("토큰증액","+40(재무-2)");toast("긴급 토큰 +40 증액 (재무 −2 반영)");render();
@@ -248,7 +248,7 @@ window.v3TopupToken=function(){
 function sim(id,fn){const snap=(G.snap||{})[id];if(!snap)return null;const keep=G,h=H,hn=hN;let m=null;try{G=fillDefaults(JSON.parse(snap));G.sound=false;const t0=document.getElementById("toast").hidden;fn();m=metricsNow();}catch(e){console.warn("인생극장 계산",e);}G=keep;H=h;hN=hn;return m;}
 function simOption(id,o){return sim(id,()=>{applyFx(val(o.fx)||"");(o.tw||[]).forEach(t=>{const p=(typeof t.p==="function"?t.p(G):t.p)/100;if(p>0)applyFx(val(t.fx)||"",{pos:p,neg:p});});});}
 const ARCH={"운영 안정형":{RUN:4,AI:2,GROW:2,SEC:2},"전환 가속형":{RUN:2,AI:4,GROW:2,SEC:2},"성장형":{RUN:2,AI:2,GROW:4,SEC:2},"예방형":{RUN:2,AI:2,GROW:2,SEC:4}};
-const ARCH_SAY={"운영 안정형":[["mfg","이번엔 야간이 버텼어."],["rd","R&D는 올해도 기다리래요."]],"전환 가속형":[["rd","자동화가 두 개 붙었어요."],["yoon","제 일은 언제 없어지나요?"]],"성장형":[["mkt","신규 두 건, 다 따 왔어요."],["kim","야간 또 혼자예요."]],"예방형":[["prc","8개월째 무사고예요."],["mkt","F사가 새 제안은 언제 오냐고 해요."]]};
+const ARCH_SAY={"운영 안정형":[["mfg","이번엔 야간이 버텼어."],["rd","R&D는 올해도 기다리래요."]],"전환 가속형":[["rd","자동화가 두 개 붙었어요."],["yoon","제 일은 언제 없어지나요?"]],"성장형":[["mkt","신규 두 건, 다 따 왔어요."],["kim","야간 또 혼자예요."]],"예방형":[["prc","8개월째 무사고예요."],["mkt","헬씨푸드가 새 제안은 언제 오냐고 해요."]]};
 function applyAllocProjectedFx(c){
  /* 배분의 한 분기 뒤 기대 효과 (02-5 D-2 투영표). 매출성 효과는 재무로 (BSC). 내 선택과 대안에 같은 표를 쓴다 */
  const hi={RUN:"mfg+2 src+1 안정+2",AI:"rd+2 재무+2",GROW:"mkt+2 재무+3",SEC:"prc+2 src+1 안정+3"},
@@ -262,14 +262,14 @@ const CINE={
   names:{A:"전체 공개",B:"항목만 공개",C:"리더에게만"},pubv:{A:65,B:55,C:42},
   say:{A:[["prc","예방 기록이 처음으로 기준표에 들어갔네요."],["board","점검 몇 번이면 몇 점이에요? 다들 계산 중."]],B:[["oh","항목은 봤는데 비중은 리더님마다 말이 달라요."]],C:[["src","저희 모듈은 제가 알아서 설명하겠습니다."],["board","다른 모듈은 기준이 다르다던데?"]]}},
  R2:{scene:"4-2",label:"팀 여력 10칸을 어떻게 나눴나",keys:["모듈 업무량 최고","리더 신뢰 평균","고객","재무","서비스 안정"]},
- R3:{scene:"R3-1b",label:"새벽 3시, 3번 라인",keys:["서비스 안정","F사 만족","발언량","강태식 신뢰","고객"],
+ R3:{scene:"R3-1b",label:"새벽 3시, 3번 라인",keys:["서비스 안정","헬씨푸드 만족","발언량","강태식 신뢰","고객"],
   mine:()=>G.f["c_R3-1b_A"]?"A":G.f["c_R3-1b_B"]?"B":G.f["c_R3-1b_C"]?"C":null,alt:{A:"B",B:"A",C:"A"},opts:()=>CONTENT.find(x=>x.id==="R3-1b").options,
   names:{A:"정지 + 절차",B:"부분 가동",C:"우회 승인"},
   say:{A:[["src","절차대로 세웠으니 할 말은 있습니다."],["oh","센서 값 이상, 지난주에도 봤습니다. 말씀드렸어야 했는데…"]],B:[["mfg","현장은 이게 현실이에요."],["prc","그 구간 옆 라인도 같은 센서를 써요."]],C:[["mfg","납기는 지켰다."],["src","그 우회, 승인 기록이 없습니다."]]}}};
 function pick5(r,m,base){if(!m||!base)return null;const d=(a,b)=>a-b;
  if(r==="R1"){return[d(m.사람,base.사람),d(m.발언량,base.발언량),d(m.trust.prc,base.trust.prc),d(m.trust.mfg,base.trust.mfg)];}
  if(r==="R2"){return[m.maxW-base.maxW,m.avgT-base.avgT,d(m.성과,base.성과),d(m.재무,base.재무),d(m.안정,base.안정)];}
- return[d(m.안정,base.안정),d(m.F사,base.F사),d(m.발언량,base.발언량),d(m.trust.mfg,base.trust.mfg),d(m.성과,base.성과)];}
+ return[d(m.안정,base.안정),d(m.헬씨푸드,base.헬씨푸드),d(m.발언량,base.발언량),d(m.trust.mfg,base.trust.mfg),d(m.성과,base.성과)];}
 function cinema(r){
  const C=CINE[r],snap=(G.snap||{})[C.scene],post=(G.post||{})[r];if(!snap||!post)return null;
  let base;{const keep=G;G=fillDefaults(JSON.parse(snap));base=metricsNow();G=keep;}
@@ -317,7 +317,7 @@ window.rate360=function(){
  const pl=(G.pulse||[]).filter(Boolean).slice(-1)[0]||[50,50,50];const dl=G.ds?G.ds.f+G.ds.p:0;
  R.push({who:"team",label:"팀원 대표",s:[to5(all[1].v==null?3:1+4*all[1].v),to5(p100to5(pl[0])),to5(p100to5(pl[1])),to5(p100to5(voice()*1.25))]});
  R.push({who:"boss",label:"본부장",s:[to5(all[1].v==null?3:1+4*all[1].v),to5(5-(G.appeals||[]).length*1.2-((G.bills||[]).includes("B3")?1:0)),to5(p100to5((G.score.성과+G.score.재무)/2)),to5(p100to5(50+((G.toldAll||{}).full||0)*6-((G.toldAll||{}).none||0)*6))]});
- R.push({who:"fco",label:"F사 임원",s:[to5(G.f.inc_direct?2:G.f.inc_proc?4:3),to5(p100to5(G.fsat)),to5(p100to5(G.fsat+(G.f.claim_delay?-15:0))),to5(G.f.f_corrected||G.f.claim_verify?4.2:G.f.f_140?2:3)]});
+ R.push({who:"fco",label:"헬씨푸드 임원",s:[to5(G.f.inc_direct?2:G.f.inc_proc?4:3),to5(p100to5(G.fsat)),to5(p100to5(G.fsat+(G.f.claim_delay?-15:0))),to5(G.f.f_corrected||G.f.claim_verify?4.2:G.f.f_140?2:3)]});
  R.forEach(x=>{x.c=x.s.map((v,i)=>{const lv=v<=2.4?0:v>=3.6?1:null;const b=BANK[x.who];let t=lv==null?BANK.mid[i+1]:b[i+1][lv];return t.replace("{결정}",LD[x.who]?lastDecName(x.who):"그 결정");});
   x.pick=x.s.map((v,i)=>[Math.abs(v-3),i]).sort((a,b)=>b[0]-a[0])[0][1];});
  if(G.f.safety_breach){const f=R.find(x=>x.who==="fco");f.extra="그날 새벽 일은, 저희 공장장이 아직 이야기합니다.";}
@@ -393,7 +393,7 @@ SCENES.v3final=function(s){
   ()=>{const tt=V3TITLE()||((G.unsent||[]).length>=3?["조용한 팀의 팀장","올해 팀은 조용했습니다."]:null)||(typeof titleOf==="function"?(()=>{const t=titleOf();return[t,(typeof TITLE_L!=="undefined"&&TITLE_L[t])||""];})():["",""]);const rt=typeof resultType==="function"?resultType():null;
    return `<div class="eyebrow">결산 1/6 · 도장과 칭호</div><h2>${brs.length?"기준 미달":"기준 통과"}</h2><div class="prose">${brs.length?`<p>다른 점수와 관계없이, 아래의 선택은 넘어서는 안 되는 선을 넘었습니다.</p>${brs.map(b=>`<p>· ${b}</p>`).join("")}`:"<p>올해 장애 절차, 보안, 현장 안전 기준을 벗어난 선택이 없었습니다.</p>"}
    <p style="margin-top:12px"><b>칭호 · ${tt[0]}</b><br>${tt[1]}</p>${rt?`<p><b>결과 유형 · ${rt[0]}</b> ${rt[1]}</p>`:""}<p class="note">선임 다짐: "${G.pledge||""}"</p></div>
-   <div class="kv">${SCORES.map(k=>`<div><span>${SL(k)}</span><b>${G.score[k]}</b></div>`).join("")}<div><span>F사 만족</span><b>${G.fsat}</b></div><div><span>팀 발언량</span><b>${voice()}</b></div><div><span>연간 토큰 효율</span><b>${(()=>{const tot=Object.values(G.roundTok||{}).reduce((a,b)=>a+b,0);return tot>0?((G.score.성과+G.score.안정)/2/(tot/15)).toFixed(1):"미사용";})()}</b> <span class="note">(총 💳${Object.values(G.roundTok||{}).reduce((a,b)=>a+b,0)})</span></div></div>
+   <div class="kv">${SCORES.map(k=>`<div><span>${SL(k)}</span><b>${G.score[k]}</b></div>`).join("")}<div><span>헬씨푸드 만족</span><b>${G.fsat}</b></div><div><span>팀 발언량</span><b>${voice()}</b></div><div><span>연간 토큰 효율</span><b>${(()=>{const tot=Object.values(G.roundTok||{}).reduce((a,b)=>a+b,0);return tot>0?((G.score.성과+G.score.안정)/2/(tot/15)).toFixed(1):"미사용";})()}</b> <span class="note">(총 💳${Object.values(G.roundTok||{}).reduce((a,b)=>a+b,0)})</span></div></div>
    ${typeof trendChart==="function"?(()=>{const t=trendChart();if(t&&t.bind)setTimeout(t.bind,0);return t&&t.html||t||"";})():""}<p class="note">스타일: ${(G.styleLog||[]).map(x=>"R"+x.r+" "+STYLE[x.style||"bal"].n).join(" → ")}</p>`;},
   ()=>{const u=G.unsent||[];return `<div class="eyebrow">결산 2/6 · 보내지 않은 메시지</div><h2>올해 당신의 받은편지함에 도착하지 않은 메시지가 ${u.length}건 있었습니다</h2><div class="unsent">${u.map(x=>`<p class="voice">${x}</p>`).join("")||'<p>올해는 말하려던 것이 모두 도착했습니다. 시끄러웠던 받은편지함을 기억하시나요.</p>'}</div><p class="note">1년 동안 숨겨 둔 값: 팀의 심리적 안전 ${G.safe}. 발언량은 이 값의 겉모습이었습니다.</p>${typeof safeSpark==="function"?safeSpark():""}`;},
   ()=>{const cs=["R1","R2","R3"].map(r=>cinema(r)).filter(Boolean);const big=cs.slice().sort((a,b)=>b.gap-a.gap)[0];
@@ -427,12 +427,12 @@ SCENES.title=function(s){
  const old=load(),has0=old&&old.idx>0,rd=old&&old.round?`Round ${old.round}`:"프롤로그";
  const start=()=>{const go=()=>{G=newGame();clearSave();next();beep(520,.1);};if(has0)confirmBox("처음부터 시작할까요?",`저장된 진행(${rd})이 지워집니다. 되돌릴 수 없습니다.`,"처음부터 시작",go,true);else go();};
  const cont=()=>{G=old;render();};
- const TRAIT={rd:"새 AI 도구라면 누구보다 먼저 써 보는 실험가",src:"무엇이든 한 번 더 확인하는 규정과 안정의 관리자",mfg:"불을 끄는 해결사. 팀장 자리를 놓친 2년 선배",prc:"불이 나기 전에 막는 예방자. 어제까지의 동료",mkt:"F사 임원들 앞에서 가장 빛나는 수주형 리더"};
+ const TRAIT={rd:"새 AI 도구라면 누구보다 먼저 써 보는 실험가",src:"무엇이든 한 번 더 확인하는 규정과 안정의 관리자",mfg:"불을 끄는 해결사. 팀장 자리를 놓친 2년 선배",prc:"불이 나기 전에 막는 예방자. 어제까지의 동료",mkt:"헬씨푸드 임원들 앞에서 가장 빛나는 수주형 리더"};
  const btns=`<div class="btns"><button class="btn main" ${A(start)}>처음부터 시작</button>${has0?`<button class="btn" ${A(cont)}>이어서 하기 (${rd})</button>`:""}</div>`;
  shell(paint(`<div class="lp">
  <section class="lp-hero">
-  <div class="eyebrow">신임 팀장 In-Tray 시뮬레이션 · v3</div>
-  <h1>F사 운영팀 신임 팀장, 첫 1년</h1>
+  <div class="eyebrow">퓨쳐테크 신임 팀장 In-Tray 시뮬레이션 · v3</div>
+  <h1>헬씨푸드 운영팀 신임 팀장, 첫 1년</h1>
   <p class="lp-lead"><b>월요일 아침 8시 40분.</b> 받은편지함에 여덟 통이 와 있고, 곧 전화가 한 통 울립니다. 어제까지 옆자리에서 함께 일하던 동료들이 오늘부터 당신을 팀장이라고 부릅니다.</p>
   <div class="lp-chips"><span>3라운드 · 1년</span><span>라운드마다 약 20분</span><span>2박 3일 과정, 하루 한 라운드</span><span>정답 없음</span></div>
   ${btns}
@@ -440,14 +440,14 @@ SCENES.title=function(s){
  </section>
 
  <section class="lp-sec"><h2>상황</h2><div class="lp-3">
-  <div><b>팀</b><p>F사 운영팀 30명. 식품업계 1위 F사의 원료 수입부터 해외 공장 라인까지를 받치는 IT 시스템을 운영합니다. 시스템이 멈추면 F사의 사업이 멈춥니다.</p></div>
-  <div><b>올해의 압박</b><p>인원은 3년째 그대로인데 일은 늘었습니다. F사는 운영비 동결을 요구하고, 회사는 AI Native 전환을 선언했습니다. 작년 말에는 "왜 이 등급인지 아무도 설명해 주지 않았다"는 이의제기가 나왔습니다.</p></div>
+  <div><b>팀</b><p>퓨쳐테크 헬씨푸드 운영팀 30명. IT 서비스 기업 퓨쳐테크에서 고객사 헬씨푸드(식품업계 1위)의 원료 수입부터 해외 공장 라인까지를 받치는 IT 시스템을 운영합니다. 시스템이 멈추면 헬씨푸드의 사업이 멈춥니다.</p></div>
+  <div><b>올해의 압박</b><p>인원은 3년째 그대로인데 일은 늘었습니다. 헬씨푸드는 운영비 동결을 요구하고, 퓨쳐테크는 AI Native 전환을 선언했습니다. 작년 말에는 "왜 이 등급인지 아무도 설명해 주지 않았다"는 이의제기가 나왔습니다.</p></div>
   <div><b>당신</b><p>이 팀에서 5년 넘게 일한 엔지니어였고, 1월 1일부로 팀장이 되었습니다. 시스템은 누구보다 잘 압니다. 일을 맡겨 본 적도, 등급을 매겨 본 적도 없습니다.</p></div>
  </div></section>
 
  <section class="lp-sec"><h2>세 번의 라운드</h2><p class="note">라운드 앞에는 강의가, 뒤에는 피드백이 있습니다. 하루에 한 라운드씩, 강사의 안내에 맞춰 시작합니다.</p><div class="lp-3">
   <div class="lp-round"><span class="lp-tag">Round 1 · 1분기</span><b>기준 세우기</b><p>받은편지함과 전화, 핵심 과제 정의, 첫 리더 회의, 등급 기준 설계와 KPI 면담.</p><span class="note">강의 1 · 전문가에서 관리자로</span></div>
-  <div class="lp-round"><span class="lp-tag">Round 2 · 2·3분기</span><b>배분과 상충</b><p>AI로 생긴 여력과 토큰 나누기, F사 운영비 협상, 공로 중재, 본사 차출, 같은 결정을 세 사람에게 설명하기.</p><span class="note">강의 2 · 나누고 맡기고 말하게 하기</span></div>
+  <div class="lp-round"><span class="lp-tag">Round 2 · 2·3분기</span><b>배분과 상충</b><p>AI로 생긴 여력과 토큰 나누기, 헬씨푸드 운영비 협상, 공로 중재, 본사 차출, 같은 결정을 세 사람에게 설명하기.</p><span class="note">강의 2 · 나누고 맡기고 말하게 하기</span></div>
   <div class="lp-round"><span class="lp-tag">Round 3 · 4분기</span><b>위기와 평가</b><p>새벽 3시 공장 라인의 안전 신호, 평가 지침 변경, 7명의 연말 평가와 이의제기. 그리고 1년 결산과 90일 액션 플랜.</p><span class="note">강의 3 · 위기와 평가, 그리고 현업으로</span></div>
  </div></section>
 
@@ -457,7 +457,7 @@ SCENES.title=function(s){
 
  <section class="lp-sec lp-2">
   <div><h2>네 장의 성적표</h2><ul class="lp-list">
-   <li><b>고객</b> F사의 만족도, 약속한 서비스를 지켰는가</li><li><b>재무</b> 팀 손익 (매출은 여기서만)</li>
+   <li><b>고객</b> 헬씨푸드의 만족도, 약속한 서비스를 지켰는가</li><li><b>재무</b> 팀 손익 (매출은 여기서만)</li>
    <li><b>구성원</b> 팀원 30명의 몰입과 목소리</li><li><b>서비스 안정</b> 시스템 가용성 · 장애 · 보안</li></ul>
    <p class="note">네 장은 이어져 있습니다. 구성원이 지치면 서비스가 흔들리고, 고객이 떠나고, 손익이 나빠집니다. 네 장을 모두 만점으로 만드는 길은 없습니다.</p></div>
   <div><h2>이 세계의 규칙</h2><ol class="lp-list">
@@ -479,9 +479,12 @@ SCENES.title=function(s){
 };
 })();
 
-/* 성적표 근거: 결정마다 계기판·F사 만족·리더 신뢰·모듈 업무량이 얼마나 움직였는지 기록한다 (2026-11-20). 다른 효과 감싸기보다 바깥에 둔다 */
+/* 성적표 근거: 결정마다 계기판·헬씨푸드 만족·리더 신뢰·모듈 업무량이 얼마나 움직였는지 기록한다 (2026-11-20). 다른 효과 감싸기보다 바깥에 둔다 */
 {const _af=applyFx;applyFx=function(str,ctx){if(!G||!G.score)return _af(str,ctx);const b={...G.score,F:G.fsat},bt={...G.trust},bw=G.mod?{...G.mod.add}:{};const out=_af(str,ctx);const d={},tr={},wl={};let any=0;
  ["성과","재무","사람","안정"].forEach(k=>{const x=G.score[k]-b[k];if(x){d[k]=x;any=1;}});const xf=G.fsat-b.F;if(xf){d.F=xf;any=1;}
  Object.keys(LD).forEach(k=>{const x=G.trust[k]-bt[k];if(x){tr[k]=x;any=1;}});if(G.mod)Object.keys(LD).forEach(k=>{const x=(G.mod.add[k]||0)-(bw[k]||0);if(x){wl[k]=x;any=1;}});
  if(any){const sc=CONTENT[G.idx]||{};const t=sc.type==="inbox"?"받은편지함 처리":sc.type==="roundEnd"||sc.type==="monthEnd"?"분기 말 연쇄 · 자동 정산":(window.SC_NICK&&SC_NICK[sc.id])||noNum(String(val(sc.title)||sc.tag||sc.id||"기타"));(G.fxLog=G.fxLog||[]).push({id:sc.id||"",t,d,tr,wl});if(G.fxLog.length>500)G.fxLog.splice(0,G.fxLog.length-500);}
  return out;};}
+
+/* 톤앤매너 v4 (2026-11-21): 다른 스타일이 모두 붙은 뒤 맨 마지막에 테마를 붙인다 */
+(function(){if(document.getElementById("theme-v4"))return;const l=document.createElement("link");l.id="theme-v4";l.rel="stylesheet";l.href="theme.css";document.head.appendChild(l);})();

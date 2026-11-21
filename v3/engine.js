@@ -1,4 +1,4 @@
-/* F사 운영팀 첫 해 · 엔진. 원고 내용은 c00.js, c01.js ... 에 있다. */
+/* 헬씨푸드 운영팀 첫 해 · 엔진. 원고 내용은 c00.js, c01.js ... 에 있다. */
 const LD={rd:{n:"서하준",m:"R&D",h:1},src:{n:"문지원",m:"조달",h:2},mfg:{n:"강태식",m:"생산",h:3},prc:{n:"이수진",m:"가공",h:4},mkt:{n:"정다은",m:"마케팅",h:5}};
 const PP={kim:{n:"김 사원",m:"생산",lead:"mfg",h:1},yoon:{n:"윤 책임",m:"조달",lead:"src",h:3},oh:{n:"오 사원",m:"가공",lead:"prc",h:5},han:{n:"한 선임",m:"마케팅",lead:"mkt",h:2},cha:{n:"차 선임",m:"R&D",lead:"rd",h:4},bae:{n:"배 책임",m:"생산",lead:"mfg",h:3},anon:{n:"○ 사원",m:"",lead:"mfg",h:2}};
 const ALLY={rd:"mkt",mkt:"rd",mfg:"src",src:"mfg"};
@@ -55,14 +55,14 @@ function fillDefaults(g){if(!g||typeof g!=="object")return g;const d=newGame();f
 function load(){try{const s=localStorage.getItem(SAVE_KEY);return s?fillDefaults(JSON.parse(s)):null;}catch(e){return null;}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 
-/* ---------- 효과 문법: "성과+3 prc-4 `fam_direct` 안전+2 소문1 큰변화1 초과부하1 B1+15 F사만족+2 이야기:oh+" ---------- */
+/* ---------- 효과 문법: "성과+3 prc-4 `fam_direct` 안전+2 소문1 큰변화1 초과부하1 B1+15 헬씨푸드만족+2 이야기:oh+" ---------- */
 function setTrust(k,d,live){if(!d)return;G.trust[k]=Math.max(0,Math.min(100,G.trust[k]+d));live[k]=(live[k]||0)+d;}
 function applyFx(str,ctx={}){
  const live=ctx.live||{};
  if(!str)return live;
  const re=/`([^`]+)`|([^\s·]+)/g;let m;
  while((m=re.exec(str))){
-  if(m[1]){if(m[1][0]==="~")delete G.f[m[1].slice(1)];else{const nw=!G.f[m[1]];G.f[m[1]]=true;if(nw&&FEXP[m[1]]){const d=FEXP[m[1]][0];G.fexp=Math.max(0,Math.min(100,(G.fexp??50)+d));(G.fexpLog=G.fexpLog||[]).push({m:G.month,d,t:FEXP[m[1]][1]});live.F사기대=(live.F사기대||0)+d;}}continue;}
+  if(m[1]){if(m[1][0]==="~")delete G.f[m[1].slice(1)];else{const nw=!G.f[m[1]];G.f[m[1]]=true;if(nw&&FEXP[m[1]]){const d=FEXP[m[1]][0];G.fexp=Math.max(0,Math.min(100,(G.fexp??50)+d));(G.fexpLog=G.fexpLog||[]).push({m:G.month,d,t:FEXP[m[1]][1]});live.헬씨푸드기대=(live.헬씨푸드기대||0)+d;}}continue;}
   const t=m[2].replace(/−/g,"-");let x;
   const sc=v=>{if(v>0&&ctx.pos)v=Math.round(v*ctx.pos);if(v<0&&ctx.neg)v=Math.round(v*ctx.neg);return v;};
   if((x=t.match(/^⏳([+-]\d+)$/)))G.time=Math.max(0,G.time+ +x[1]);
@@ -78,7 +78,7 @@ function applyFx(str,ctx={}){
    if(ALLY[k]&&!(G.f.ally_broken&&(k==="mfg"||k==="src")))setTrust(ALLY[k],Math.trunc(v/2),live);
    if(v>0&&FOE[k])FOE[k].forEach(p=>setTrust(p,-Math.round(v*.3*(ctx.foe2?2:1)),live));
   }else if((x=t.match(/^(성과|재무|사람|안정)([+-]\d+)$/))){let v=sc(+x[2]);if(v>0&&(x[1]==="성과"||x[1]==="재무"))v=Math.round(v*styleF().perf);if(v>0&&x[1]==="성과"&&G.f.cha_left&&G.month>=10&&ctx.rel==="rd")v=Math.ceil(v/2);G.score[x[1]]=Math.max(0,Math.min(100,G.score[x[1]]+v));}
-  else if((x=t.match(/^F사만족([+-]\d+)$/)))G.fsat=Math.max(0,Math.min(100,G.fsat+sc(+x[1])));
+  else if((x=t.match(/^헬씨푸드만족([+-]\d+)$/)))G.fsat=Math.max(0,Math.min(100,G.fsat+sc(+x[1])));
   else if((x=t.match(/^안전([+-]\d+)$/)))G.safe=Math.max(0,Math.min(100,G.safe+sc(+x[1])));
   else if(t==="소문규칙"){if(Math.random()<.4){G.rumors++;G.safe=Math.max(0,G.safe-2);if(ctx.rel)setTrust(ctx.rel,-3,live);}}
   else if((x=t.match(/^칸:(RUN|AI|GROW|SEC)-(\d+)$/))){const n=+x[2];if(!G.cells){G.over++;}else{if(G.cells[x[1]]<n)G.over++;G.cells[x[1]]=Math.max(0,G.cells[x[1]]-n);}}
@@ -129,7 +129,7 @@ function drawSide(live){
  if(p.hidden)return;
  p.innerHTML=`<div><div class="label">모듈 리더</div><div class="leaders">${Object.keys(LD).map(k=>{const d=live&&live[k];
   return `<div class="ld">${face(k,G.trust[k])}<div><b>${LD[k].n} <span class="num" style="font-weight:400;color:var(--muted)">${G.trust[k]}</span></b><small>${LD[k].m}</small><div class="tb"><i style="width:${G.trust[k]}%"></i></div></div>${d?`<span class="delta ${d>0?"up":"down"}">${d>0?"+":""}${d}</span>`:""}</div>`}).join("")}</div></div>
- <div><div class="label">성적표</div><div class="cards">${(()=>{const l=(G.mon||[]).slice(-1)[0];return l?`<div class="card"><span>보고된 이슈·아차</span><b>${l.rep}</b><em>${l.m}월</em></div>`:"";})()}${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>F사 만족 ${G.fsat}${live&&live.F사기대?"":""}</em><em title="F사가 기대하는 수준. 분기 말에 안정 점수와 비교합니다.">F사 기대 ${G.fexp??50}${live&&live.F사기대?` <span class="delta ${live.F사기대>0?"down":"up"}" style="position:static">${live.F사기대>0?"+":""}${live.F사기대}</span>`:""}</em>`:""}</div>`).join("")}</div></div>${notesHtml()}`;
+ <div><div class="label">성적표</div><div class="cards">${(()=>{const l=(G.mon||[]).slice(-1)[0];return l?`<div class="card"><span>보고된 이슈·아차</span><b>${l.rep}</b><em>${l.m}월</em></div>`:"";})()}${SCORES.map(k=>`<div class="card"><span>${k}</span><b>${G.score[k]}</b>${k==="성과"?`<em>헬씨푸드 만족 ${G.fsat}${live&&live.헬씨푸드기대?"":""}</em><em title="헬씨푸드가 기대하는 수준. 분기 말에 안정 점수와 비교합니다.">헬씨푸드 기대 ${G.fexp??50}${live&&live.헬씨푸드기대?` <span class="delta ${live.헬씨푸드기대>0?"down":"up"}" style="position:static">${live.헬씨푸드기대>0?"+":""}${live.헬씨푸드기대}</span>`:""}</em>`:""}</div>`).join("")}</div></div>${notesHtml()}`;
 }
 function drawBar(clock){
  const s=CONTENT[G.idx]||{};
@@ -370,7 +370,7 @@ function SC_CHOICE(s,opt={}){
    const GL=gradeList(),PL=principleList(),TR=teamRules(),pk=Array.isArray(why)?why:[];
    const btn=(w,i,grp)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${pk.includes(w)}" ${A(()=>{const a=Array.isArray(why)?[...why]:[];const j=a.indexOf(w);if(j>=0)a.splice(j,1);else{if(a.length>=2)a.shift();a.push(w);}why=a;draw();})}><span class="k">${i+1}</span><span>${w}</span></button>`;
    shell(`<div class="pane"><div class="eyebrow">근거</div><h2>이 결정의 근거는 무엇입니까?</h2><p class="note">공개된 기준 가운데 최대 2개를 고르세요. 공개하지 않은 기준은 근거로 쓸 수 없습니다.</p>
-   <p><b>팀 운영 원칙</b> <span class="note">회사가 정한 원칙${G.written.notice&&G.written.notice.방식!=="none"?"과 4월 공지에 쓴 배분 기준":""}</span></p><div class="opts">${PL.map((w,i)=>btn(w,i,"운")).join("")}</div>
+   <p><b>팀 운영 원칙</b> <span class="note">퓨쳐테크가 정한 원칙${G.written.notice&&G.written.notice.방식!=="none"?"과 4월 공지에 쓴 배분 기준":""}</span></p><div class="opts">${PL.map((w,i)=>btn(w,i,"운")).join("")}</div>
    ${TR.length?`<p><b>팀 규칙</b> <span class="note">올해 결정으로 만든 규칙</span></p><div class="opts">${TR.map((w,i)=>btn(w,i,"팀")).join("")}</div>`:""}
    ${GL.length?`<p><b>등급 기준</b> <span class="note">3월에 공개한 평가 기준</span></p><div class="opts">${GL.map((w,i)=>btn(w,i,"등")).join("")}</div>`:`<p class="note">${has("pub_leaders")?"등급 기준은 리더들과만 맞춰서 근거로 쓸 수 없습니다.":"공개한 등급 기준이 아직 없습니다."}</p>`}
    <div class="foot"><span class="note num">${pk.length}/2</span><button class="btn main" ${pk.length?"":"disabled"} ${A(()=>{const r=judgeWhy(s,sel,pk);G.cons.push({scene:s.id,choice:sel,why:pk.join(" · "),fit:r.fit,half:has("rule_silent")&&pk.includes("AI 활용 효과")});consNote=r.note;if(has("rule_silent")&&pk.includes("AI 활용 효과")&&s.rel)applyFx(s.rel+"-1");if(s.common.noTell||O().noTell){finish();}else{step="tell";draw();}})}>다음</button></div></div>`);
@@ -493,7 +493,7 @@ function SC_KPI(s){
   if(has("pub_prevent")||has("pub_security")||has("pub_support"))ach("보이지 않는 것을 보다");
   SC_CHOICE({id:s.id+"-2",tag:s.tag,when:s.when,title:"어디까지 알릴까요?",options:s.levels},{done:(o)=>{
    G.quality+=o.k==="A"?20:o.k==="B"?10:0;
-   SC_CHOICE({id:s.id+"-3",tag:s.tag,when:s.when,title:"재검토 조건",intro:["이 합의서를 다시 열어 볼 조건을 미리 적어 둘까요? \"회사 지침이나 사업 조건이 바뀌면 2주 안에 다시 검토해 공지한다.\""],options:s.planb});
+   SC_CHOICE({id:s.id+"-3",tag:s.tag,when:s.when,title:"재검토 조건",intro:["이 합의서를 다시 열어 볼 조건을 미리 적어 둘까요? \"퓨쳐테크 지침이나 사업 조건이 바뀌면 2주 안에 다시 검토해 공지한다.\""],options:s.planb});
   }});
  };
  draw();
@@ -528,9 +528,9 @@ function endQuarter(){
  const lv=v=>Math.trunc((v-50)/10);
  const ex=G.fexp??50,st0=G.score.안정;const a=lv(G.score.사람)*2,c=lv(G.fsat);const b=Math.max(-6,Math.min(6,Math.round((st0-ex)/4)));
  G.score.안정=Math.max(0,Math.min(100,G.score.안정+a));G.fsat=Math.max(0,Math.min(100,G.fsat+b));
- /* v3 BSC 고리: 구성원 → 서비스 안정 → 고객(F사 만족) → 재무. 고객 만족은 재무로만 이어진다 */G.score.재무=Math.max(0,Math.min(100,G.score.재무+c*2));
- G.chain.push({q:G.quarter+1,사람_안정:a,안정_F사:b,F사_재무:c*2,F사_성과:0,기대:ex,안정:st0});const QS={q:G.quarter+1,chain:chainLine(G.chain[G.chain.length-1]),ot:G.ot,tokFx:G.tokenCap?(G.tokenCap>=140?2:G.tokenCap>=100?1:0):0};
- (G.hist=G.hist||[]).push({...G.score,F사:G.fsat,F사기대:G.fexp??50,안전:G.safe});
+ /* v3 BSC 고리: 구성원 → 서비스 안정 → 고객(헬씨푸드 만족) → 재무. 고객 만족은 재무로만 이어진다 */G.score.재무=Math.max(0,Math.min(100,G.score.재무+c*2));
+ G.chain.push({q:G.quarter+1,사람_안정:a,안정_헬씨푸드:b,헬씨푸드_재무:c*2,헬씨푸드_성과:0,기대:ex,안정:st0});const QS={q:G.quarter+1,chain:chainLine(G.chain[G.chain.length-1]),ot:G.ot,tokFx:G.tokenCap?(G.tokenCap>=140?2:G.tokenCap>=100?1:0):0};
+ (G.hist=G.hist||[]).push({...G.score,헬씨푸드:G.fsat,헬씨푸드기대:G.fexp??50,안전:G.safe});
  const carry=Math.min(2,G.time),bonus=Math.min(2,G.delegWin),pen=G.quarter<3?G.ot:0;
  G.toldAll.full+=G.told.full;G.toldAll.none+=G.told.none;
  if(G.tokenCap)applyFx("재무-"+(G.tokenCap>=140?2:G.tokenCap>=100?1:0));
@@ -619,7 +619,7 @@ function choiceText(id,ch){{const fx=/^AI\d/.test(id)?FIXED_CHOICE.ai:/^RET\d+M/
  return /^[A-D]$/.test(ch)?"고른 안 "+ch:ch;}
 function label(id,ch){return nm(id)+" — "+choiceText(id,ch);}
 function stripId(t){return String(t).replace(/^(M\d+(~M\d+)?|R-\d|\d+-\d+[a-z]?(_\d)?)\s+/,"");}
-function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`구성원 점수 때문에 다음 분기 서비스 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`F사 기대 ${c.기대} 대비 서비스 안정 ${c.안정} → F사 만족 ${sg(c.안정_F사)}`);else if(c.안정_F사)p.push(`서비스 안정 점수 때문에 F사 만족이 ${sg(c.안정_F사)}`);if(c.F사_재무)p.push(`F사 만족 때문에 재무가 ${sg(c.F사_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
+function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`구성원 점수 때문에 다음 분기 서비스 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`헬씨푸드 기대 ${c.기대} 대비 서비스 안정 ${c.안정} → 헬씨푸드 만족 ${sg(c.안정_헬씨푸드)}`);else if(c.안정_헬씨푸드)p.push(`서비스 안정 점수 때문에 헬씨푸드 만족이 ${sg(c.안정_헬씨푸드)}`);if(c.헬씨푸드_재무)p.push(`헬씨푸드 만족 때문에 재무가 ${sg(c.헬씨푸드_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
 
 /* 받은편지함 시간 비용(초)과 마감 정산 */
 const IBT={reply:35,del:12,four:12};
@@ -648,7 +648,7 @@ function jo(w,a,b,mode){const t=String(w).replace(/["'”’)\]\s…]+$/,"");con
  if(!fin)return b;if(mode==="ro"&&fin===8)return b;return a;}
 
 /* 예약 안건: 분기마다 미리 정해 둔 핵심 안건. 선택과 알리기를 별도 예약 시간으로 처리해서 팀장 시간이 모자라도 잠기지 않는다
-   1분기 KPI 합의서 · 2분기 평가 지침 재공지, 본사 AI 진단 회신 · 3분기 F사 클레임(산식 정정 포함), 리더 중재 · 4분기 연말 장애, 연말 평가와 이의 면담. 분기 펄스 서베이는 늘 예약 안건이다 */
+   1분기 KPI 합의서 · 2분기 평가 지침 재공지, 본사 AI 진단 회신 · 3분기 헬씨푸드 클레임(산식 정정 포함), 리더 중재 · 4분기 연말 장애, 연말 평가와 이의 면담. 분기 펄스 서베이는 늘 예약 안건이다 */
 /* v3: 예약 시간 안건 없음. 모든 비용이 팀장 시간에서 나간다 */
 const KEY_IDS=[];
 const RSV_AGENDA=["3-1","6-4a","6-4b","AI6","AI9","9-4","9-5","12-2","12-3a","12-3","12-4"];
@@ -675,7 +675,7 @@ const G2P={"장애 예방 활동":["장애 없는 운영","장애·보안 위험
 function gradeList(){return has("pub_leaders")?[]:(G.pub||[]);}
 function principleList(){const n=G.written.notice;const add=n&&n.방식!=="none"?(n.기준||[]):[];return PRINCIPLE_BASE.concat(add.filter(x=>!PRINCIPLE_BASE.includes(x)));}
 function fitSet(fitArr){const any=(fitArr||[]).some(x=>/^어느 공개/.test(x));const g=(fitArr||[]).filter(x=>!/^어느 공개/.test(x));const p=new Set();g.forEach(x=>(G2P[x]||[]).forEach(y=>p.add(y)));return{any,grade:g,prin:[...p]};}
-/* 같은 뜻의 기준은 서로 인정한다: 공지에 쓴 "비용"과 회사 원칙 "비용 책임", 공지에 쓴 "장애·보안 위험"과 운영·보안 원칙 */
+/* 같은 뜻의 기준은 서로 인정한다: 공지에 쓴 "비용"과 퓨쳐테크 원칙 "비용 책임", 공지에 쓴 "장애·보안 위험"과 운영·보안 원칙 */
 function fitHas(f,w){const all=f.grade.concat(f.prin);if(all.includes(w))return true;if(w==="비용")return all.includes("비용 책임");if(w==="비용 책임")return all.includes("비용");if(w==="장애·보안 위험")return all.includes("장애 없는 운영")||all.includes("절차와 보안 준수");return false;}
 function judgeWhy(s,sel,pk){const f=fitSet(s.common.fit&&s.common.fit[sel]);const ok=pk.filter(w=>f.any||fitHas(f,w));const fit=ok.length>0;
  const avail=gradeList().concat(principleList(),teamRules());const link=avail.filter((x,i,a)=>a.indexOf(x)===i&&fitHas(f,x));
@@ -694,20 +694,20 @@ const TALK_INFO={rd:["know_rd_load","know_rd_token"],src:["know_src_sign","know_
  kim:["know_kim","know_kim_alert"],yoon:["know_yoon","know_yoon_err"],oh:["know_oh","know_oh_risk"],han:["know_han","know_han_edit"],cha:["know_cha","know_cha_alone"],bae:["know_bae","know_bae_b"]};
 const KNOW={know_rd_load:"R&D 실험의 절반은 차 선임 한 사람이 돌립니다.",know_rd_token:"R&D가 쓴 토큰의 3분의 1은 중간에 접은 실험에 들어갔습니다.",know_src_sign:"조달 결재는 문지원 한 사람을 거칩니다. 자리를 비우면 멈춥니다.",know_src_audit:"감사 자료는 해마다 문지원과 윤 책임 둘이 밤에 만듭니다.",
  know_mfg_night:"야간 대기표에는 8명이 있지만, 실제로 설 수 있는 사람은 5명입니다.",know_mfg_cover:"강태식은 야간 자리가 빌 때마다 자기 이름을 먼저 넣어 왔습니다.",know_prc_time:"점검표 47개 항목을 다 보면 여섯 시간이 걸립니다. 실제로 쓰는 시간은 12분쯤입니다.",know_prc_name:"가공 모듈의 예방 실적은 올해 본사 보고서에 한 줄도 없습니다.",
- know_mkt_f:"F사 임원은 숫자보다 누가 책임지는지를 먼저 묻습니다.",know_mkt_pipe:"하반기 제안 세 건이 같은 세 사람에게 걸려 있습니다.",know_kim_alert:"야간 경고 열에 아홉은 같은 세 종류입니다.",know_yoon_err:"AI 분류가 긴급 발주를 일반으로 넣는 일이 있습니다. 윤 책임이 따로 적어 두고 있습니다.",
- know_han_edit:"제안서 편집 이력을 함께 열어 보았습니다. 한 선임이 고친 곳이 41건입니다. 연말 평가 기록에 \"기여 41건\"이 생겼습니다.",know_cha_alone:"차 선임은 설계 검토를 받아 본 적이 없습니다. 늘 혼자 정했습니다.",know_bae_b:"작년 B의 사유는 인사 기록 어디에도 적혀 있지 않습니다.",know_kim:"김 사원은 주 세 번 대기를 섭니다. 다른 사람은 주 한 번쯤입니다.",know_yoon:"발주 검토표의 예외 규칙은 윤 책임만 압니다.",know_oh:"오 사원은 E-417이 왜 나는지 아직 모릅니다.",know_han:"제안서 본문은 거의 한 선임이 씁니다. 표지에는 이름이 없습니다.",know_cha:"차 선임은 설계를 맡고 싶어 합니다.",know_bae:"배 책임의 작년 이의제기 회신은 \"종결\" 두 글자였습니다.",know_oh_risk:"오 사원이 바쁜 주에 점검 절차를 건너뛰고 있습니다.",know_metric:"9월에 지표를 두고 이야기가 나올 수 있습니다.",know_case:"우수 사례 이야기가 나올 수 있습니다.",know_token:"연간 토큰 정산이 다가옵니다. 지표부터 맞춰 두면 좋습니다.",know_rift:"평가 결과를 두고 강태식과 문지원 사이에 할 말이 생겼습니다.",know_mfg_mood:"리더들은 올해 강태식이 팀장이 될 줄 알았습니다.",know_line:"생산 라인이 요즘 불안합니다.",know_july:"F사가 7월에 큰 제안을 하나 줄 것 같습니다.",know_han2:"한 선임은 보고서에 고객이 묻는 것이 빠졌다고 봅니다.",know_eval_rd:"서하준은 평가 때 실험 건수를 어떻게 볼지 궁금해합니다.",know_eval_prc:"이수진은 예방 기록이 평가에 어디에 들어갈지 묻습니다.",know_dec:"연말에 무언가 터질 것 같다는 말이 있습니다.",know_cha3:"차 선임 일은 11월에 정해질 것 같습니다.",know_auto:"자동화 안건이 8월에 다시 올라옵니다.",know_hq:"8월에 본사가 인력 조사를 합니다."};
+ know_mkt_f:"헬씨푸드 임원은 숫자보다 누가 책임지는지를 먼저 묻습니다.",know_mkt_pipe:"하반기 제안 세 건이 같은 세 사람에게 걸려 있습니다.",know_kim_alert:"야간 경고 열에 아홉은 같은 세 종류입니다.",know_yoon_err:"AI 분류가 긴급 발주를 일반으로 넣는 일이 있습니다. 윤 책임이 따로 적어 두고 있습니다.",
+ know_han_edit:"제안서 편집 이력을 함께 열어 보았습니다. 한 선임이 고친 곳이 41건입니다. 연말 평가 기록에 \"기여 41건\"이 생겼습니다.",know_cha_alone:"차 선임은 설계 검토를 받아 본 적이 없습니다. 늘 혼자 정했습니다.",know_bae_b:"작년 B의 사유는 인사 기록 어디에도 적혀 있지 않습니다.",know_kim:"김 사원은 주 세 번 대기를 섭니다. 다른 사람은 주 한 번쯤입니다.",know_yoon:"발주 검토표의 예외 규칙은 윤 책임만 압니다.",know_oh:"오 사원은 E-417이 왜 나는지 아직 모릅니다.",know_han:"제안서 본문은 거의 한 선임이 씁니다. 표지에는 이름이 없습니다.",know_cha:"차 선임은 설계를 맡고 싶어 합니다.",know_bae:"배 책임의 작년 이의제기 회신은 \"종결\" 두 글자였습니다.",know_oh_risk:"오 사원이 바쁜 주에 점검 절차를 건너뛰고 있습니다.",know_metric:"9월에 지표를 두고 이야기가 나올 수 있습니다.",know_case:"우수 사례 이야기가 나올 수 있습니다.",know_token:"연간 토큰 정산이 다가옵니다. 지표부터 맞춰 두면 좋습니다.",know_rift:"평가 결과를 두고 강태식과 문지원 사이에 할 말이 생겼습니다.",know_mfg_mood:"리더들은 올해 강태식이 팀장이 될 줄 알았습니다.",know_line:"생산 라인이 요즘 불안합니다.",know_july:"헬씨푸드가 7월에 큰 제안을 하나 줄 것 같습니다.",know_han2:"한 선임은 보고서에 고객이 묻는 것이 빠졌다고 봅니다.",know_eval_rd:"서하준은 평가 때 실험 건수를 어떻게 볼지 궁금해합니다.",know_eval_prc:"이수진은 예방 기록이 평가에 어디에 들어갈지 묻습니다.",know_dec:"연말에 무언가 터질 것 같다는 말이 있습니다.",know_cha3:"차 선임 일은 11월에 정해질 것 같습니다.",know_auto:"자동화 안건이 8월에 다시 올라옵니다.",know_hq:"8월에 본사가 인력 조사를 합니다."};
 /* 진단 모드: 시드를 고정하면 같은 선택에 같은 결과가 나온다 */
 (function(){const q=new URLSearchParams(location.search);const sd=q.get("seed");if(sd==null)return;const base=[...String(sd)].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619)>>>0,2166136261);let st=base;const orig=Math.random;
  const mul=()=>{st|=0;st=st+0x6D2B79F5|0;let t=Math.imul(st^st>>>15,1|st);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
  window.SEEDED=String(sd);Math.random=()=>{try{const sc=CONTENT[G.idx];const key=(sc?sc.id:"")+":"+G.decisions.length;if(key!==window.__sk){window.__sk=key;st=[...key].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619)>>>0,base);}}catch(e){return orig();}return mul();};})();
 
-/* F사 기대: 약속을 키우면 오르고, 숫자를 바로잡거나 범위를 줄이면 내려간다. 분기 말 F사 만족 = (안정 − 기대) 차이 */
-const FEXP={prop_full:[8,"7월 제안을 요청 범위 그대로 받음"],prop_ai:[3,"7월 제안을 AI 분석으로 3주 안에 약속"],r2_more:[5,"4월 신규 과제를 더 받음"],ct_more:[6,"6월 계약에 신규 과제 2건을 넣음"],small_win:[3,"5월 소규모 수주를 받음"],f_140:[5,"\"주 140시간 절감\"이 F사에 그대로 감"],scope_full:[8,"10월 본계약을 전 품목·1월 착수로 받음"],ai9_accepted:[2,"F사 AI 재산정 수치를 받아들임"],
- f_corrected:[-6,"140시간을 38시간(실측 중)으로 바로잡음"],prop_narrow:[-4,"7월 제안 범위를 한 품목으로 줄임"],scope_stage:[-4,"10월 본계약을 단계적으로 넓히기로 함"],ai9_fixed:[-3,"F사 재산정의 계획 정비 포함을 짚음"]};
+/* 헬씨푸드 기대: 약속을 키우면 오르고, 숫자를 바로잡거나 범위를 줄이면 내려간다. 분기 말 헬씨푸드 만족 = (안정 − 기대) 차이 */
+const FEXP={prop_full:[8,"7월 제안을 요청 범위 그대로 받음"],prop_ai:[3,"7월 제안을 AI 분석으로 3주 안에 약속"],r2_more:[5,"4월 신규 과제를 더 받음"],ct_more:[6,"6월 계약에 신규 과제 2건을 넣음"],small_win:[3,"5월 소규모 수주를 받음"],f_140:[5,"\"주 140시간 절감\"이 헬씨푸드에 그대로 감"],scope_full:[8,"10월 본계약을 전 품목·1월 착수로 받음"],ai9_accepted:[2,"헬씨푸드 AI 재산정 수치를 받아들임"],
+ f_corrected:[-6,"140시간을 38시간(실측 중)으로 바로잡음"],prop_narrow:[-4,"7월 제안 범위를 한 품목으로 줄임"],scope_stage:[-4,"10월 본계약을 단계적으로 넓히기로 함"],ai9_fixed:[-3,"헬씨푸드 재산정의 계획 정비 포함을 짚음"]};
 
 /* 확률의 호의 장부: 위험한 선택 뒤에 나쁜 결과가 굴러오지 않은 경우 */
-function twBad(t){if(t.mult&&t.mult>1.4)return true;let f="";try{f=String(val(t.fx)||"");}catch(e){}let sev=0;f.replace(/(성과|재무|사람|안정|F사만족|안전)[−-](\d+)/g,(_,k,n)=>{sev+=+n;});f.replace(/(rd|src|mfg|prc|mkt)[−-](\d+)/g,(_,k,n)=>{sev+=(+n)/2;});if(/소문|초과부하/.test(f))sev+=2;if(/`(sec_found|inc_found|sec_data_found|cha_end_gone|tae_end_left|token_drain|prop_gap|night_clash|run_thin|kim_fragile)`/.test(f))sev+=3;return sev>=3;}
-function luckCat(s,t){const x=(cleanTitle(s.title)||"")+" "+(val(t.t)||"");return /장애|복구|배치|야간|라인|경고|E-417|오류|오분류|오탐|접속|권한|패치|절차/.test(x)?"장애":/보안|외부 AI|외부 서비스|외부로|신고|정보보안|개인 계정|유출/.test(x)?"보안":/떠나|사직|이직|병가|소진|위축|무서|지쳤/.test(x)?"사람":/F사|임원|유 과장|고객|계약|납기/.test(x)?"고객":"기타";}
+function twBad(t){if(t.mult&&t.mult>1.4)return true;let f="";try{f=String(val(t.fx)||"");}catch(e){}let sev=0;f.replace(/(성과|재무|사람|안정|헬씨푸드만족|안전)[−-](\d+)/g,(_,k,n)=>{sev+=+n;});f.replace(/(rd|src|mfg|prc|mkt)[−-](\d+)/g,(_,k,n)=>{sev+=(+n)/2;});if(/소문|초과부하/.test(f))sev+=2;if(/`(sec_found|inc_found|sec_data_found|cha_end_gone|tae_end_left|token_drain|prop_gap|night_clash|run_thin|kim_fragile)`/.test(f))sev+=3;return sev>=3;}
+function luckCat(s,t){const x=(cleanTitle(s.title)||"")+" "+(val(t.t)||"");return /장애|복구|배치|야간|라인|경고|E-417|오류|오분류|오탐|접속|권한|패치|절차/.test(x)?"장애":/보안|외부 AI|외부 서비스|외부로|신고|정보보안|개인 계정|유출/.test(x)?"보안":/떠나|사직|이직|병가|소진|위축|무서|지쳤/.test(x)?"사람":/헬씨푸드|임원|유 과장|고객|계약|납기/.test(x)?"고객":"기타";}
 function luckLog(s,o,hit,hits2){if(!o)return;const P=t=>{try{return +val(typeof t.p==="function"?t.p(G):t.p)||0;}catch(e){return 0;}};
  const add=t=>{const p=P(t);if(p<25||!twBad(t))return;(G.luck=G.luck||[]).push({m:G.month,scene:s.id,title:cleanTitle(s.title)||"",choice:String(val(o.t)||"").slice(0,40),t:String(val(t.t)||""),p,cat:luckCat(s,t)});};
  (o.tw||[]).forEach(t=>{if(t!==hit)add(t);});(o.tw2||[]).forEach(t=>{if(!hits2.includes(t))add(t);});}
