@@ -142,6 +142,28 @@ drawSide=function(live){
  <div><div class="label">모듈 업무량 · 스트레스</div><div class="mods">${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mod"><span>${LD[k].m}</span><div class="mbar" title="업무량 ${w} · 스트레스 ${st}"><i class="w" style="width:${w}%"></i><i class="s ${st>=80?"hot":st>=60?"warm":""}" style="width:${st}%"></i></div><b class="num">${st}</b>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext')" title="단기 외부 지원: 스트레스 −15, 재무 −2">지원</button><button onclick="v3mitigate('${k}','due')" title="마감 조정: 스트레스 −10, F사 만족 또는 고객 −">조정</button></span>`:""}</div>`;}).join("")}</div><div class="note" style="font-size:11px">위 막대 업무량 · 아래 막대 스트레스${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</div></div>`;
 };
 
+/* 여력 칸 설명 (2026-11-21). 02-2 ③ "칸의 뜻"과 "배분이 뒤 결정을 좌우" 표, 실제 코드의 효과 방향만 쓴다. 크기와 시점은 숨긴다 */
+const CELL_INFO={
+ RUN:{n:"RUN 기존 운영",what:"지금 돌아가는 F사 운영과 야간 대기를 지키는 인력",mods:"생산 · 가공",hi:"강태식(생산)과 문지원(조달)이 반깁니다. 야간 운영에 여유가 생깁니다.",lo:"강태식과 문지원의 신뢰가 크게 떨어집니다. 야간 대기가 몇 사람에게 쏠리고, 새벽에 장애가 나면 당번이 혼자 남습니다."},
+ AI:{n:"AI 전환",what:"AI 도구 도입, 교육, 자동화에 쓰는 인력",mods:"R&D · 조달",hi:"서하준(R&D)이 반깁니다. AI 활용 성과가 쌓여 연말 평가의 근거가 됩니다.",lo:"서하준의 신뢰가 크게 떨어집니다. AI 전환이 R&D 혼자 밀어붙이는 일로 남습니다."},
+ GROW:{n:"GROW 추가 제안",what:"F사에 새 과제를 제안하고, 더 요구받은 일을 받아 매출을 만드는 인력",mods:"마케팅 · R&D",hi:"정다은(마케팅)이 반깁니다. F사에 새 일을 더 받아 줄 때 수익으로 이어질 여지가 생깁니다.",lo:"정다은의 신뢰가 떨어집니다. F사가 일을 더 요구할 때 받아 줄 칸이 없어, 받으면 곧바로 초과 부하가 됩니다."},
+ SEC:{n:"SEC 예방·보안",what:"점검, 개선, 보안 교육처럼 사고를 미리 막는 인력",mods:"가공 · 조달",hi:"이수진(가공)과 문지원이 반깁니다. 사고가 나도 피해가 줄고, 새벽 장애 때 예방 인력이 원인 기록을 바로 뽑습니다.",lo:"이수진의 신뢰가 떨어집니다. 사고가 나면 피해가 커집니다."}};
+window.CELL_INFO=CELL_INFO;
+window.cellRowInfo=function(k,n){const I=CELL_INFO[k];if(!I)return k;const st=n>=3?["넉넉","var(--good)"]:n<=1?["부족","var(--bad)"]:["보통","var(--muted)"];
+ const ln=(on,mark,lab,txt)=>`<div style="font-size:12.5px;line-height:1.45;margin-top:3px;color:${on?"var(--ink)":"var(--muted)"};opacity:${on?1:.7}">${mark} <strong style="font-weight:600">${lab}</strong> ${txt}</div>`;
+ return `<div style="min-width:0;text-align:left"><div style="font-size:14.5px;color:var(--ink)"><strong style="font-weight:700">${I.n}</strong> <small style="display:inline-block;font-size:11.5px;border:1px solid currentColor;border-radius:999px;padding:0 7px;margin-left:4px;color:${st[1]};vertical-align:1px">${st[0]} · ${n}칸</small></div>
+  <div style="font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45">${I.what}. 칸을 놓으면 <strong style="font-weight:600;color:var(--ink)">${I.mods}</strong> 업무량이 줄어듭니다.</div>
+  ${ln(n>=3,"▲","3칸 이상이면",I.hi)}${ln(n<=1,"▼","1칸 이하이면",I.lo)}</div>`;};
+window.cellGuideHtml=function(r3){const L=r3?[
+ "9월까지의 배분에 <b>2칸이 새로 생겼습니다</b>. 새 2칸을 놓고, 기존 칸은 <b>2칸까지</b> 다른 곳으로 옮길 수 있습니다.",
+ "칸마다 <b>2칸이 보통</b>, <b>3칸 이상은 넉넉</b>, <b>1칸 이하는 부족</b>입니다. 넉넉하거나 부족해진 칸은 확정하는 순간 그 칸을 바라는 리더의 반응과 4분기 장면이 달라집니다.",
+ "칸을 하나 놓을 때마다 그 칸을 맡는 두 모듈의 <b>업무량</b>이 줄어듭니다(아래 막대). 업무량이 70 이상인 모듈은 장면마다 스트레스가 쌓이고, 스트레스가 80을 넘으면 그 리더의 신뢰가 깎입니다.",
+ "4월에 배분을 공지했다면, 칸을 옮긴 뒤 다시 알릴지 묻습니다(규칙 ③)."]:[
+ "<b>10칸</b>은 AI 전환으로 생긴 팀의 여유(사람과 시간)입니다. 이번 결정은 그 여유를 어디에 쓸지 정하는 일입니다.",
+ "칸마다 <b>2칸이 보통</b>입니다. <b>3칸 이상은 넉넉</b>, <b>1칸 이하는 부족</b>으로 보고, 확정하는 순간 그 칸을 바라는 리더의 반응과 뒤에 오는 장면이 달라집니다. 효과의 크기와 시점은 미리 알려 주지 않습니다.",
+ "칸을 하나 놓을 때마다 그 칸을 맡는 두 모듈의 <b>업무량</b>이 줄어듭니다(아래 막대). 업무량이 70 이상인 모듈은 장면마다 스트레스가 쌓이고, 스트레스가 80을 넘으면 그 리더의 신뢰가 깎입니다.",
+ "8월에 본사가 인력을 빼 가면 어느 칸에서 줄일지 다시 정하고, 10월(Round 3 시작)에는 2칸이 새로 생겨 다시 조정합니다."];
+ return `<details class="ref"${r3?"":" open"}><summary>칸을 어떻게 읽나요?</summary><ul style="margin:6px 0 0;padding-left:18px;font-size:13.5px;line-height:1.55">${L.map(x=>`<li>${x}</li>`).join("")}</ul></details>`;};
 /* 배분 화면 안에도 모듈 막대를 띄운다 (칸을 옮기면 바로 움직인다) */
 function modPanel(){const M=MD(),can=((G.mitig||{})[G.round||1]||0)<3;return `<div class="modpanel"><div class="label">모듈 업무량 · 스트레스 <span class="note" style="font-weight:400">칸을 옮기면 바로 움직입니다${can?` · 완화 ${3-((G.mitig||{})[G.round||1]||0)}번 남음`:""}</span></div>${LK.map(k=>{const w=workload(k),st=M.s[k];return `<div class="mrow"><span>${LD[k].m}</span><span class="note">업무량</span><div class="b3"><i style="width:${w}%;background:${w>=70?"var(--bad)":"var(--lav)"}"></i><span class="num">${w}</span></div><span class="note">스트레스</span><div class="b3"><i style="width:${st}%;background:${st>=80?"var(--bad)":st>=60?"var(--s4)":"var(--mint-bar)"}"></i><span class="num">${st}</span></div>${can?`<span class="mbtn"><button onclick="v3mitigate('${k}','ext');v3modRefresh()" title="스트레스 −15 · 업무량 −10 · 재무 −2">외부 지원</button><button onclick="v3mitigate('${k}','due');v3modRefresh()" title="스트레스 −10 · F사 만족 또는 고객 −">마감 조정</button></span>`:""}</div>`;}).join("")}</div>`;}
 window.v3modRefresh=()=>{const e=document.querySelector('#view .modpanel');if(e)e.outerHTML=modPanel();};
@@ -153,7 +175,7 @@ SCENES.realloc=function(s){
  const N={RUN:"RUN 기존 운영",AI:"AI 전환",GROW:"GROW 추가 제안",SEC:"SEC 예방·보안"};
  const draw=()=>{paint("");G.cellsDraft={...c};const ok=tot()===T&&moved()<=2;
   shell(`<div class="pane"><div class="eyebrow">Round 3 · 배분 조정</div><h2>새로 생긴 2칸을 놓고, 필요하면 2칸까지 옮기세요</h2><p class="note">칸을 옮기면 아래 모듈 막대가 바로 움직입니다. 스트레스가 높은 모듈에는 [외부 지원] · [마감 조정]을 쓸 수 있습니다 (라운드당 3번).</p>
-  <div class="table">${Object.keys(c).map(k=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><span style="font-size:14.5px;color:var(--ink)">${N[k]} <span class="note">지금 ${orig[k]}칸</span></span><span class="btns" style="align-items:center"><button class="btn" ${A(()=>{if(c[k]>0&&(c[k]>orig[k]||moved()<2)){c[k]--;draw();}})}>−</button><b>${c[k]}</b><button class="btn" ${A(()=>{if(tot()<T){c[k]++;draw();}})}>+</button></span></div>`).join("")}</div>
+  ${cellGuideHtml(true)}<div class="table">${Object.keys(c).map(k=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><div style="min-width:0">${cellRowInfo(k,c[k])}<div class="note" style="font-size:12px;margin-top:3px">9월까지 ${orig[k]}칸</div></div><span class="btns" style="align-items:center;flex:0 0 auto;flex-wrap:nowrap"><button class="btn" ${A(()=>{if(c[k]>0&&(c[k]>orig[k]||moved()<2)){c[k]--;draw();}})}>−</button><b>${c[k]}</b><button class="btn" ${A(()=>{if(tot()<T){c[k]++;draw();}})}>+</button></span></div>`).join("")}</div>
   <div class="foot"><span class="note num">${tot()}/${T}칸 · 옮긴 칸 ${moved()}/2</span><button class="btn main" ${ok?"":"disabled"} ${A(fin)}>확정</button></div></div>`);};
  const fin=()=>{const changed=Object.keys(orig).some(k=>moved()>0);G.cells={...c};delete G.cellsDraft;record("R3-0",JSON.stringify(c));
   if(changed&&G.f.alloc_notice){paint("");shell(`<div class="pane"><div class="eyebrow">규칙 ③</div><h2>바뀐 배분을 알릴까요?</h2><p class="note">공지한 배분을 바꿨습니다. 공개한 기준을 바꾸면 다시 알려야 합니다.</p><div class="opts"><button class="opt" ${G.time<1?"disabled":""} ${A(()=>{G.time-=1;G.tu.all+=1;applyFx("안전+1");applySig("④L",1,"R3-0","재공지");next();})}><span class="k">A</span><span>바뀐 칸과 이유를 간단히 알린다${glHtml({gl:["모두가 바뀐 배분을 앎","시간이 듦"]})}</span><span class="cost">⏳1</span></button><button class="opt" ${A(()=>{G.f.rule3_cells=true;applyFx("안전-2 B10+20");applySig("④P",1,"R3-0","재공지 없음");next();})}><span class="k">B</span><span>따로 알리지 않는다${glHtml({gl:["시간을 아낌","말과 행동이 다르다는 말이 나올 수 있음"]})}</span><span class="cost">0</span></button></div></div>`);}

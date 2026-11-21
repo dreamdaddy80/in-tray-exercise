@@ -662,13 +662,17 @@ const MONTH={"RET2":4,"6-1":6,"6-1p":6,"5-4":6,"END6":6,"8-1a":8,"8-1b":8,"8-1c"
 const list=ORDER.map(x=>typeof x==="string"?get(x):x);
 list.forEach(s=>{if(MONTH[s.id])s.month=MONTH[s.id];});
 CONTENT.length=0;list.forEach(s=>CONTENT.push(s));
-/* index.html에 v3ui.js 태그가 누락된 경우 자동 로드 후 boot() 실행 */
-if(typeof document!=="undefined"&&!window.openProfile&&!document.querySelector("script[src*=\"v3ui.js\"]")){
- const _boot=window.boot;let called=false;
- window.boot=function(){called=true;};
- const sc=document.createElement("script");sc.src="v3ui.js";
- sc.onload=sc.onerror=function(){window.boot=_boot;if(called&&typeof _boot==="function")_boot();};
- document.head.appendChild(sc);
+/* index.html에 v3ui.js 태그가 누락된 경우에만 자동 로드 후 boot() 실행.
+   판정은 boot() 호출 시점에 한다. v3.js가 읽히는 순간에는 뒤쪽 script 태그가 아직 DOM에 없어,
+   그때 판정하면 v3ui.js가 두 번 실행되고 모든 감싸기(스트레스·지표 근거 등)가 이중으로 걸린다 (2026-11-21 수정) */
+if(typeof document!=="undefined"){
+ const _boot=window.boot;
+ window.boot=function(){
+  if(window.openProfile||typeof _boot!=="function")return _boot&&_boot.apply(this,arguments);
+  const sc=document.createElement("script");sc.src="v3ui.js";
+  sc.onload=sc.onerror=function(){_boot();};
+  document.head.appendChild(sc);
+ };
 }
 })();
 
