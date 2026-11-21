@@ -139,8 +139,22 @@ function drawBar(clock){
  $("months").innerHTML=Array.from({length:12},(_,i)=>`<i class="${i+1<G.month?"past":i+1===G.month?"now":""}"></i>`).join("");
  const c=clock==null?"":`<div class="clock ${clock<=30?"hot":""}" aria-label="남은 시간">${Math.floor(clock/60)}:${String(clock%60).padStart(2,"0")}</div>`;
  const n=Object.keys(G.prom).length;
- H.__led=openLedger;H.__snd=()=>{G.sound=!G.sound;drawBar(clock);};H.__exit=()=>confirmBox("저장하고 나갈까요?",exitText(),"저장 후 나가기",saveExit);H.__restart=()=>confirmBox("처음부터 다시 시작할까요?","지금까지의 진행과 저장 기록이 모두 지워집니다. 되돌릴 수 없습니다.","처음부터 다시",restartGame,true);
- $("res").innerHTML=`<div class="r ${G.ot?"over":""}">팀장 시간 <b>${G.time}</b>${G.ot?` 야근 ${G.ot}`:""}</div><div class="r">토큰 <b>${G.token==null?"—":G.token}</b></div><div class="r rcap" title="${G.cells?"4월에 나눈 팀의 여유 10칸. 운영(RUN) · AI 전환(AI) · 추가 제안(GROW) · 예방·보안(SEC)":"AI로 생긴 팀의 여유 10칸. 4월에 운영 · AI 전환 · 추가 제안 · 예방·보안으로 나눕니다."}">여력 ${G.cells?["RUN","AI","GROW","SEC"].map(k=>`<span class="cap">${k} <b>${G.cells[k]??0}</b></span>`).join(""):`<b style="font-size:13px;font-weight:600">4월에 배분</b>`}</div>${c}<button class="tool" data-a="__led">장부 ${n}</button><button class="tool" data-a="__snd">소리 ${G.sound?"켜짐":"꺼짐"}</button>${G.review?"":`<button class="tool" data-a="__exit">저장 후 나가기</button><button class="tool" data-a="__restart">처음부터 다시</button>`}`;
+ H.__led=openLedger;H.__res=openResHelp;H.__snd=()=>{G.sound=!G.sound;drawBar(clock);};H.__exit=()=>confirmBox("저장하고 나갈까요?",exitText(),"저장 후 나가기",saveExit);H.__restart=()=>confirmBox("처음부터 다시 시작할까요?","지금까지의 진행과 저장 기록이 모두 지워집니다. 되돌릴 수 없습니다.","처음부터 다시",restartGame,true);
+ $("res").innerHTML=`<div class="r ${G.ot?"over":""}">팀장 시간 <b>${G.time}</b>${G.ot?` 야근 ${G.ot}`:""}</div><div class="r">토큰 <b>${G.token==null?"—":G.token}</b></div><button class="r rcap" data-a="__res" style="background:none;border:0;font-family:inherit;color:inherit;cursor:pointer;padding:0" title="팀 여력: AI 전환으로 생긴 팀의 여유 시간 10칸. 누르면 설명">팀 여력 <span aria-hidden="true" style="font-size:11px;border:1px solid currentColor;border-radius:999px;width:15px;height:15px;display:inline-grid;place-items:center;color:var(--muted)">i</span> ${G.cells?[["RUN","운영"],["AI","AI"],["GROW","제안"],["SEC","예방"]].map(([k,n])=>`<span class="cap" title="${k}">${n} <b>${G.cells[k]??0}</b></span>`).join(""):`<b style="font-size:13px;font-weight:600">4월에 배분</b>`}</button>${c}<button class="tool" data-a="__led">장부 ${n}</button><button class="tool" data-a="__snd">소리 ${G.sound?"켜짐":"꺼짐"}</button>${G.review?"":`<button class="tool" data-a="__exit">저장 후 나가기</button><button class="tool" data-a="__restart">처음부터 다시</button>`}`;
+}
+/* 세 자원 안내 (2026-11-21): 상단 바의 '팀 여력'을 누르면 연다 */
+function openResHelp(){
+ const m=$("modal");const k1="res_close";H[k1]=()=>{m.hidden=true;};
+ const I=window.CELL_INFO||{};const st=n=>n>=3?"넉넉":n<=1?"부족":"보통";
+ const rows=["RUN","AI","GROW","SEC"].map(k=>{const x=I[k]||{n:k,what:"",mods:""};const n=G.cells?G.cells[k]??0:null;return `<tr><td style="padding:6px 8px;border-top:1px solid var(--line);white-space:nowrap"><b>${x.n}</b></td><td style="padding:6px 8px;border-top:1px solid var(--line)">${x.what}${x.mods?`<br><small class="note">업무량이 줄어드는 모듈: ${x.mods}</small>`:""}</td><td style="padding:6px 8px;border-top:1px solid var(--line);white-space:nowrap" class="num">${n==null?"—":`${n}칸 · ${st(n)}`}</td></tr>`;}).join("");
+ m.innerHTML=`<div class="sheet"><h2 style="font-size:19px">세 가지 자원</h2><div class="prose" style="font-size:14.5px">
+ <p><b>👥 팀 여력</b> AI 전환으로 반복 업무가 줄면서 팀원들에게 생긴 <b>여유 시간</b>입니다. 사람이 늘어난 것이 아니라, 같은 30명이 덜어 낸 일만큼 다른 일에 쓸 수 있게 된 손입니다. 게임에서는 이 여유 전체를 <b>10칸</b>으로 나타냅니다. 칸을 놓은 곳에는 사람과 시간이 붙고, 칸을 놓지 않은 곳은 지금 인력으로 버팁니다.</p>
+ <p>4월에 네 곳에 나누고, 8월 본사 차출 때 줄어들 수 있으며, 10월에 2칸이 새로 생깁니다. 칸마다 2칸이 보통, 3칸 이상이 넉넉, 1칸 이하가 부족입니다.${G.cells?"":" 지금은 아직 나누기 전입니다."}</p></div>
+ <table style="width:100%;border-collapse:collapse;font-size:13.5px"><tr><th style="text-align:left;padding:4px 8px">칸</th><th style="text-align:left;padding:4px 8px">무엇에 쓰나</th><th style="text-align:left;padding:4px 8px">지금</th></tr>${rows}</table>
+ <div class="prose" style="font-size:14.5px"><p><b>⏳ 팀장 시간</b> 당신 한 사람의 시간입니다. 설명, 면담, 직접 처리에 듭니다. 라운드마다 새로 받고, 남은 시간은 2까지 다음 라운드로 넘어갑니다. 모자라면 분기마다 3까지 야근으로 빌릴 수 있습니다.</p>
+ <p><b>💳 토큰</b> AI 도구를 쓸 때 드는 비용입니다. 팀 손익(재무)에 잡힙니다. Round 1은 40이고, 4월에 분기 한도를 정합니다. 한도를 높게 잡을수록 재무가 깎입니다.</p></div>
+ <div class="btns"><button class="btn" data-a="${k1}">닫기</button></div></div>`;
+ m.hidden=false;
 }
 function openLedger(){
  const m=$("modal");const ps=Object.values(G.prom);
