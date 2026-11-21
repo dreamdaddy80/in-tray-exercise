@@ -445,7 +445,7 @@ SCENES.title=function(s){
   <div><b>당신</b><p>이 팀에서 5년 넘게 일한 엔지니어였고, 1월 1일부로 팀장이 되었습니다. 시스템은 누구보다 잘 압니다. 일을 맡겨 본 적도, 등급을 매겨 본 적도 없습니다.</p></div>
  </div></section>
 
- <section class="lp-sec"><h2>세 번의 라운드</h2><p class="note">라운드 앞에는 강의가, 뒤에는 피드백이 있습니다. 라운드는 강사가 알려 주는 코드로 열립니다.</p><div class="lp-3">
+ <section class="lp-sec"><h2>세 번의 라운드</h2><p class="note">라운드 앞에는 강의가, 뒤에는 피드백이 있습니다. 하루에 한 라운드씩, 강사의 안내에 맞춰 시작합니다.</p><div class="lp-3">
   <div class="lp-round"><span class="lp-tag">Round 1 · 1분기</span><b>기준 세우기</b><p>받은편지함과 전화, 핵심 과제 정의, 첫 리더 회의, 등급 기준 설계와 KPI 면담.</p><span class="note">강의 1 · 전문가에서 관리자로</span></div>
   <div class="lp-round"><span class="lp-tag">Round 2 · 2·3분기</span><b>배분과 상충</b><p>AI로 생긴 여력과 토큰 나누기, F사 운영비 협상, 공로 중재, 본사 차출, 같은 결정을 세 사람에게 설명하기.</p><span class="note">강의 2 · 나누고 맡기고 말하게 하기</span></div>
   <div class="lp-round"><span class="lp-tag">Round 3 · 4분기</span><b>위기와 평가</b><p>새벽 3시 공장 라인의 안전 신호, 평가 지침 변경, 7명의 연말 평가와 이의제기. 그리고 1년 결산과 90일 액션 플랜.</p><span class="note">강의 3 · 위기와 평가, 그리고 현업으로</span></div>
