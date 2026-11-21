@@ -11,3 +11,10 @@
 
 - 플레이: https://dreamdaddy80.github.io/in-tray-exercise/v3/
 - 진행자 집계: https://dreamdaddy80.github.io/in-tray-exercise/v3/facilitator.html
+
+## v3.1 · 2026-11-21판
+강사가이드·이론 교안 v2와 맞춘 판입니다. 위의 v3 주소는 이전 판으로 그대로 둡니다.
+
+- 플레이: https://dreamdaddy80.github.io/in-tray-exercise/v3.1/
+- 진행자 집계: https://dreamdaddy80.github.io/in-tray-exercise/v3.1/facilitator.html
+
