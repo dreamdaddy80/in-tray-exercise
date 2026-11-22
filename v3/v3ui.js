@@ -520,3 +520,41 @@ SCENES.title=function(s){
  if(typeof window.render==="function"&&!window.render.__season){const r=window.render;window.render=function(){const x=r.apply(this,arguments);try{season()}catch(e){}return x};window.render.__season=1;}
  season();
 })();
+
+/* 되돌리기 (2026-11-22): 같은 라운드 안에서 이전 장면의 처음으로 돌아간다.
+   장면에 들어설 때의 상태를 저장해 두고, 되돌리면 그 상태로 바꾼다. 라운드 시작·성적표·대기 화면에서 기록을 비우므로 라운드를 넘어 돌아갈 수 없다.
+   되돌린 기록(G.undo)은 상태를 바꿔도 지워지지 않고, 성적표 요약과 결과 코드(ud)에 남는다. */
+(function(){
+ if(window.__undoReady)return;window.__undoReady=1;
+ const HIST=[],LIMIT=40;let entry=null,pending=false;
+ const wall=s=>!s||s.bare||/^(GATE|ROUND|WAIT|V3END|FINALE)/.test(s.id||"");
+ const nm=s=>s?String((window.SC_NICK&&SC_NICK[s.id])||s.title||s.id||"").replace(/<[^>]+>/g,""):"";
+ const sig=()=>{try{return JSON.stringify([(G.decisions||[]).length,G.written,G.f,G.score,G.trust,G.cells,G.prom,G.token,G.fsat]);}catch(e){return "";}};
+ const dirty=()=>!!(entry&&entry.idx===G.idx&&entry.base!=null&&sig()!==entry.base);
+ window.canUndo=()=>typeof G!=="undefined"&&G&&!G.review&&(HIST.length>0||dirty());
+ const n0=next;next=function(){
+  if(entry&&typeof G!=="undefined"&&G&&entry.idx===G.idx&&!G.review){HIST.push(entry);if(HIST.length>LIMIT)HIST.shift();}
+  entry=null;pending=true;return n0.apply(this,arguments);};
+ const r0=render;render=function(){
+  let fresh=false;
+  if(pending){pending=false;try{const s=CONTENT[G.idx];if(wall(s)||G.review){HIST.length=0;entry=null;}else{const rr=G.round||0;if(HIST.length&&HIST[HIST.length-1].r!==rr)HIST.length=0;entry={idx:G.idx,r:rr,s:JSON.stringify(G)};fresh=true;}}catch(e){entry=null;}}
+  const x=r0.apply(this,arguments);
+  if(fresh&&entry)entry.base=sig();
+  return x;};
+ render.__season=1;
+ window.doUndo=function(){
+  if(!window.canUndo())return;
+  const same=dirty();const cur=CONTENT[G.idx],tgt=same?entry:HIST[HIST.length-1],to=CONTENT[tgt.idx];
+  confirmBox(same?"이 장면을 처음부터 다시 할까요?":"이전 장면으로 돌아갈까요?",`<b>${nm(to)}</b> 장면의 처음으로 돌아갑니다. ${same?"이 장면에서 한 선택과 점수 변화":"그 뒤의 선택과 점수 변화"}는 지워집니다. 되돌린 기록은 이번 라운드 성적표와 결과 코드에 남습니다.`,"돌아가기",()=>{
+   if(!same)HIST.pop();try{clearInterval(CLOCK);CLOCK=null;}catch(e){}
+   const u=JSON.parse(JSON.stringify(G.undo||{n:{},log:[]}));
+   G=JSON.parse(tgt.s);
+   u.n[tgt.r]=(u.n[tgt.r]||0)+1;u.log.push({r:tgt.r,m:G.month||0,from:nm(cur),to:nm(to),same:same?1:0});
+   G.undo=u;entry={idx:tgt.idx,r:tgt.r,s:tgt.s};
+   save();r0();entry.base=sig();window.scrollTo(0,0);toast("이전 장면으로 돌아왔습니다. 되돌린 기록은 성적표에 남습니다.");});
+ };
+ const d0=drawBar;drawBar=function(clock){
+  const x=d0.apply(this,arguments);
+  try{if(window.canUndo()){H.__undo=window.doUndo;const led=document.querySelector('#res [data-a="__led"]');if(led&&!document.querySelector('#res [data-a="__undo"]'))led.insertAdjacentHTML("beforebegin",'<button class="tool" data-a="__undo" title="선택을 했다면 이 장면의 처음으로, 아직 안 했다면 직전 장면의 처음으로 돌아갑니다. 같은 라운드 안에서만 되며, 되돌린 기록은 성적표에 남습니다.">← 되돌리기</button>');}}catch(e){}
+  return x;};
+})();

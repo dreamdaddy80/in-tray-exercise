@@ -76,6 +76,9 @@ function run(){
    h+=`<div><b>서술형 미리 보기 (3요소 자동 점검)</b><p>답안 ${ns.length}건 · 3/3 ${c(3)}건 · 2/3 ${c(2)}건 · 1/3 이하 ${c(1)+c(0)}건</p><p class="note">① 기준·원칙 ② 상대 맥락 ③ 다음 행동·기한을 낱말로 점검한 예비 판정입니다. 최종 채점은 응답 묶음으로 강사가 합니다.</p></div>`;}
   if(L.some(x=>x.tk)){const g={};L.forEach(x=>{if(!x.tk)return;(g[x.tk[1]]=g[x.tk[1]]||[]).push(x);});
    h+=`<div><b>토큰 한도별 사용량과 효율</b><table><tr><th>한도</th><th>명</th><th>쓴 토큰</th><th>효율</th><th>재무</th></tr>${Object.keys(g).sort((a,b)=>a-b).map(c=>{const A=g[c];const eff=A.filter(x=>x.tk[0]>0).map(x=>Math.round((x.kpi[0]+x.kpi[3])/2/(x.tk[0]/10)*10)/10);return `<tr><td>💳${c}</td><td class="n">${A.length}</td><td class="n">${avg(A.map(x=>x.tk[0]))}</td><td class="n">${eff.length?(eff.reduce((a,b)=>a+b,0)/eff.length).toFixed(1):"—"}</td><td class="n">${avg(A.map(x=>x.kpi[1]))}</td></tr>`;}).join("")}</table><p class="note">효율 = (고객 + 서비스 안정) ÷ 2 ÷ (쓴 토큰 ÷ 10). 학습자 성적표 ② 탭의 '토큰 효율'과 같은 식입니다.</p></div>`;}
+  /* 되돌리기 (2026-11-22) */
+  if(L.some(x=>x.ud!=null)){const g=[[0,0,"0회"],[1,2,"1~2회"],[3,999,"3회 이상"]].map(([a,b,n])=>[n,L.filter(x=>x.ud!=null&&x.ud>=a&&x.ud<=b)]);
+   h+=`<div><b>이전 장면으로 되돌리기</b><table><tr><th>횟수</th><th>명</th><th>참가자</th></tr>${g.map(([n,A])=>`<tr><td>${n}</td><td class="n">${A.length}</td><td>${n==="0회"?"":A.map(x=>(x.nick||"익명")+(x.ud?` (${x.ud})`:"")).join(", ")}</td></tr>`).join("")}</table><p class="note">되돌린 장면과 순서는 각 참가자의 성적표 요약에 있습니다. 결정을 바꾼 이유를 피드백 시간에 물어보세요.</p></div>`;}
   /* 스타일별 */
   const sg={};L.forEach(x=>{(sg[x.style]=sg[x.style]||[]).push(x);});
   h+=`<div><b>스타일별 지표 평균</b><table><tr><th>스타일</th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${Object.keys(sg).map(s=>`<tr><td>${STY[s]||s}</td><td class="n">${sg[s].length}</td>${KPI.map((_,i)=>`<td class="n">${avg(sg[s].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table></div>`;

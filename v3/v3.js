@@ -421,7 +421,7 @@ function resultCode(r){
  const ch={};["M08","1-5","3-1","R1-pick","3-8","4-5","6-1","5-4","8-1a","R3-1a","R3-1b","9-4","6-4b","12-3a"].forEach(id=>{const c=lastChoice(id);if(c!=null)ch[id]=String(c).slice(0,12);});
  if(G.f.pub_full)ch.pub="A";else if(G.f.pub_items)ch.pub="B";else if(G.f.pub_leaders)ch.pub="C";
  if(G.cells)ch.cells=["RUN","AI","GROW","SEC"].map(k=>G.cells[k]||0).join("");
- const o={v:3,r,nick:G.nick||"",style:G.style||"bal",ch,kpi:[G.score.성과,G.score.재무,G.score.사람,G.score.안정,G.fsat],ax:{self:G.diag||null,act:axRange(0)},g2:G.goal2,ib:(()=>{const st=(G.rs||{})[r]||{},nx=(G.rs||{})[r+1];const ms=(G.decisions||[]).slice(st.dec||0,nx?nx.dec:undefined).filter(x=>/^M\d+/.test(x.scene)).map(x=>String(x.choice).split(":")[0]);const n=k=>ms.filter(x=>x===k).length;const ds=(nx&&nx.ds0)||G.ds||{},d0=st.ds0||{};return [n("직접")+n("답장"),n("위임"),Math.max(0,(ds.f||0)-(d0.f||0)),n("코칭"),n("보류")+n("시간 초과(보류)")];})(),m39:r>=2?(G.f.got_M39?1:0):undefined,rb:window.v3RubricN?v3RubricN(r):undefined,tk:[(G.roundTok&&G.roundTok[r])||0,G.tokenCap||40],t:Math.round((Date.now()-((G.rs||{})[r]||{}).t0)/1000)||0};
+ const o={v:3,r,nick:G.nick||"",style:G.style||"bal",ch,kpi:[G.score.성과,G.score.재무,G.score.사람,G.score.안정,G.fsat],ax:{self:G.diag||null,act:axRange(0)},g2:G.goal2,ib:(()=>{const st=(G.rs||{})[r]||{},nx=(G.rs||{})[r+1];const ms=(G.decisions||[]).slice(st.dec||0,nx?nx.dec:undefined).filter(x=>/^M\d+/.test(x.scene)).map(x=>String(x.choice).split(":")[0]);const n=k=>ms.filter(x=>x===k).length;const ds=(nx&&nx.ds0)||G.ds||{},d0=st.ds0||{};return [n("직접")+n("답장"),n("위임"),Math.max(0,(ds.f||0)-(d0.f||0)),n("코칭"),n("보류")+n("시간 초과(보류)")];})(),m39:r>=2?(G.f.got_M39?1:0):undefined,rb:window.v3RubricN?v3RubricN(r):undefined,tk:[(G.roundTok&&G.roundTok[r])||0,G.tokenCap||40],ud:(G.undo&&G.undo.n&&G.undo.n[r])||0,t:Math.round((Date.now()-((G.rs||{})[r]||{}).t0)/1000)||0};
  const b=btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
  let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;return `IT3-R${r}-${b}-${(h%65536).toString(16).padStart(4,"0")}`;
 }
@@ -532,6 +532,7 @@ SCENES.roundEnd=function(s){
  const T=[];
  /* 요약 */
  T[0]=()=>`<div class="prose"><p><b>${RT[0]}</b>. ${RT[1]}</p><p>이 성적표는 점수를 매기는 표가 아니라 <b>배우는 시간</b>입니다. 내 결정이 리더들과 계기판, 모듈의 업무량과 스트레스에 무엇을 남겼는지 보고, 좋은 리더라면 어떻게 판단했을지 비교한 뒤, 다음 라운드에 무엇에 주의할지 정합니다.</p></div>
+  ${(()=>{const L=((G.undo&&G.undo.log)||[]).filter(x=>x.r===r);const e=t=>String(t||"").replace(/</g,"&lt;");return L.length?`<div class="secbox"><div class="seclab">이번 라운드에 되돌린 횟수 ${L.length}회</div><p>${L.map(x=>(x.same?`${x.m?x.m+"월 · ":""}<b>${e(x.to)}</b> 장면을 처음부터 다시 함`:`${x.m?x.m+"월 · ":""}<b>${e(x.from)}</b>에서 <b>${e(x.to)}</b>(으)로 돌아감`)).join("<br>")}</p><div class="seclab">피드백 시간에 생각해 볼 질문</div><p>무엇을 보고 결정을 바꾸고 싶었나요? 실제 팀장이라면 그 정보를 결정하기 전에 어떻게 얻을 수 있었을까요?</p></div>`:"";})()}
   ${prevFocus?`<div class="secbox"><div class="seclab">지난 라운드에 내가 정한 주안점</div><p>${String(prevFocus).replace(/</g,"&lt;")}</p></div>`:""}
   <div class="sum3">
    <button class="sumc" ${go(1)}><span class="seclab">① 결정 돌아보기</span><b>${judged.length?`핵심 결정 ${judged.length}개 중 ${matchN}개`:"핵심 결정 없음"}</b><small>좋은 리더의 선택과 같은 길을 고른 수</small><em>결정별로 보기 →</em></button>
