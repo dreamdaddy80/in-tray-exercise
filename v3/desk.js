@@ -16,15 +16,16 @@
  const on=()=>root.dataset.ui==="desk";
 
  /* ---------- 장면 → 앱 ---------- */
- const APPS={mail:"메일",chat:"메신저",meet:"화상 회의",hr:"인사시스템",dash:"팀 대시보드",err:"생산 모니터링 시스템",sec:"보안 센터",news:"사내 속보",lounge:"익명 라운지",note:"업무 노트"};
+ const APPS={onboard:"신임 리더 온보딩",call:"전화",mail:"메일",chat:"메신저",meet:"화상 회의",hr:"인사시스템",dash:"팀 대시보드",err:"생산 모니터링 시스템",sec:"보안 센터",news:"사내 속보",lounge:"익명 라운지",note:"업무 노트"};
  const BY_ID={"1-3":"note","1-5":"meet","1-4":"chat","3-1":"hr","R1-pick":"chat","3-4":"meet","3-5":"meet","3-6":"meet","3-8":"sec","3-9":"dash","9-7":"dash",
   "4-2":"hr","4-3":"meet","4-4":"lounge","4-5":"meet","5-4":"meet","6-1":"meet","6-1p":"hr","6-2":"mail","6-3":"chat","6-4a":"news",
-  "8-1a":"news","8-1b":"meet","8-1c":"hr","R3-0":"hr","R3-1a":"err","R3-1b":"err","9-4":"news","11-4":"chat",
+  "8-1a":"news","8-1b":"meet","8-1c":"hr","R3-0":"hr","R3-1a":"err","R3-1b":"err","9-4":"call","11-4":"chat",
   "12-3a":"hr","12-3":"hr","12-4":"hr","12-6":"mail","S2":"lounge"};
  window.appOf=function(s){
   if(!s)return "note";const id=String(s.id||"");
   if(s.type==="inbox"||s.mail)return "mail";
   if(/^(ROUND|V3END|FINALE)/.test(id))return "dash";
+  if(/^P\d/.test(id))return "onboard";
   if(BY_ID[id])return BY_ID[id];
   if(/^12-/.test(id))return "hr";
   if(/^R2-|^R3-/.test(id))return "hr";
@@ -39,21 +40,40 @@
   const sh=document.getElementById("shell");if(!sh)return null;
   const win=sh.parentElement;if(win&&!win.id)win.id="dkwin";
   let t=document.getElementById("dktitle");
-  if(!t){t=document.createElement("div");t.id="dktitle";t.innerHTML='<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b class="app"></b><span class="sub"></span><button type="button" class="team" aria-expanded="false">팀 보기</button>';win.insertBefore(t,sh);
+  if(!t){t=document.createElement("div");t.id="dktitle";t.innerHTML='<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b class="app"></b><span class="sub"></span><button type="button" class="team" aria-expanded="false" aria-controls="people">리더 신뢰·업무량</button>';win.insertBefore(t,sh);
    t.querySelector(".team").addEventListener("click",()=>toggleTeam());}
   return t;
  }
- function toggleTeam(force){const p=document.getElementById("people");if(!p)return;const o=force==null?!p.classList.contains("dk-open"):!!force;p.classList.toggle("dk-open",o);
-  const b=document.querySelector("#dktitle .team");if(b){b.setAttribute("aria-expanded",o?"true":"false");b.textContent=o?"팀 닫기":"팀 보기";}}
+ let teamOpener=null;
+ function toggleTeam(force){const p=document.getElementById("people");if(!p)return;const was=p.classList.contains("dk-open");const o=force==null?!was:!!force;if(o===was&&force!=null)return;
+  p.classList.toggle("dk-open",o);
+  const b=document.querySelector("#dktitle .team");if(b)b.setAttribute("aria-expanded",o?"true":"false");
+  document.querySelectorAll('#dkdock button[data-k="team"]').forEach(x=>x.classList.toggle("open",o));
+  if(o){const nb=document.getElementById("dknote");if(nb)nb.hidden=true;teamOpener=document.activeElement;teamHead();setTimeout(()=>{const c=p.querySelector(".dk-pclose");if(c)c.focus();},30);}
+  else if(was){try{if(teamOpener&&document.contains(teamOpener))teamOpener.focus();}catch(e){}teamOpener=null;}}
  window.toggleTeam=toggleTeam;
+ /* 펼침 메뉴(메뉴·운영자 메뉴): 바깥을 누르거나 Esc를 누르면 닫는다 */
+ document.addEventListener("pointerdown",e=>{document.querySelectorAll("details.dk-menu[open],details.opmenu[open]").forEach(d=>{if(!d.contains(e.target))d.removeAttribute("open");});});
+ document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;document.querySelectorAll("details.dk-menu[open],details.opmenu[open]").forEach(d=>{d.removeAttribute("open");const sm=d.querySelector("summary");if(sm)sm.focus();});});
+ /* 서랍 머리: 제목과 닫기 버튼 (drawSide가 다시 그릴 때마다 붙인다) */
+ function teamHead(){const p=document.getElementById("people");if(!p||!on()||p.querySelector(":scope > .dk-ph"))return;
+  p.setAttribute("role","region");p.setAttribute("aria-label","리더 신뢰·업무량");
+  p.insertAdjacentHTML("afterbegin",'<div class="dk-ph"><span><b>리더 신뢰·업무량</b><small>리더 5명의 신뢰와 모듈별 업무량·스트레스</small></span><button type="button" class="dk-pclose">닫기</button></div>');
+  p.querySelector(".dk-pclose").addEventListener("click",()=>toggleTeam(false));}
+ document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;const p=document.getElementById("people");
+  if(p&&p.classList.contains("dk-open")){const lx=document.getElementById("lexw");if(lx&&!lx.hidden)return;if(document.getElementById("dkal"))return;const md=document.getElementById("modal");if(md&&!md.hidden)return;toggleTeam(false);}});
+ document.addEventListener("pointerdown",e=>{const p=document.getElementById("people");if(!p||!p.classList.contains("dk-open"))return;
+  if(p.contains(e.target)||e.target.closest('#dktitle .team,#dkdock button[data-k="team"],.dkm-ctl .ppl,#modal,#lexw'))return;toggleTeam(false);});
  function paintFrame(){
   const t=ensureFrame();if(!t)return;
   const s=CONTENT[G.idx]||{};const app=appOf(s);
   root.dataset.app=on()?app:"";
-  t.hidden=!on()||!!s.bare;
+  t.hidden=!on()||s.id==="P0";
+  root.dataset.bare=s.bare&&s.id!=="P0"?"1":"";
   t.querySelector(".app").textContent=APPS[app]||"";
   const sub=[val(s.when)||(G.month?G.month+"월":""),strip(val(s.title)||"")].filter(Boolean).join(" · ");
   t.querySelector(".sub").textContent=sub;
+  try{osPaint(s,app);}catch(e){}
  }
  function val(x){try{return typeof x==="function"?x(G):x;}catch(e){return "";}}
  function strip(x){return String(x||"").replace(/<[^>]+>/g,"");}
@@ -62,6 +82,7 @@
  const _db=drawBar;
  drawBar=function(clock){
   const r=_db.apply(this,arguments);
+  try{document.querySelectorAll("#res > .r").forEach(r=>{if(r.dataset.s)return;const t=(r.firstChild&&r.firstChild.nodeType===3?r.firstChild.textContent:"").trim();if(/팀장 시간/.test(t))r.dataset.s="시간";else if(/토큰/.test(t))r.dataset.s="토큰";});}catch(e){}
   try{paintFrame();
    if(on()){const res=document.getElementById("res");if(res&&!res.querySelector(".dk-menu")){
     const tools=[...res.querySelectorAll('.tool:not([data-a="__undo"]), .rcap')];
@@ -76,13 +97,13 @@
  const _ds=drawSide;
  drawSide=function(live){
   const r=_ds.apply(this,arguments);
-  try{if(on()){const sh=document.getElementById("shell");if(sh)sh.style.gridTemplateColumns="minmax(0,1fr)";
+  try{if(on()){const sh=document.getElementById("shell");if(sh)sh.style.gridTemplateColumns="minmax(0,1fr)";teamHead();
    if(live&&typeof LD!=="undefined"){const ch=Object.keys(LD).filter(k=>live[k]).map(k=>`${LD[k].n} ${live[k]>0?"+":""}${live[k]}`);if(ch.length)deskNote("리더 신뢰",ch.join(" · "));}}}catch(e){}
   return r;
  };
  let noteT=null;
- function deskNote(head,text){let n=document.getElementById("dknote");if(!n){n=document.createElement("div");n.id="dknote";n.setAttribute("role","status");document.body.appendChild(n);}
-  n.innerHTML=`<b>${head}</b><span>${text}</span>`;n.hidden=false;n.classList.remove("go");void n.offsetWidth;n.classList.add("go");clearTimeout(noteT);noteT=setTimeout(()=>{n.hidden=true;},3200);}
+ function deskNote(head,text){{const pp=document.getElementById("people");if(pp&&pp.classList.contains("dk-open"))return;}let n=document.getElementById("dknote");if(!n){n=document.createElement("div");n.id="dknote";n.setAttribute("role","status");document.body.appendChild(n);}
+  n.innerHTML=`<span class="ai" style="--c:#5b6770">${typeof ICO!=="undefined"?ICO.users:""}</span><span class="tx"><span class="hd"><b>리더 신뢰·업무량</b><small>지금</small></span><b class="tt">${head}</b><span>${text}</span></span>`;n.hidden=false;n.classList.remove("go");void n.offsetWidth;n.classList.add("go");clearTimeout(noteT);noteT=setTimeout(()=>{n.hidden=true;},3200);}
  window.deskNote=deskNote;
 
  /* ---------- 받은편지함: 메일과 메신저로 나눠 보기 ---------- */
@@ -185,27 +206,92 @@
   const o=document.querySelector("#view .opt[aria-pressed=true]");if(!o)return;const s=CONTENT[G.idx]||{};
   const t=o.querySelector(".k + span");picked[s.id]=t?[...t.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join("").trim():"";},true);
 
+ /* ---------- 아이콘 (업무 PC 2차, 2026-11-26) ---------- */
+ const I=d=>`<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+ const ICO={
+  mail:I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>'),
+  chat:I('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>'),
+  video:I('<rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5"/>'),
+  videooff:I('<path d="M10.5 6H13.5a2 2 0 0 1 2 2v3.5M15.5 15.5V16a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h.5M15.5 10l6-3.5v11l-4-2.3M3 3l18 18"/>'),
+  hr:I('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 17c.8-2 2-3 3.5-3s2.7 1 3.5 3M14 9h4M14 13h4"/>'),
+  chart:I('<path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/>'),
+  book:I('<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17Z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>'),
+  users:I('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.6c2.6.2 4.4 2 5 5.4"/>'),
+  search:I('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
+  mic:I('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>'),
+  micoff:I('<path d="M15 9.3V6a3 3 0 0 0-5.7-1.3M9 9v2a3 3 0 0 0 5 2.2M5 11a7 7 0 0 0 11.6 5.3M19 11a7 7 0 0 1-.6 2.8M12 18v3M3 3l18 18"/>'),
+  smile:I('<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>'),
+  cc:I('<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M10.5 10.2a2.4 2.4 0 1 0 0 3.6M17 10.2a2.4 2.4 0 1 0 0 3.6"/>'),
+  phone:I('<path d="M5 4h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 6.3 6.3l1.4-2.2L20 15.5V19a2 2 0 0 1-2.2 2A17 17 0 0 1 3 6.2 2 2 0 0 1 5 4Z"/>'),
+  hang:I('<path d="M3 14.8c5-4.9 13-4.9 18 0l-2 2.7-3.8-1.5v-2.9a11 11 0 0 0-6.4 0V16l-3.8 1.5Z"/>'),
+  clip:I('<path d="m21 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8L10 17.9a1.7 1.7 0 0 1-2.4-2.4l8-8"/>'),
+  send:I('<path d="M21 3 10 14M21 3l-6.5 18-4.5-7-7-4.5Z"/>'),
+  wifi:I('<path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M12 19h.01"/>'),
+  bat:'<svg class="ic" viewBox="0 0 28 14" width="24" height="12" aria-hidden="true"><rect x=".75" y=".75" width="23" height="12.5" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".55"/><rect x="2.6" y="2.6" width="15.5" height="8.8" rx="1.8" fill="currentColor"/><path d="M25.6 4.8v4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".55"/></svg>',
+  bell:I('<path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+  reply:I('<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v4"/>'),
+  replyall:I('<path d="M7 14 2 9l5-5"/><path d="M12 14 7 9l5-5"/><path d="M7 9h8a6 6 0 0 1 6 6v4"/>'),
+  forward:I('<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0-6 6v4"/>'),
+  archive:I('<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/>'),
+  trash:I('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
+  more:I('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>'),
+  shield:I('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 8v5M12 16h.01"/>'),
+  alert:I('<path d="M12 3 2 20h20Z"/><path d="M12 10v4M12 17h.01"/>'),
+  note:I('<path d="M5 3h10l4 4v14H5Z"/><path d="M15 3v4h4M8 12h8M8 16h6"/>'),
+  edit:I('<path d="M4 20h4L19 9l-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/>'),
+  home:I('<path d="m3 11 9-7 9 7"/><path d="M5 10v10h14V10"/>'),
+  doc:I('<path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5"/>'),
+  tv:I('<rect x="2.5" y="5" width="19" height="13" rx="2"/><path d="M8 21h8M8 2l4 3 4-3"/>'),
+  grid:I('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
+  chev:I('<path d="m9 6 6 6-6 6"/>'),
+  lounge:I('<path d="M4 5h16v11H9l-5 4Z"/><path d="M8 9h8M8 12h5"/>')
+ };
+ window.DK_ICO=ICO;
+ const t0s={};const t0=k=>t0s[k]||(t0s[k]=Date.now());
+ const mmss=ms=>{const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?String(h).padStart(2,"0")+":":"")+String(m).padStart(2,"0")+":"+String(x).padStart(2,"0");};
+ setInterval(()=>{document.querySelectorAll("[data-t0]").forEach(e=>{e.textContent=mmss(Date.now()+(+e.dataset.off||0)-(+e.dataset.t0));});},1000);
+ const ROOM={rd:["#3b4d63","#1b2531","#9fc3e8"],src:["#5a4a3a","#2a211a","#e8c99f"],mfg:["#3d4a3c","#1c231b","#b9d6a0"],prc:["#4f3f58","#241c2b","#d7b6ea"],mkt:["#5e3b3b","#2b1a1a","#f2b3a6"],kim:["#3c4f52","#1a2526","#a7dbe0"]};
+ const roomBg=k=>{const r=ROOM[k]||["#3e4448","#1e2225","#c9d1d6"];return `--r1:${r[0]};--r2:${r[1]};--r3:${r[2]}`;};
+ const camFace=k=>{let f=faceOf(k);f=f.replace(/ clip-path="url\(#[^)]+\)"/g,"");return f;};
+ const timeOf=s=>{const w=String(val(s.when)||"");const m=w.match(/(새벽|아침|오전|오후|저녁|밤)\s*(\d{1,2})시\s*(\d{1,2})?분?/);if(m){return `${/새벽|아침|오전/.test(m[1])?"오전":"오후"} ${m[2]}:${String(m[3]||"00").padStart(2,"0")}`;}return "";};
+
+ /* ---------- 화상 회의 (2차) ---------- */
  function meetApp(pane,s){
   if(pane.dataset.dk)return;pane.dataset.dk="meet";
   const old=pane.querySelector(".dk-meet");if(old)old.remove();
   const sp=speakerOf(pane,s);const P=who(sp);
   const title=strip(val(s.title)||(pane.querySelector("h2")||{}).textContent||"리더 회의");
   const lead=typeof LD!=="undefined"?Object.keys(LD):[];
-  const tile=(k,cls)=>{const p=who(k);return `<div class="dkm-t ${cls||""}">${faceOf(k)}<span>${esc(p.n)}<small>${esc(p.m)}</small></span></div>`;};
-  const me=`<div class="dkm-t me"><span class="me-av">나</span><span>팀장<small>나</small></span></div>`;
+  const st0=t0("meet:"+s.id);
+  const plate=(k,talk)=>{const p=who(k);return `<span class="plate">${talk?ICO.mic+'<i class="lv"><b></b><b></b><b></b></i>':ICO.micoff}${esc(p.n)} <small>${esc(p.m)}</small></span>`;};
+  const tile=(k,talk)=>`<div class="cam${talk?" talk":""}" style="${roomBg(k)}"><div class="cv">${camFace(k)}</div>${plate(k,talk)}</div>`;
+  const me=`<div class="cam me" style="--r1:#24302b;--r2:#121815;--r3:#8fb8a5"><div class="cv"><span class="me-av">나</span></div><span class="plate"><span class="mi">${ICO.mic}</span>나 (팀장)</span><span class="react" aria-hidden="true"></span></div>`;
   const stage=document.createElement("section");stage.className="dkm-stage";
-  stage.innerHTML=`<div class="dkm-top"><span class="rec"><i></i>회의 중</span><b>${esc(title)}</b><span class="cnt">참석 6명</span></div>`+
-   (P?`<div class="dkm-main"><div class="dkm-big">${faceOf(sp)}</div><span class="dkm-tag">${esc(P.n)} · ${esc(P.m)} <em>말하는 중</em></span><div class="dkm-cap"></div></div>
-     <div class="dkm-strip">${lead.filter(k=>k!==sp).map(k=>tile(k)).join("")}${me}</div>`
-     :`<div class="dkm-gal">${lead.map(k=>tile(k)).join("")}${me}</div><div class="dkm-cap gal"></div>`)+
-   `<div class="dkm-ctl"><span class="c" aria-hidden="true">마이크</span><span class="c" aria-hidden="true">카메라</span><span class="c" aria-hidden="true">화면 공유</span><button type="button" class="c">참석자 보기</button></div>`;
+  stage.innerHTML=`<div class="dkm-top"><span class="rec"><i></i>REC <b data-t0="${st0}">00:00</b></span><b class="ttl">${esc(title)}</b><span class="cnt">${ICO.users} 6</span><span class="lay">${ICO.grid} ${P?"발표자 보기":"갤러리 보기"}</span></div>`+
+   (P?`<div class="dkm-main">${tile(sp,1)}<div class="dkm-cap"><span class="cc">자막</span></div></div><div class="dkm-strip">${lead.filter(k=>k!==sp).map(k=>tile(k,0)).join("")}${me}</div>`
+     :`<div class="dkm-gal">${lead.map(k=>tile(k,0)).join("")}${me}</div><div class="dkm-cap gal"><span class="cc">자막</span></div>`)+
+   `<div class="dkm-ctl" role="toolbar" aria-label="회의 도구">
+     <button type="button" class="c mic" aria-label="음소거" aria-pressed="false">${ICO.mic}<span>음소거</span></button>
+     <button type="button" class="c camb" aria-label="비디오 중지" aria-pressed="false">${ICO.video}<span>비디오 중지</span></button>
+     <span class="sep"></span>
+     <button type="button" class="c rx" aria-label="반응">${ICO.smile}<span>반응</span></button>
+     <button type="button" class="c ccb" aria-label="자막" aria-pressed="true">${ICO.cc}<span>자막</span></button>
+     <button type="button" class="c ppl" aria-label="참석자">${ICO.users}<span>참석자</span></button>
+     <span class="sep"></span>
+     <button type="button" class="c leave" aria-label="나가기">${ICO.hang}<span>나가기</span></button></div>`;
   const cap=stage.querySelector(".dkm-cap");
   const qs=[...pane.querySelectorAll(":scope > .say, :scope > .cond")];
   if(qs.length&&!pane.querySelector(".opts")&&/일어난 일/.test((pane.querySelector(".eyebrow")||{}).textContent||""))qs.length=0;
   qs.forEach(q=>cap.appendChild(q));if(!qs.length)cap.remove();
-  stage.querySelector("button.c").addEventListener("click",()=>toggleTeam(true));
+  const meT=stage.querySelector(".cam.me");
+  stage.querySelector(".mic").addEventListener("click",e=>{const b=e.currentTarget;const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.innerHTML=(on?ICO.micoff:ICO.mic)+`<span>${on?"음소거 해제":"음소거"}</span>`;meT.querySelector(".mi").innerHTML=on?ICO.micoff:ICO.mic;});
+  stage.querySelector(".camb").addEventListener("click",e=>{const b=e.currentTarget;const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.innerHTML=(on?ICO.videooff:ICO.video)+`<span>${on?"비디오 시작":"비디오 중지"}</span>`;meT.classList.toggle("off",on);});
+  stage.querySelector(".rx").addEventListener("click",()=>{const r=meT.querySelector(".react");r.textContent="👍";r.classList.remove("go");void r.offsetWidth;r.classList.add("go");});
+  stage.querySelector(".ccb").addEventListener("click",e=>{const b=e.currentTarget;const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);stage.classList.toggle("nocc",!on);});
+  stage.querySelector(".ppl").addEventListener("click",()=>toggleTeam(true));
+  stage.querySelector(".leave").addEventListener("click",()=>{try{toast("결정을 마치면 회의가 끝납니다. 오른쪽 '회의 안건'에서 답을 정하세요.");}catch(e){}});
   const side=document.createElement("aside");side.className="dkm-side";
-  side.innerHTML=`<div class="dkm-sh"><b>회의 안건</b><span>${esc(val(s.when)||(G.month?G.month+"월":""))}</span></div><div class="dkm-body"></div><div class="dkm-foot"></div>`;
+  side.innerHTML=`<div class="dkm-sh" role="presentation"><span class="tab on">회의 안건</span><span class="tab">참석자 6</span><span class="when">${esc(val(s.when)||(G.month?G.month+"월":""))}</span></div><div class="dkm-body"></div><div class="dkm-foot"></div>`;
   const body=side.querySelector(".dkm-body"),foot=side.querySelector(".dkm-foot");
   const opts=pane.querySelector(":scope > .opts"),ft=pane.querySelector(":scope > .foot");
   [...pane.childNodes].forEach(n=>{if(n!==opts&&n!==ft)body.appendChild(n);});
@@ -215,26 +301,37 @@
   const wrap=document.createElement("div");wrap.className="dkm";wrap.append(stage,side);pane.appendChild(wrap);
  }
 
+ /* ---------- 메신저 (2차) ---------- */
  function chatApp(pane,s){
   if(pane.dataset.dk)return;pane.dataset.dk="chat";
   const k=speakerOf(pane,s);const P=who(k)||{n:"대화",m:""};
   const opts=pane.querySelector(":scope > .opts"),ft=pane.querySelector(":scope > .foot");
   const says=[...pane.querySelectorAll(":scope > .say, :scope > .cond")];
   const first=(pane.querySelector(".say .voice")||{}).textContent||"";
+  const tm=timeOf(s);
   const lead=typeof LD!=="undefined"?Object.keys(LD).filter(x=>x!==k):[];
-  const room=(x,on,prev)=>{const p=who(x);return `<div class="dkc-r ${on?"on":""}">${faceOf(x)}<span><b>${esc(p.n)}</b><small>${esc(prev||p.m)}</small></span></div>`;};
+  const room=(x,on,prev,n)=>{const p=who(x);return `<div class="dkc-r ${on?"on":""}">${faceOf(x)}<span class="rn"><b>${esc(p.n)}</b><small>${esc(prev||p.m+" 모듈")}</small></span><span class="rt">${on?esc(tm||"지금"):""}${n?`<i>${n}</i>`:""}</span></div>`;};
   const app=document.createElement("div");app.className="dkc";
-  app.innerHTML=`<aside class="dkc-rooms"><div class="dkc-rh"><b>채팅</b><span class="srch" aria-hidden="true">이름 검색</span></div>${k?room(k,1,first.slice(0,26)+(first.length>26?"…":"")):""}${lead.map(x=>room(x,0)).join("")}</aside>
-   <section class="dkc-room"><header>${k?faceOf(k):""}<span><b>${esc(P.n)}</b><small>${esc(P.m)}${P.m?" · ":""}1:1 대화</small></span></header><div class="dkc-log"></div><div class="dkc-cmp"></div></section>`;
+  app.innerHTML=`<nav class="dkc-rail" aria-hidden="true"><span class="on">${ICO.chat}</span><span>${ICO.users}</span><span>${ICO.bell}</span><span class="b">${ICO.more}</span></nav>
+   <aside class="dkc-rooms"><div class="dkc-rh"><b>채팅</b><span class="ics" aria-hidden="true">${ICO.edit}</span></div><div class="srch" aria-hidden="true">${ICO.search}<span>이름, 채팅방 검색</span></div>
+    <div class="dkc-list">${k?room(k,1,first.slice(0,30)+(first.length>30?"…":""),opts?1:0):""}${lead.map(x=>room(x,0)).join("")}</div></aside>
+   <section class="dkc-room"><header>${k?faceOf(k):""}<span><b>${esc(P.n)}</b><small>${esc(P.m)}${P.m?" 모듈 · ":""}1:1 대화</small></span><span class="hi" aria-hidden="true">${ICO.phone}${ICO.video}${ICO.search}${ICO.more}</span></header><div class="dkc-log"></div><div class="dkc-cmp"></div></section>`;
   const log=app.querySelector(".dkc-log"),cmp=app.querySelector(".dkc-cmp");
   const eb=pane.querySelector(":scope > .eyebrow");if(eb){eb.classList.add("dkc-day");log.appendChild(eb);}
   const narr=document.createElement("div");narr.className="dkc-narr";
   [...pane.childNodes].forEach(n=>{if(n===opts||n===ft||says.includes(n))return;narr.appendChild(n);});
   if(narr.textContent.trim())log.appendChild(narr);
-  says.forEach(q=>{q.classList.add("dkc-b");log.appendChild(q);});
-  if(!opts&&picked[s.id])narr.insertAdjacentHTML("beforebegin",`<div class="dkc-me"><span>${esc(picked[s.id])}</span></div>`);
-  if(opts){cmp.insertAdjacentHTML("beforeend",`<p class="dkc-lab">답장 고르기</p>`);cmp.appendChild(opts);}
-  if(ft){const b=ft.querySelector(".btn.main");if(b&&opts&&b.textContent.trim()==="결정")b.textContent="보내기";cmp.appendChild(ft);}
+  says.forEach(q=>{q.classList.add("dkc-b");if(tm)q.insertAdjacentHTML("beforeend",`<span class="tm">${esc(tm)}</span>`);log.appendChild(q);});
+  if(!opts&&picked[s.id])narr.insertAdjacentHTML("beforebegin",`<div class="dkc-me"><span class="rd">읽음</span><span class="bb">${esc(picked[s.id])}</span></div>`);
+  if(opts){
+   const pr=opts.querySelector(".opt[aria-pressed=true] .k + span");
+   const pt=pr?[...pr.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join("").trim():"";
+   cmp.insertAdjacentHTML("beforeend",`<p class="dkc-lab">추천 답장 · 하나를 고르면 입력창에 들어갑니다</p>`);cmp.appendChild(opts);
+   cmp.insertAdjacentHTML("beforeend",`<div class="dkc-in"><span class="cl" aria-hidden="true">${ICO.clip}</span><div class="ta${pt?"":" ph"}">${pt?esc(pt):"추천 답장을 고르세요"}</div><span class="sendslot"></span></div>`);
+  }
+  if(ft){const b=ft.querySelector(".btn.main");if(b&&opts&&b.textContent.trim()==="결정"){b.innerHTML=`${ICO.send}<span>전송</span>`;b.classList.add("dk-send");}
+   const slot=cmp.querySelector(".sendslot");
+   if(slot&&opts){const note=ft.querySelector(".note");if(note){note.classList.add("dkc-hint");cmp.appendChild(note);}slot.replaceWith(ft);}else cmp.appendChild(ft);}
   if(!cmp.childNodes.length)cmp.remove();
   pane.appendChild(app);
  }
@@ -245,8 +342,9 @@
   const nm=nameMap();
   m.querySelectorAll(".item").forEach(it=>{const top=it.querySelector(".top");if(!top||it.querySelector(".dkav"))return;
    const tag=top.querySelector(".tag");const sender=[...top.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join("").trim();
-   const k=keyByName(sender);const alert=tag&&tag.classList.contains("ALERT");
-   it.insertAdjacentHTML("afterbegin",`<span class="dkav ${alert?"al":""}">${k?faceOf(k):`<i>${alert?"!":esc(sender.slice(0,1)||"?")}</i>`}</span>`);
+   const nm=sender.replace(/^[^\p{L}\p{N}]+/u,"").trim();const k=keyByName(nm.replace(/\s*\(.*$/,""));const alert=tag&&tag.classList.contains("ALERT");const call=tag&&tag.classList.contains("CALL");
+   const first=Array.from(nm)[0]||"?";
+   it.insertAdjacentHTML("afterbegin",`<span class="dkav ${alert?"al":""}${call?" call":""}">${k&&!call?faceOf(k):call?(typeof ICO!=="undefined"?ICO.phone:"☎"):`<i>${alert?"!":esc(first)}</i>`}</span>`);
    if(!it.classList.contains("read")&&!it.classList.contains("done"))it.classList.add("dk-unread");});
   const rh=m.querySelector(".rhead");
   if(rh&&!rh.querySelector(".dkav")){const on=m.querySelector(".item.on");const av=on&&on.querySelector(".dkav");
@@ -260,19 +358,126 @@
   nav.querySelectorAll("button[data-k]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.k)));
   return true;
  }
+ /* ---------- 인사시스템 (2차): 그룹웨어 화면 ---------- */
+ const ENT={kpi:["목표·KPI",["KPI 합의서","등급 기여 기준","합의 현황","재검토 조건"]],res:["자원·결재",["여력 배분","토큰 한도","결재함","공지 이력"]],eval:["평가",["평가 대상자","직접 평가","이의제기","결과 공지"]]};
+ const ENT_BY={"3-1":["kpi",1,"등급 기여 기준 등록"],"4-2":["res",0,"2분기 여력 배분 결재"],"6-1p":["res",2,"계약 재협상 기준 등록"],"8-1c":["res",3,"인력 차출 후 재배분 공지"],"R3-0":["res",0,"4분기 여력 재배분 결재"],
+  "12-3a":["eval",0,"연말 평가 · 구성원 등급 확정"],"12-3":["eval",1,"연말 평가 · 직접 평가"],"12-4":["eval",2,"평가 이의제기 처리"]};
+ function hrApp(pane,s){
+  if(pane.dataset.dk)return;pane.dataset.dk="hr";
+  const m=ENT_BY[s.id]||(/^12-/.test(s.id)?["eval",3,"연말 평가"]:["res",2,"결재 문서"]);const [g,items]=ENT[m[0]];
+  const no=`HR-2026-${String(G.month||1).padStart(2,"0")}${String(Math.abs([...String(s.id)].reduce((a,c)=>a*31+c.charCodeAt(0),7))%900+100)}`;
+  const ent=document.createElement("div");ent.className="ent";
+  ent.innerHTML=`<header class="ent-gnb"><span class="ent-logo"><b>FUTURETECH</b><span>HR Portal</span></span><nav aria-hidden="true">${["홈","목표·KPI","자원·결재","평가","조직도"].map(x=>`<span class="${x===g?"on":""}">${x}</span>`).join("")}</nav><span class="ent-user">${ICO.bell}<span>헬씨푸드 운영팀 · <b>팀장</b></span></span></header>
+   <div class="ent-body"><aside class="ent-lnb" aria-hidden="true"><b>${g}</b><ul>${items.map((x,i)=>`<li class="${i===m[1]?"on":""}">${x}</li>`).join("")}</ul><p class="ent-help">처리 기한이 지난 문서는 결재함에서 빨간색으로 표시됩니다.</p></aside>
+   <main class="ent-main"><div class="ent-crumb">${ICO.home}<span>홈</span>${ICO.chev}<span>${g}</span>${ICO.chev}<b>${items[m[1]]}</b></div>
+    <div class="ent-title"><h1>${m[2]}</h1><span class="docno">문서번호 ${no}</span></div>
+    <table class="ent-appr" aria-label="결재선"><tr><th rowspan="2">결재선</th><td>기안</td><td>검토</td><td>승인</td></tr><tr><td><b>팀장</b><span class="st now">작성 중</span></td><td><b>인사팀</b><span class="st">대기</span></td><td><b>담당 임원</b><span class="st">대기</span></td></tr></table>
+    <div class="ent-form"></div></main></div>`;
+  const form=ent.querySelector(".ent-form");[...pane.childNodes].forEach(n=>form.appendChild(n));
+  const hb=form.querySelector(".dk-hr");if(hb)hb.remove();
+  pane.appendChild(ent);
+ }
+ /* ---------- 팀 대시보드 (2차): 성적표 ---------- */
+ function dashApp(){
+  const pane=document.querySelector("#view .pane");if(pane&&pane.dataset.dk==="dash")return true;const tabs=pane&&pane.querySelector(":scope > .sctabs");if(!tabs)return false;pane.dataset.dk="dash";
+  const eb=(pane.querySelector(":scope > .eyebrow")||{}).textContent||"";
+  const bi=document.createElement("div");bi.className="bi";
+  bi.innerHTML=`<aside class="bi-nav"><div class="bi-brand">${ICO.chart}<b>팀 인사이트</b></div><p class="bi-sub">${esc(eb)}</p><div class="bi-tabs"></div><p class="bi-foot">헬씨푸드 운영팀 · 30명</p></aside><main class="bi-main"></main>`;
+  const main=bi.querySelector(".bi-main");[...pane.childNodes].forEach(n=>{if(n!==tabs)main.appendChild(n);});
+  bi.querySelector(".bi-tabs").appendChild(tabs);pane.appendChild(bi);
+  return true;
+ }
+ /* ---------- 메일 도구 모음 ---------- */
+ function mailBar(){
+  const m=document.querySelector("#view .mail[data-dk]");if(!m||m.querySelector(".dkmail-tb"))return;
+  m.insertAdjacentHTML("afterbegin",`<div class="dkmail-tb" aria-hidden="true"><span class="new">${ICO.edit}새 메일</span><span>${ICO.reply}답장</span><span>${ICO.replyall}전체 답장</span><span>${ICO.forward}전달</span><span class="sep"></span><span>${ICO.archive}보관</span><span>${ICO.trash}삭제</span><span class="srch">${ICO.search}메일 검색</span></div>`);
+ }
+
+ /* ---------- 돌발: 먼저 덮치는 경보, 그다음 긴급 대응 화면 ---------- */
+ const ALARM={"R3-1a":"err","3-8":"sec","9-4":"call","8-1a":"news","6-4a":"news"};
+ const URGENT={"R3-1a":["err","inc:R3"],"R3-1b":["err","inc:R3"],"3-8":["sec","inc:3-8"],"9-4":["call","inc:9-4"]};
+ let alarmAt=null;
+ function siren(type){try{if(!G.sound)return;const seq=type==="call"?[[700,.28],[0,.12],[700,.28],[0,.6],[700,.28],[0,.12],[700,.28]]:type==="news"?[[660,.12],[880,.18]]:[[880,.16],[620,.16],[880,.16],[620,.16],[880,.16],[620,.16]];let t=0;seq.forEach(([f,d])=>{if(f)setTimeout(()=>beep(f,d,type==="call"?"sine":"square"),t*1000);t+=d+.04;});}catch(e){}}
+ function alarm(s){
+  const type=ALARM[s.id];if(!type||alarmAt===G.idx||G.review)return;alarmAt=G.idx;
+  document.querySelectorAll("#dkal").forEach(x=>x.remove());
+  const k=(URGENT[s.id]||[])[1];const tt=k?t0(k):Date.now();
+  const d=document.createElement("div");d.id="dkal";d.className="al-"+type;d.setAttribute("role","alertdialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-labelledby","dkal-t");
+  const P=(s.intro||[]).map(val).filter(Boolean);
+  let box="";
+  if(type==="err")box=`<div class="al-box"><div class="al-head"><span class="al-ic">!</span><div><b id="dkal-t">치명적 오류 · 1등급 장애</b><span>생산 모니터링 시스템 · 헬씨푸드 해외 공장</span></div><span class="al-t">경과 <b data-t0="${tt}">00:00</b></span></div>
+    <div class="al-log">${(ERR_LOG["R3-1a"]||[]).map((x,i)=>`<div style="animation-delay:${.35+i*.55}s">${esc(x)}</div>`).join("")}</div>
+    <p class="al-msg">안전 인터록 센서 값이 시스템 기록과 맞지 않습니다. 1등급 장애 절차에 따라 지금 지휘자를 정해야 합니다.</p><button type="button" class="al-go">상황 확인</button></div>`;
+  if(type==="sec")box=`<div class="al-box"><div class="al-radar" aria-hidden="true"><i></i></div><b id="dkal-t" class="al-big">위협 탐지</b><p class="al-sub">퓨쳐테크 보안 센터 · 데이터 유출 의심</p>
+    <dl class="al-dl"><dt>탐지 내용</dt><dd>승인되지 않은 외부 AI 서비스로 파일 전송</dd><dt>대상</dt><dd>헬씨푸드 고객 데이터</dd><dt>전송 시점</dt><dd>48시간 전</dd><dt>보고 기한</dt><dd class="red">헬씨푸드 24시간 · 당국 72시간</dd></dl><button type="button" class="al-go">대응 시작</button></div>`;
+  if(type==="call")box=`<div class="al-box"><div class="al-caller" aria-hidden="true"><span class="ring"></span><span class="ring r2"></span><span class="av">헬</span></div><b id="dkal-t" class="al-big">헬씨푸드 임원</b><p class="al-sub">휴대전화 · 전화가 오고 있습니다</p><p class="al-when">${esc(val(s.when)||"")}</p><button type="button" class="al-go">${ICO.phone}<span>받기</span></button></div>`;
+  if(type==="news")box=`<div class="al-box"><div class="al-tv"><span class="al-live"><i></i>LIVE</span><span class="al-ch">퓨쳐테크 사내 방송</span></div><div class="al-slab"><span class="al-tag">속보</span><b id="dkal-t">${esc(strip(val(s.title)||""))}</b></div><p class="al-sub">${esc(strip(P[0]||P[1]||"")).slice(0,90)}</p><button type="button" class="al-go">자세히 보기</button></div>`;
+  d.innerHTML=`<div class="al-flash" aria-hidden="true"></div>${box}`;
+  document.body.appendChild(d);
+  const go=d.querySelector(".al-go");const done=()=>{d.classList.add("out");setTimeout(()=>d.remove(),220);try{document.querySelector("#view h2, #view .dkm-q, #view .opts")?.focus?.();}catch(e){}};
+  go.addEventListener("click",done);d.addEventListener("keydown",e=>{if(e.key==="Escape"||e.key==="Enter"){e.preventDefault();done();}});
+  setTimeout(()=>go.focus(),60);siren(type);
+ }
+ function urgentPaint(s){
+  const u=URGENT[s.id];root.dataset.urgent=on()&&u?u[0]:"";
+  let pill=document.getElementById("dkurg");
+  if(!u||!on()){if(pill)pill.remove();const p2=document.getElementById("dkurg2");if(p2)p2.remove();return;}
+  const label={err:"1등급 장애 대응 중",sec:"보안 사고 대응 중",call:"통화 중"}[u[0]];
+  if(!pill){pill=document.createElement("span");pill.id="dkurg";const st=document.getElementById("dkst");if(st)st.prepend(pill);}
+  pill.innerHTML=`<i></i>${label} <b data-t0="${t0(u[1])}">${mmss(Date.now()-t0(u[1]))}</b>`;
+  let p2=document.getElementById("dkurg2");const tt=document.getElementById("dktitle");
+  if(!p2&&tt){p2=document.createElement("span");p2.id="dkurg2";const tb=tt.querySelector(".team");tt.insertBefore(p2,tb);}
+  if(p2){p2.innerHTML=`<i></i><b data-t0="${t0(u[1])}">${mmss(Date.now()-t0(u[1]))}</b>`;p2.setAttribute("aria-label",label);p2.title=label;}
+ }
+ function callPane(pane,s){
+  if(pane.querySelector(".dk-call"))return;
+  pane.insertAdjacentHTML("afterbegin",`<div class="dk-call"><span class="av">헬</span><div class="nm"><b>헬씨푸드 임원</b><span>통화 중 · <b data-t0="${t0("inc:9-4")}">00:00</b></span></div><div class="ctl" aria-hidden="true"><span>${ICO.micoff}<small>음소거</small></span><span>${ICO.grid}<small>키패드</small></span><span>${ICO.users}<small>통화 추가</small></span><span class="end">${ICO.hang}<small>통화 종료</small></span></div></div>`);
+ }
+
+ /* ---------- 운영체제: 메뉴바 · 독 ---------- */
+ const DOCK=[["mail","메일","#2f6fec",ICO.mail],["chat","메신저","#f5c400",ICO.chat],["meet","화상 회의","#0e9f8e",ICO.video],["hr","인사시스템","#1f3a68",ICO.hr],["dash","팀 대시보드","#2b2f36",ICO.chart]];
+ const EXTRA={err:["생산 모니터링","#d7261e",ICO.alert],sec:["보안 센터","#b3261e",ICO.shield],news:["사내 방송","#0b1220",ICO.tv],call:["전화","#1f9d55",ICO.phone],lounge:["익명 라운지","#ff5a4e",ICO.lounge],note:["업무 노트","#e9b949",ICO.note],onboard:["신임 리더 온보딩","#00473C",ICO.home]};
+ const appTip={mail:"메일은 받은편지함 시간에 열립니다.",chat:"메신저는 대화가 오면 열립니다.",meet:"화상 회의는 회의 시간에 열립니다.",hr:"인사시스템은 배분·평가 때 열립니다.",dash:"팀 대시보드는 라운드가 끝나면 열립니다."};
+ function osPaint(s,app){
+  const bar=document.querySelector(".bar .wrap");if(!bar)return;
+  let mb=document.getElementById("dkmb");
+  if(!mb){mb=document.createElement("div");mb.id="dkmb";mb.setAttribute("aria-hidden","true");bar.prepend(mb);}
+  mb.innerHTML=`<span class="logo">F</span><b>${esc(APPS[app]||"업무 노트")}</b>${["파일","편집","보기","창","도움말"].map(x=>`<span>${x}</span>`).join("")}`;
+  let st=document.getElementById("dkst");
+  if(!st){st=document.createElement("div");st.id="dkst";bar.appendChild(st);}
+  if(!st.querySelector(".sys"))st.insertAdjacentHTML("beforeend",`<span class="sys" aria-hidden="true">${ICO.wifi}${ICO.bat}<span class="dt"></span></span>`);
+  st.querySelector(".dt").textContent=String(val(s.when)||(G.month?G.month+"월":"")).replace(/\s*·.*$/,"");
+  let dk=document.getElementById("dkdock");
+  if(!dk){dk=document.createElement("nav");dk.id="dkdock";dk.setAttribute("aria-label","앱");document.body.appendChild(dk);
+   dk.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;
+    if(k==="team")return toggleTeam();if(k==="lex"){try{openLex();}catch(x){}return;}
+    if(b.classList.contains("on"))return;try{toast(appTip[k]||"이 앱은 관련 장면에서 열립니다.");}catch(x){}});}
+  const badge={};
+  const mm=document.querySelector("#view .mail");if(mm){badge.mail=mm.querySelectorAll(".item:not(.done) .tag:not(.DM)").length;badge.chat=mm.querySelectorAll(".item:not(.done) .tag.DM").length;}
+  const ex=EXTRA[app];
+  const btn=(k,n,c,ic,on,bd)=>`<button type="button" data-k="${k}" class="${on?"on":""}" style="--c:${c}" aria-label="${n}${bd?` · 새 항목 ${bd}`:""}"${on?' aria-current="true"':""}><span class="ai">${ic}</span>${bd?`<i class="bd">${bd}</i>`:""}<span class="tip">${n}</span></button>`;
+  dk.innerHTML=DOCK.map(([k,n,c,ic])=>btn(k,n,c,ic,app===k,badge[k])).join("")+(ex?`<span class="sep"></span>${btn(app,ex[0],ex[1],ex[2],1)}`:"")+
+   `<span class="sep"></span>${btn("team","리더 신뢰·업무량","#5b6770",ICO.users,0)}${btn("lex","리더십 사전","#00473C",ICO.book,0)}`;
+  dk.hidden=!on()||s.id==="P0"||root.dataset.dklock==="1";
+  const tb=dk.querySelector('button[data-k="team"]');if(tb)tb.hidden=!!s.bare;
+ }
+
  function decorate(){
-  const s=CONTENT[G.idx]||{};if(s.bare)return;const app=appOf(s);
+  const s=CONTENT[G.idx]||{};if(s.bare){root.dataset.urgent="";return;}const app=appOf(s);
   const pane=document.querySelector("#view .pane");
   if(app==="meet"&&pane)meetApp(pane,s);
   if(app==="chat"&&pane)chatApp(pane,s);
-  if(app==="mail")mailApp();
-  root.dataset.dkfix=(app==="meet"&&pane&&pane.dataset.dk)||(app==="chat"&&pane&&pane.dataset.dk)||(app==="mail"&&document.querySelector("#view .mail"))?app:"";
-  if(app==="hr"&&pane)hrBand(pane,s);
-  if(app==="dash")dashTabs();
+  if(app==="mail"){mailApp();mailBar();}
+  if(app==="hr"&&pane)hrApp(pane,s);
+  const dashOK=app==="dash"&&dashApp();if(app==="dash"&&!dashOK)dashTabs();
+  root.dataset.dkfix=(app==="meet"&&pane&&pane.dataset.dk)||(app==="chat"&&pane&&pane.dataset.dk)||(app==="mail"&&document.querySelector("#view .mail"))||(app==="hr"&&pane&&pane.dataset.dk==="hr")||dashOK?app:"";
   if(app==="err"&&pane)errPane(pane,s);
   if(app==="sec"&&pane)secPane(pane,s);
   if(app==="news"&&pane)newsPane(pane,s);
+  if(app==="call"&&pane)callPane(pane,s);
   if(app==="lounge"&&pane)loungePane(pane,s);
+  {const ex=document.getElementById("dkal");if(ex&&alarmAt!==G.idx)ex.remove();}
+  urgentPaint(s);alarm(s);
  }
  window.deskDecorate=decorate;
 
@@ -320,8 +525,9 @@
  }
 
  /* ---------- 그릴 때마다 ---------- */
- const _sh=shell;
- shell=function(){const r=_sh.apply(this,arguments);try{root.dataset.dklock="";uiMenuItem();if(on()){lockScreen();mailApp();splitInbox();decorate();}else root.dataset.dkfix="";paintFrame();}catch(e){}return r;};
+ const _sh=shell;let lastIdx=null;
+ function resetScroll(){if(lastIdx===G.idx)return;lastIdx=G.idx;requestAnimationFrame(()=>{const v=document.getElementById("view");if(v)v.scrollTop=0;document.querySelectorAll("#view .dkm-body,#view .dkc-log,#view .ent-main,#view .bi-main,#view .list,#view .reader").forEach(e=>{e.scrollTop=0;});});}
+ shell=function(){const r=_sh.apply(this,arguments);try{resetScroll();root.dataset.dklock="";uiMenuItem();if(on()){lockScreen();mailApp();splitInbox();decorate();}else root.dataset.dkfix="";paintFrame();}catch(e){}return r;};
 
  /* ---------- 첫 화면: 화면 방식 고르기 ---------- */
  const _r=render;
