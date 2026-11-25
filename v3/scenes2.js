@@ -7,12 +7,18 @@ function evid(a,side){const seen=[];G.sig.filter(s=>s.a===a&&s.s===side&&!s.forc
 
 /* 4-2 여력·토큰 배분과 공지문 (원고 03-4) */
 function SC_ALLOC(s){
- const c={RUN:3,AI:3,GROW:2,SEC:2};const L0={RUN:"RUN 기존 운영",AI:"AI 전환",GROW:"GROW 추가 제안",SEC:"SEC 예방·보안"};
- let hold=0;const total=()=>c.RUN+c.AI+c.GROW+c.SEC+hold;
+ /* C-4 (2026-11-25): 기본값을 지금 상태로 계산한다. 한 칸만 옮기고, 왜 이 값인지 한 줄로 보여 준다 */
+ const c={RUN:3,AI:3,GROW:2,SEC:2},why0=[];
+ {const st=G.score.안정,night=!!(G.f.night_clash||G.f.night_wait||G.f.kim_waited||G.f.kim_no_leave||G.f.mfg_angry),sec=!!(G.f.sec_breach||G.f.sec_hidden||G.f.sec_breach_caught||G.f.pend_M16);
+  if(st<=40||night){c.RUN++;c.AI--;why0.push((st<=40&&night?`서비스 안정이 ${st}까지 내려왔고, 야간 대기와 긴급 작업이 몇 사람에게 몰려 있어`:st<=40?`서비스 안정이 ${st}까지 내려와`:"야간 대기와 긴급 작업이 몇 사람에게 몰려 있어")+" 운영(RUN)에 1칸을 더 놓고 AI 전환에서 1칸을 뺐습니다.");}
+  else if(sec){c.SEC++;c.AI--;why0.push("1분기에 보안 사고가 있어 예방·보안(SEC)에 1칸을 더 놓고 AI 전환에서 1칸을 뺐습니다.");}}
+ const L0={RUN:"RUN 기존 운영",AI:"AI 전환",GROW:"GROW 추가 제안",SEC:"SEC 예방·보안"};
+ const c0={...c};let hold=0;const total=()=>c.RUN+c.AI+c.GROW+c.SEC+hold;
  const d1=()=>{paint("");G.cellsDraft={...c};
   shell(`<div class="pane"><div class="eyebrow">4월 · 여력 배분</div><h2>팀 여력 10칸 나누기</h2><div class="prose"><p>AI 전환으로 생긴 여력을 처음으로 나눕니다. 네 곳(기존 운영 · AI 전환 · 추가 제안 · 예방·보안)에 10칸을 나누세요.</p></div>${window.cellGuideHtml?cellGuideHtml():""}
   <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px"><b>March(1991), 탐색과 활용</b><br>지금 하던 일을 더 잘하는 것과 새로운 일을 시도하는 것은 같은 사람, 같은 시간을 두고 다툽니다. 무엇을 하기로 했는지만큼, 무엇을 하지 않기로 했는지가 중요합니다.<br><b>생각해 볼 질문:</b> 이번 분기에 하지 않기로 한 일은 무엇입니까?</p></details>
   <div class="cond"><span>선임 때 고른 우선순위: ${G.prio.map(SL).join(", ")}</span>${has("f_pilot")?"<span>헬씨푸드 시범 과제로 GROW 1칸이 이미 잡혀 있습니다.</span>":""}${has("saw_gap")?"<span>재무팀 집계: 실제 확인된 절감은 주 38시간.</span>":""}${has("token_audit")?"<span>1분기 토큰 사용은 R&D와 마케팅이 전체의 81%.</span>":""}${has("night_wait")?"<span>2월에 야간 대기를 4월로 미뤘습니다.</span>":""}</div>
+  <p class="note">기본값 ${["RUN","AI","GROW","SEC"].map(k=>k+" "+c0[k]).join(" · ")}: ${why0.length?why0.join(" "):"지금 상태로는 2월 초안(3 · 3 · 2 · 2) 그대로입니다."} 칸은 자유롭게 옮길 수 있습니다.</p>
   <div class="table">${Object.keys(c).map(k=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px">${window.cellRowInfo?cellRowInfo(k,c[k]):`<span style="font-size:14.5px;color:var(--ink)">${L0[k]}</span>`}<span class="btns" style="align-items:center;flex:0 0 auto;flex-wrap:nowrap">${BTN(()=>{if(c[k]>0){c[k]--;d1();}},"−")}<b>${c[k]}</b>${BTN(()=>{if(total()<10){c[k]++;d1();}},"+")}</span></div>`).join("")}<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px"><div style="min-width:0;text-align:left"><div style="font-size:14.5px;color:var(--ink)"><strong style="font-weight:700">보류</strong></div><div style="font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45">지금은 나누지 않고 남겨 둡니다(최대 4칸). 10월(Round 3 시작)에 나눌 수 있습니다. 재무가 조금 지켜지지만, 일을 원하던 R&D와 마케팅이 서운해합니다.</div></div><span class="btns" style="align-items:center;flex:0 0 auto;flex-wrap:nowrap">${BTN(()=>{if(hold>0){hold--;d1();}},"−")}<b>${hold}</b>${BTN(()=>{if(total()<10&&hold<4){hold++;d1();}},"+")}</span></div></div>
   <div class="foot"><span class="note num">${total()}/10칸${hold?` · 보류 ${hold}칸`:""}</span><button class="btn main" ${total()===10?"":"disabled"} ${A(done1)}>배분 확정</button></div></div>`);
  };
@@ -26,21 +32,29 @@ function SC_ALLOC(s){
   record("4-2",JSON.stringify(c));drawSide(live);
   d2();
  };
- let cap=G.tokenCap||100;
+ const TOK_DRAFT=G.tokenCap||40,TOK_CAPS=[...new Set([TOK_DRAFT,60,100,140])].sort((a,b)=>a-b);let cap=TOK_DRAFT; /* B-3①: 2월 초안 값이 선택지에 들어가게 */
  const d2=()=>{paint("");
-  shell(`<div class="pane"><div class="eyebrow">4월 · 토큰</div><h2>분기 토큰 한도</h2><div class="prose"><p>2월 초안은 분기 ${G.tokenCap||100}입니다. 한도가 높을수록 재무 성적표가 분기마다 깎입니다.</p></div>
-  <div class="btns">${[60,100,140].map(v=>BTN(()=>{cap=v;d2();},(v===60?"짜게 ":v===100?"보통 ":"넉넉하게 ")+v,cap===v?"main":"")).join("")}</div>
-  ${cap!==(G.tokenCap||100)?'<p class="note">재무팀 박 책임: "바뀐 한도로 다시 승인 올리겠습니다."</p>':""}
-  <div class="foot"><span></span>${BTN(()=>{G.token=cap;G.tokenCap=cap;["token_low","token_mid","token_high"].forEach(f=>delete G.f[f]);G.f[cap===60?"token_low":cap===100?"token_mid":"token_high"]=true;
+  shell(`<div class="pane"><div class="eyebrow">4월 · 토큰</div><h2>분기 토큰 한도</h2><div class="prose"><p>2월 초안은 분기 ${TOK_DRAFT}입니다. 한도가 높을수록 재무 성적표가 분기마다 깎입니다(100 이상부터).</p></div>
+  <div class="btns">${TOK_CAPS.map(v=>BTN(()=>{cap=v;d2();},(v===TOK_DRAFT?"2월 초안 그대로 ":v<=60?"짜게 ":v===100?"보통 ":"넉넉하게 ")+v,cap===v?"main":"")).join("")}</div>
+  ${cap!==TOK_DRAFT?'<p class="note">재무팀 박 책임: "바뀐 한도로 다시 승인 올리겠습니다."</p>':""}
+  <div class="foot"><span></span>${BTN(()=>{G.token=cap;G.tokenCap=cap;["token_low","token_mid","token_high"].forEach(f=>delete G.f[f]);G.f[cap<=60?"token_low":cap<=100?"token_mid":"token_high"]=true;
    SC_CHOICE({id:"4-2b",tag:"토큰 배분",when:"4월",title:"토큰을 어떻게 나눌까요?",options:[
-    {k:"A",t:"1분기에 쓴 양대로 나눠 준다. 지금 쓰는 곳이 가장 필요한 곳이다.",done:"쓴 양대로 나눴습니다.",fx:"rd+2 mkt+1 src-2 prc-1",sig:"③P",tw:[{p:40,t:"많이 쓴 곳이 더 많이 쓰고 있습니다.",fx:"`token_drain`"}]},
+    {k:"A",t:((G.roundTok||{})[1]||0)>0?"1분기에 쓴 양대로 나눠 준다. 지금 쓰는 곳이 가장 필요한 곳이다.":"1분기 사용 기록이 없으니, 리더들이 요청한 양대로 나눠 준다. 먼저 손드는 곳이 가장 필요한 곳이다.",done:((G.roundTok||{})[1]||0)>0?"쓴 양대로 나눴습니다.":"요청한 양대로 나눴습니다.",fx:"rd+2 mkt+1 src-2 prc-1",sig:"③P",tw:[{p:40,t:"많이 쓴 곳이 더 많이 쓰고 있습니다.",fx:"`token_drain`"}]},
     {k:"B",t:"모듈별로 기대 효과를 받아, 토큰당 효과가 큰 곳부터 먼저 배정한다.",cost:1,done:"토큰당 효과 순으로 배정했습니다.",fx:"재무+2 rd-1",sig:"③L",tw:[{p:35,t:"기대 효과를 부풀려 낸 모듈이 있습니다.",fx:"`token_game`"}]},
     {k:"C",t:"다섯 모듈에 똑같이 나누고, 남은 분은 분기 말에 모아서 다시 나눈다.",done:"똑같이 나눴습니다.",fx:"src+2 mfg+1 rd-4 mkt-2",tw:[{p:30,t:"조달이 남은 몫으로 작은 자동화를 시작했습니다.",fx:"성과+2 이야기:yoon+ `small_auto`"}]},
    ]},{done:d3});},"다음","main")}</div></div>`);
  };
  let nwarn="";const crit=[];let txt="";const CR=["효과","비용","장애·보안 위험","작년 실적","리더 요청량","팀장 재량"];
+ /* C-5 (2026-11-25): 공지에 고른 기준과 실제 배분이 어긋나면 보내기 전에 한 줄로 알린다(보내는 것은 막지 않음) */
+ const noticeGap=()=>{const L=[];const risk=crit.includes("장애·보안 위험");
+  if(risk&&(c.SEC<=1||c.GROW>=4||c.SEC+c.RUN<4))L.push(`공지에 고른 기준 "장애·보안 위험"과 실제 배분이 어긋납니다. 예방·보안(SEC) ${c.SEC}칸 · 기존 운영(RUN) ${c.RUN}칸 · 추가 제안(GROW) ${c.GROW}칸입니다.`);
+  if(crit.includes("효과")&&c.AI<=1&&c.GROW<=1)L.push(`공지에 고른 기준 "효과"와 달리 AI 전환·추가 제안이 모두 1칸 이하입니다.`);
+  const tb=G.f["c_4-2b_A"]?["작년 실적","리더 요청량"]:G.f["c_4-2b_B"]?["효과","비용"]:G.f["c_4-2b_C"]?["팀장 재량"]:[];
+  const tn=G.f["c_4-2b_A"]?(((G.roundTok||{})[1]||0)>0?"1분기에 쓴 양대로":"리더들이 요청한 양대로"):G.f["c_4-2b_B"]?"토큰당 효과 순으로":"모듈마다 똑같이";
+  if(crit.length&&tb.length&&!tb.some(x=>crit.includes(x)))L.push(`토큰은 ${tn} 나눴는데, 공지 기준에 이와 맞는 기준(${tb.join(" 또는 ")})이 없습니다.`);
+  return L.length?`<div class="happen"><span class="label">보내기 전에</span>${L.join("<br>")}<br><small>그대로 보내도 됩니다. 공지한 기준은 이후 배분·중재·평가에서 근거로 다시 쓰입니다.</small></div>`:"";};
  const d3=()=>{paint("");
-  shell(`<div class="pane"><div class="eyebrow">구성원 공지문</div><h2>왜 이렇게 나눴는지 쓰세요</h2>${(()=>{const TM=G.f["c_4-2b_A"]?"1분기에 쓴 양대로":G.f["c_4-2b_B"]?"토큰당 기대 효과가 큰 모듈부터":G.f["c_4-2b_C"]?"다섯 모듈에 똑같이":"정하지 않음";const LN={RUN:"기존 운영",AI:"AI 전환",GROW:"추가 제안",SEC:"예방·보안"};return `<div class="secbox" style="background:var(--sunk);border-radius:14px;padding:12px 14px;margin:6px 0 12px;font-size:13.5px;line-height:1.6"><b>무엇을 알리나요?</b> 방금 정한 두 가지를 팀원 30명에게 알리는 공지입니다. 공지문은 주로 <b>여력 10칸을 왜 이렇게 나눴는지</b>를 설명하고, 토큰은 한두 문장으로 덧붙이면 됩니다.<br>· <b>여력 10칸</b>: ${Object.keys(LN).map(k=>`${LN[k]}(${k}) ${c[k]}칸`).join(" · ")}${hold?` · 보류 ${hold}칸`:""}<br>· <b>AI 토큰</b>: 분기 한도 ${cap} · ${TM} 나눔<br><b>기준을 고르는 이유</b> 공지에 담은 기준은 팀이 아는 기준이 되어, 뒤에서 배분·중재·평가를 결정할 때 근거로 고를 수 있습니다(규칙 ①: 공개하지 않은 기준은 근거로 쓸 수 없습니다). 실제로 나눈 방식과 다른 기준을 적으면 팀원들이 알아챕니다.</div>`;})()}<p><b>공지에 담을 배분 기준을 고르세요</b> <span class="note">(여러 개 고를 수 있습니다)</span></p><div class="btns">${CR.map(x=>BTN(()=>{txt=$("nt").value;const i=crit.indexOf(x);if(i>=0)crit.splice(i,1);else crit.push(x);d3();},x,crit.includes(x)?"main":"")).join("")}</div>
+  shell(`<div class="pane"><div class="eyebrow">구성원 공지문</div><h2>왜 이렇게 나눴는지 쓰세요</h2>${(()=>{const TM=G.f["c_4-2b_A"]?(((G.roundTok||{})[1]||0)>0?"1분기에 쓴 양대로":"리더들이 요청한 양대로"):G.f["c_4-2b_B"]?"토큰당 기대 효과가 큰 모듈부터":G.f["c_4-2b_C"]?"다섯 모듈에 똑같이":"정하지 않음";const LN={RUN:"기존 운영",AI:"AI 전환",GROW:"추가 제안",SEC:"예방·보안"};return `<div class="secbox" style="background:var(--sunk);border-radius:14px;padding:12px 14px;margin:6px 0 12px;font-size:13.5px;line-height:1.6"><b>무엇을 알리나요?</b> 방금 정한 두 가지를 팀원 30명에게 알리는 공지입니다. 공지문은 주로 <b>여력 10칸을 왜 이렇게 나눴는지</b>를 설명하고, 토큰은 한두 문장으로 덧붙이면 됩니다.<br>· <b>여력 10칸</b>: ${Object.keys(LN).map(k=>`${LN[k]}(${k}) ${c[k]}칸`).join(" · ")}${hold?` · 보류 ${hold}칸`:""}<br>· <b>AI 토큰</b>: 분기 한도 ${cap} · ${TM} 나눔<br><b>기준을 고르는 이유</b> 공지에 담은 기준은 팀이 아는 기준이 되어, 뒤에서 배분·중재·평가를 결정할 때 근거로 고를 수 있습니다(규칙 ①: 공개하지 않은 기준은 근거로 쓸 수 없습니다). 실제로 나눈 방식과 다른 기준을 적으면 팀원들이 알아챕니다.</div>`;})()}<p><b>공지에 담을 배분 기준을 고르세요</b> <span class="note">(여러 개 고를 수 있습니다)</span></p><div class="btns">${CR.map(x=>BTN(()=>{txt=$("nt").value;const i=crit.indexOf(x);if(i>=0)crit.splice(i,1);else crit.push(x);d3();},x,crit.includes(x)?"main":"")).join("")}</div>${noticeGap()}
   <label class="label" for="nt">공지문 3~5문장 · 어디에 몇 칸을 줬는지, 왜 그렇게 나눴는지(고른 기준), 그래서 무엇을 하지 않기로 했는지</label><textarea id="nt" style="min-height:130px">${txt}</textarea>
   <p><b>어떻게 보낼까요?</b></p><div class="opts">
   <button class="opt" ${G.time<2?"disabled":""} ${A(()=>{txt=$("nt").value;const rd=readable(txt,20);if(!rd.ok){nwarn="공지문: "+rd.why;d3();return;}nwarn="";send("full");})}><span class="k">·</span><span>쓴 공지문을 팀 전체에 보낸다</span><span class="cost">⏳2</span>${G.time<2?`<span class="why">${lackText(2-G.time)}</span>`:""}</button>${G.time<2?borrowLink(2-G.time,()=>{txt=$("nt").value;d3();}):""}
@@ -97,13 +111,18 @@ function wrForm(x){const ss=wrSentences(x),pred=ss.filter(v=>/(다|요|죠|까|�
  if(triple||(top[1]>=4&&top[1]/tk.length>=.2))bad.push(`같은 낱말 "${top[0]}"${jo(top[0],"을","를")} 되풀이했습니다`);if(ss.length&&avg<3)bad.push("문장이 너무 짧습니다");
  return{n:ss.length,pred,avg,bad,long:pred>5};}
 /* 다음 단계: 과거 표현 뒤에 남은 부분에 때를 나타내는 말이나 요청이 있을 때만 인정한다 */
+/* C-6 (2026-11-25 확정): 다음 단계는 날짜·기한 표현이 있을 때만 인정한다("매주", "알려 주세요"는 인정하지 않음) */
+const WR_DUE=/\d+월\s*\d+일까지|\d+월\s*\d+일|\d+월 말까지|\d+월까지|\d+일까지|[가-힣0-9]+까지|기한|다음 주|다음 달|다음 회의|다음 분기|이번 주|이번 달/;
+function wrDue(x){for(const v of wrSentences(x)){let rest=v,m;WR_PAST.lastIndex=0;while((m=WR_PAST.exec(v)))rest=v.slice(m.index+m[0].length);const t=rest.match(WR_DUE);if(t)return t[0];}return null;}
+/* C-6: 기준은 공개한 기준·원칙 이름이 그대로 들어갈 때만 인정한다 */
+function wrNames(why){return [...new Set([...(why?[why]:[]),...gradeList(),...principleList()])];}
 function wrNext(x){for(const v of wrSentences(x)){let rest=v,m;WR_PAST.lastIndex=0;while((m=WR_PAST.exec(v)))rest=v.slice(m.index+m[0].length);const t=rest.match(WR_TIME)||rest.match(WR_ASK);if(t)return t[0];}return null;}
 /* AI 초안과 겹치는 문장의 비율 */
 function wrDraftOverlap(x,d){const ss=wrSentences(x),ds=wrSentences(d);if(!ss.length||!ds.length)return 0;const hit=ss.filter(v=>ds.some(w=>jacc(v,w)>=.8)).length;return Math.max(hit/ss.length,jacc(x,d)>=.7?1:0);}
 function wrScore(x,t,why,d,noOv){const m=[],hitw=[];let n=0;
- const cw=[...KW.crit,...(why?[why]:[]),...principleList()].find(w=>x.includes(w))||(x.match(KW.why)||[])[0];if(cw){n++;hitw.push(`기준 "${cw}"`);}else m.push("무엇을 기준으로 정했는지");
+ const nm=wrNames(why),cw=nm.find(w=>x.includes(w));if(cw){n++;hitw.push(`기준 "${cw}"`);}else m.push(`공개한 기준 이름(${nm.slice(0,3).map(w=>"\""+w+"\"").join(", ")} 등)`);
  const qw=(val(t.ans)||[]).find(w=>x.includes(w));if(qw){n++;hitw.push(`질문에 답한 말 "${qw}"`);}else m.push(`이 사람의 질문("${val(t.q)}")에 대한 답`);
- const nx=wrNext(x);if(nx){n++;hitw.push(`다음 단계 "${nx}"`);}else m.push("앞으로 언제 무엇을 하는지");
+ const nx=wrDue(x);if(nx){n++;hitw.push(`다음 단계 "${nx}"`);}else m.push("날짜나 기한이 있는 다음 단계(예: \"10월 15일까지\", \"다음 주 수요일까지\")");
  const form=wrForm(x),ov=wrDraftOverlap(x,d),flags=[];
  if(form.bad.length){n=0;flags.push("문장으로 쓰지 않았습니다 ("+form.bad.join(", ")+"). 0점으로 기록합니다");}
  else{if(ov>=.6&&!noOv){n=Math.max(0,n-1);flags.push("초안을 거의 그대로 보냈습니다 (1점 감점)");}if(form.long)flags.push("3~5문장보다 깁니다");}
@@ -297,7 +316,7 @@ function SC_EVAL(s){
    if(v){if(has("pub_leaders"))return "기준을 구성원에게 공개한 적이 없어, 연결해도 근거로 인정되지 않습니다.";if(fits.includes(v))return "이어지는 연결입니다.";
     return `이 기록은 ${q(v)}${jo(v,"과","와")} 이어지지 않습니다. ${fits.length?"맞는 기준: "+lst:"이 기록에 맞는 공개 기준은 없습니다."}`;}
    if(fits.length&&!pubFit.length)return `맞는 기준 ${fits.map(q).join(", ")}${jo(fits[fits.length-1],"은","는")} 3월에 공개하지 않은 기준이라 쓸 수 없습니다.`;return "";};
-  shell(`<div class="pane"><div class="eyebrow">연말 평가 · ${i+1}/${people.length}</div><h2>${name(e.k)}</h2>
+  shell(`<div class="pane"><div class="eyebrow">연말 평가 · ${i+1}/${people.length}</div><h2>${name(e.k)}</h2>${i===0?`<div class="happen"><span class="label">배분 가이드</span>S ${quota.S} · A ${quota.A} · B ${quota.B} · C ${quota.C}명은 인사팀 요구입니다. 전원이 KPI를 달성해도 C가 ${quota.C}명 나와야 확정됩니다. C를 받을 사람에게는 다른 사람보다 더 분명한 근거가 필요합니다.</div>`:""}
   <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px"><b>Folger, Konovsky &amp; Cropanzano(1992), 정당한 평가 절차</b><br>평가가 정당하다고 받아들여지려면 세 가지가 필요합니다. 기준을 미리 알려 주었는가, 당사자의 이야기를 들을 기회가 있었는가, 실제 기록과 증거로 판단했는가.<br><b>생각해 볼 질문:</b> 이 등급의 근거는 당사자가 미리 알 수 있었던 것입니까?</p></details>
   ${has("rule_kept")?'<p class="note">올해 우리 팀은 인사팀 지침 적용 유예 팀입니다.</p>':""}
   <p class="note">배분 가이드: S ${quota.S} · A ${quota.A} · B ${quota.B} · C ${quota.C} · 현재 S ${cnt("S")} A ${cnt("A")} B ${cnt("B")} C ${cnt("C")}</p>
@@ -321,6 +340,7 @@ function SC_EVAL(s){
    G.grades[e.k].근거=rs.map((r,x)=>c.picks[x]!==undefined?r[0]+"→"+c.picks[x]:null).filter(Boolean);
   });
   G.badEvid=bad;G.evalGood=good;G.evalN=people.length;G.goal6a=good===people.length;
+  G.noEvid=people.filter(e=>!st[e.k].fit).map(e=>name(e.k)); /* C-7: 근거 없이 확정한 사람 */
   /* 3월 기준 선택 때문에 증빙이 막힌 사람: 쓸 수 있는 기록은 2개 이상인데, 공개한 기준과 이어지는 기록이 2개가 안 되는 경우 */
   G.evalBlocked=people.map(e=>{const rs=recs(e).filter(r=>!r[3]&&(r[2]||[]).length);const usable=rs.filter(r=>r[2].some(x=>G.pub.includes(x))).length;
    if(rs.length<2||(usable>=2&&!has("pub_leaders")))return null;const need=[];rs.filter(r=>!r[2].some(x=>G.pub.includes(x))).forEach(r=>r[2].forEach(x=>{if(!need.includes(x))need.push(x);}));
@@ -328,7 +348,7 @@ function SC_EVAL(s){
   if(good>=8)applySig("②L",1,"12-3","근거 충족");if(good<5)applySig("②P",1,"12-3","근거 부족");if(used){applySig("②P",1,"12-3","KPI 순서로 채우기");G.f.kpi_fill=true;}
   {const rk={S:0,A:1,B:2,C:3};const ord=[...people].sort((a,b)=>KPIORD[val(a.kpi)]-KPIORD[val(b.kpi)]);let same=true;for(let x=1;x<ord.length;x++){if(rk[st[ord[x].k].g]<rk[st[ord[x-1].k].g])same=false;}if(same&&good<5){applySig("②P",1,"12-3","KPI 순서대로");G.f.kpi_order=true;}}
   record("12-3",JSON.stringify(G.grades));
-  paint("");shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>평가를 확정했습니다</h2><div class="prose"><p>인사시스템에 등급을 제출했습니다.</p></div><div class="foot"><span></span>${BTN(next,"다음","main")}</div></div>`,live);
+  paint("");shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>평가를 확정했습니다</h2><div class="prose"><p>인사시스템에 등급을 제출했습니다.</p>${G.noEvid.length?`<p>근거 없이 확정한 사람 <b>${G.noEvid.length}명</b>: ${G.noEvid.join(", ")}. 이 사람들이 이의를 내면 등급의 이유를 설명할 기록이 없습니다.</p>`:""}</div><div class="foot"><span></span>${BTN(next,"다음","main")}</div></div>`,live);
  };
  draw();
 }

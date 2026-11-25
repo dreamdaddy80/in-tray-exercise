@@ -137,7 +137,7 @@ function drawBar(clock){
  if(s.bare)return;
  $("when").textContent=val(s.when)||(G.month?G.month+"월":"");
  $("months").innerHTML=Array.from({length:12},(_,i)=>`<i class="${i+1<G.month?"past":i+1===G.month?"now":""}"></i>`).join("");
- const c=clock==null?"":`<div class="clock ${clock<=30?"hot":""}" aria-label="남은 시간">${Math.floor(clock/60)}:${String(clock%60).padStart(2,"0")}</div>`;
+ const c=clock==null?"":G.timeMode==="free"?`<div class="clock" aria-label="시간 제한 없음">제한 없음</div>`:`<div class="clock ${clock<=30?"hot":""}" aria-label="남은 시간">${Math.floor(clock/60)}:${String(clock%60).padStart(2,"0")}</div>`;
  const n=Object.keys(G.prom).length;
  H.__led=openLedger;H.__res=openResHelp;H.__snd=()=>{G.sound=!G.sound;drawBar(clock);};H.__exit=()=>confirmBox("저장하고 나갈까요?",exitText(),"저장 후 나가기",saveExit);H.__restart=()=>confirmBox("처음부터 다시 시작할까요?","지금까지의 진행과 저장 기록이 모두 지워집니다. 되돌릴 수 없습니다.","처음부터 다시",restartGame,true);
  $("res").innerHTML=`<div class="r ${G.ot?"over":""}">팀장 시간 <b>${G.time}</b>${G.ot?` 야근 ${G.ot}`:""}</div><div class="r">토큰 <b>${G.token==null?"—":G.token}</b></div><button class="r rcap" data-a="__res" style="background:none;border:0;font-family:inherit;color:inherit;cursor:pointer;padding:0" title="팀 여력: AI 전환으로 생긴 팀의 여유 시간 10칸. 누르면 설명">팀 여력 <span aria-hidden="true" style="font-size:11px;border:1px solid currentColor;border-radius:999px;width:15px;height:15px;display:inline-grid;place-items:center;color:var(--muted)">i</span> ${G.cells?[["RUN","운영"],["AI","AI"],["GROW","제안"],["SEC","예방"]].map(([k,n])=>`<span class="cap" title="${k}">${n} <b>${G.cells[k]??0}</b></span>`).join(""):`<b style="font-size:13px;font-weight:600">4월에 배분</b>`}</button>${c}<button class="tool" data-a="__led">장부 ${n}</button><button class="tool" data-a="__snd">소리 ${G.sound?"켜짐":"꺼짐"}</button>${G.review?"":`<button class="tool" data-a="__exit">저장 후 나가기</button><button class="tool" data-a="__restart">처음부터 다시</button>`}`;
@@ -268,15 +268,18 @@ function SC_INBOX(s){
  s=Object.assign({},s,{mail:mailAll.filter(m=>m.need==null||G.safe>=m.need)});
  mailAll.forEach(m=>{if(s.mail.includes(m))G.f["got_"+m.id]=true;else if(m.unsent&&!G.unsent.includes(m.unsent))G.unsent.push(m.unsent);});
  if(s.onStart)s.onStart(G,s);
- const st=CONTENT[G.idx]._st={sel:null,opened:{},done:{},mode:null,to:null,four:false,left:val(s.seconds),over:false,direct:0,replies:0,holds:0,ord:{},settled:false};
+ const st=CONTENT[G.idx]._st={sel:null,opened:{},done:{},mode:null,to:null,four:false,left:Math.round(val(s.seconds)*(G.timeMode==="plus"?1.5:1)),over:false,direct:0,replies:0,holds:0,ord:{},settled:false};
  G.seen=0;
  /* v3: 전화 끼어들기. 제한 시간의 절반이 지나거나 다른 메시지를 다 처리하면 벨이 울린다 */
- const callM=s.mail.find(x=>x.t==="CALL"),ringAt=Math.floor(val(s.seconds)/2);
+ const callM=s.mail.find(x=>x.t==="CALL"),ringAt=Math.floor(st.left/2);
  const ring=()=>{if(st.rang||!callM||st.done[callM.id]||st.over)return;st.rang=true;st.ringing=true;[0,260,520].forEach(t=>setTimeout(()=>beep(880,.14,"square"),t));draw();};
  const ringHtml=()=>`<div class="ring"><div class="eyebrow">📞 전화가 왔습니다</div><h2>${callM.from.replace("📞 ","")}</h2><p class="note">받으면 20초가 듭니다. 거절하면 짧은 메시지를 남기고, 그냥 두면 부재중으로 남습니다.</p><div class="btns"><button class="btn main" ${A(()=>{spend(st,20);st.ringing=false;st.sel=callM.id;st.opened[callM.id]=true;G.f["opened_"+callM.id]=true;st.mode=REPLIES[callM.id]?"reply":null;draw();})}>받는다 · 20초</button><button class="btn" ${A(()=>{spend(st,3);st.ringing=false;const rp=(REPLIES[callM.id]||[]).find(x=>x.d===false);if(rp){const rr=rp.r;finish(callM,[rr[0],rr[1],rr[2],{...(rr[3]||{}),nod:true,rk:"답장"}],"직접");}else finish(callM,callM.hold,"보류");})}>거절하고 메시지 · 3초</button><button class="btn" ${A(()=>{st.ringing=false;finish(callM,callM.hold,"보류");})}>그냥 둔다</button></div></div>`;
- const startClock=()=>{if(CLOCK||st.over)return;CLOCK=setInterval(()=>{st.left--;if(st.left<=0){st.left=0;expire();}else if(callM&&!st.rang&&st.left<=ringAt)ring();drawBar(st.left);},1000);};
+ const startClock=()=>{if(CLOCK||st.over)return;CLOCK=setInterval(()=>{st.left--;if(st.left<=0){st.left=0;if(G.timeMode==="free"){if(callM&&!st.rang)ring();}else expire();}else if(callM&&!st.rang&&st.left<=ringAt)ring();drawBar(st.left);},1000);};
  const expire=()=>{clearInterval(CLOCK);CLOCK=null;st.over=true;beep(240,.3,"square");if(typeof aiInboxExpire==="function")aiInboxExpire(s,st);
-  s.mail.forEach(m=>{if(!st.done[m.id]){const r=resolveRow(m.hold);st.done[m.id]=r[0];applyFx(r[1],{rel:m.rel});G.f["h_"+m.id]=true;st.holds++;record(m.id,"시간 초과(보류)");}});
+  s.mail.forEach(m=>{if(!st.done[m.id]){const r=resolveRow(m.hold);
+   /* B-7: 보안·장애 절차 안건은 시간이 끝나도 거절로 적지 않고 미결 안건으로 남긴다. 점수 효과는 보류와 같고, 위반 플래그만 붙이지 않는다 */
+   if(typeof pendMail==="function"&&pendMail(m)){st.done[m.id]=PEND_TEXT;applyFx(String(r[1]||"").replace(/`(sec_hidden)`/g,""),{rel:m.rel});G.f["h_"+m.id]=true;G.f["pend_"+m.id]=true;(G.pending=G.pending||[]).push({id:m.id,sub:m.sub,from:m.from,month:G.month,r:G.round||1});(st.pend=st.pend||[]).push(m);st.holds++;record(m.id,"시간 초과(미결)");return;}
+   st.done[m.id]=r[0];applyFx(r[1],{rel:m.rel});G.f["h_"+m.id]=true;st.holds++;record(m.id,"시간 초과(보류)");}});
   draw();};
  const resolveRow=r=>typeof r==="function"?r(st.opened):r;
  const finish=(m,row,kind,to)=>{
@@ -316,8 +319,8 @@ function SC_INBOX(s){
      <label class="chk"><input type="checkbox" id="four" ${st.four?"checked":""}><span>기대 결과·기한·권한·이유를 함께 전달한다<small>메시지를 쓰는 데 ${IBT.four}초가 더 듭니다.</small></span></label>
      <div class="btns"><button class="btn main" ${st.to&&st.left>IBT.del+(st.four?IBT.four:0)?"":"disabled"} ${A(()=>{spend(st,IBT.del+(st.four?IBT.four:0));finish(m,(m.to&&m.to[st.to])||m.other,"위임",st.to);})}>맡기기 · ${IBT.del+(st.four?IBT.four:0)}초</button><button class="btn" ${A(()=>{st.mode=null;st.to=null;draw();})}>취소</button></div>`;
     }else if(st.mode==="reply"){const reps=replyOpts(m,st).filter(x=>!(m.t==="CALL"&&x.d===false));
-     r+=`<div class="label">어떻게 답할까요? <span class="note">${m.t==="CALL"?"통화 중입니다":"답장 하나에 "+IBT.reply+"초"}</span></div><div class="opts">${reps.map((x,i)=>`<button class="opt" ${A(()=>{spend(st,m.t==="CALL"?0:IBT.reply);const row=x.self?m.self:x.r;const rr=typeof row==="function"?row(st.opened):row;finish(m,[rr[0],rr[1],rr[2],{...(rr[3]||{}),nod:x.d===false,rk:x.rk}],"직접");})}><span class="k">${"ABCD"[i]}</span><span>${x.t}</span></button>`).join("")}</div><div class="btns"><button class="btn" ${A(()=>{st.mode=null;draw();})}>취소</button></div>`;}
-    else{const low=k=>st.left<=IBT[k];
+     r+=`<div class="label">어떻게 답할까요? <span class="note">${m.t==="CALL"?"통화 중입니다":"답장 하나에 "+IBT.reply+"초"}</span></div><div class="opts">${reps.map((x,i)=>`<button class="opt" ${A(()=>{const go=()=>{spend(st,m.t==="CALL"?0:IBT.reply);const row=x.self?m.self:x.r;const rr=typeof row==="function"?row(st.opened):row;finish(m,[rr[0],rr[1],rr[2],{...(rr[3]||{}),nod:x.d===false,rk:x.rk}],"직접");};const w=typeof replyGuard==="function"?replyGuard(m,x,st):null;if(w)confirmBox(w[0],w[1],w[2],go);else go();})}><span class="k">${"ABCD"[i]}</span><span>${x.t}</span></button>`).join("")}</div><div class="btns"><button class="btn" ${A(()=>{st.mode=null;draw();})}>취소</button></div>`;}
+    else{const low=k=>G.timeMode!=="free"&&st.left<=IBT[k];
      r+=`<div class="btns"><button class="btn" ${low("reply")?"disabled":""} ${A(()=>{if(REPLIES[m.id]){st.mode="reply";draw();}else{spend(st,IBT.reply);finish(m,m.self,"직접");}})}>직접 답장 · ${IBT.reply}초</button>${m.noDel?"":`<button class="btn" ${low("del")?"disabled":""} ${A(()=>{st.mode="del";draw();})}>위임 · ${IBT.del}초~</button>`}<button class="btn" ${A(()=>{spend(st,IBT.hold||0);finish(m,m.hold,"보류");})}>보류${IBT.hold?" · "+IBT.hold+"초":""}</button></div><p class="note">보류한 메시지는 오늘 아무도 처리하지 않습니다. 보류가 3건을 넘으면 넘은 건수만큼 서비스 안정이 내려갑니다. 받은편지함은 ⏳ 팀장 시간을 깎지 않습니다.${low("reply")?" 남은 시간이 직접 답장에 모자랍니다.":""}</p>`;}
     r+=`</div>`;
    }
@@ -339,7 +342,7 @@ function borrow(n){G.ot+=n;G.time+=n;G.burnout+=n;G.borrowed=(G.borrowed||0)+n;}
 function borrowText(lack){return `야근으로 ⏳${lack}${jo(lack,"을","를")} 빌려서 고르기 · ${G.quarter>=3?"연말 야근 기록에 쌓입니다":"다음 분기 시간에서 갚습니다"} (이번 분기 한도 ${OT_CAP} 중 ${G.ot} 사용)`;}
 function lackText(lack){return `팀장 시간이 ${lack} 모자랍니다.${canBorrow(lack)?"":` 이번 분기 야근 한도(${OT_CAP})${G.ot>=OT_CAP?"를 다 써서":`가 ${OT_CAP-G.ot}만 남아`} 빌릴 수 없습니다.`}`;}
 function borrowLink(lack,redraw){return canBorrow(lack)?`<div style="padding-left:32px"><button class="link" ${A(()=>{borrow(lack);beep(200,.12,"sawtooth");redraw();})}>${borrowText(lack)}</button></div>`:"";}
-const RSV_NOTE='<p class="note">예약 안건입니다. 이 안건의 선택과 알리기는 미리 떼어 둔 예약 시간으로 처리해서, 남은 팀장 시간이 줄지 않고 잠기지도 않습니다.</p>';
+const RSV_NOTE='<p class="note"><b>예약 안건</b> · 이 안건의 선택과 알리기는 미리 떼어 둔 예약 시간으로 처리합니다. 어느 선택지를 골라도 남은 팀장 시간은 줄지 않고 잠기지도 않습니다. 선택지 옆 ⏳는 그 선택에 드는 시간입니다.</p>';
 const PREP_COST=.5;
 /* 알리는 대상: 팀 전체에 알리면 가장 투명하지만 반박도 공개적으로 온다. 리더에게만 알리면 조용하지만 아래까지 닿지 않을 수 있다 */
 const TELL_TO=[{id:"team",t:"팀 전체",d:"모두가 같은 설명을 듣습니다. 반박도 모두 앞에서 나올 수 있습니다."},{id:"leader",t:"관련 리더",d:"리더와 조용히 맞춥니다. 구성원에게 전해질지는 리더에게 달려 있습니다."},{id:"self",t:"당사자",d:"이 결정에 직접 걸린 사람에게만 알립니다."}];
@@ -363,8 +366,8 @@ function SC_CHOICE(s,opt={}){
    shell(`<div class="pane">${head(s)}<p><b>면담 전에 어떻게 할까요?</b></p><div class="opts"><button class="opt" ${short?"disabled":""} ${A(()=>pick(true))}><span class="k">·</span><span>기준 문서를 먼저 보내고 의견을 묻는다</span><span class="cost">⏳${PREP_COST}</span>${short?`<span class="why">${lackText(PREP_COST-G.time)}</span>`:""}</button>${short?borrowLink(PREP_COST-G.time,draw):""}<button class="opt" ${A(()=>pick(false))}><span class="k">·</span><span>면담 자리에서 바로 이야기한다</span><span class="cost"></span></button></div></div>`);
   }else if(step==="opt"){
    shell(`<div class="pane">${top()}${s.ask?`<p><b>${s.ask}</b></p>`:""}
-   <div class="opts">${shown.map((o,i)=>{const c=val(o.cost)||0,short=!KEY&&c>G.time,lack=c-G.time,tk=o.tok&&(G.token||0)<o.tok,dis=(o.dis&&o.dis(G))||(tk?`토큰이 모자랍니다. (${o.tok} 필요)`:"");const tag=[c?(KEY?"예약 ⏳":"⏳")+c:"",o.tok?"💳"+o.tok:"",val(o.tagText)||""].filter(Boolean).join(" ");const L="ABCD"[i];
-    return `<button class="opt" aria-pressed="${sel===o.k&&!partial}" ${short||dis?"disabled":""} ${A(()=>{sel=o.k;partial=false;draw();})}><span class="k">${L}</span><span>${val(o.t)}${glHtml(o)}</span><span class="cost">${tag}</span>${dis?`<span class="why">${dis}</span>`:short?`<span class="why">${lackText(lack)}</span>`:""}</button>${short&&!dis?borrowLink(lack,draw)+partialLink(o,L,c):""}`}).join("")}</div>${KEY&&shown.some(o=>val(o.cost))?RSV_NOTE:""}
+   ${KEY?RSV_NOTE:""}<div class="opts">${shown.map((o,i)=>{const c=val(o.cost)||0,short=!KEY&&c>G.time,lack=c-G.time,tk=o.tok&&(G.token||0)<o.tok,dis=(o.dis&&o.dis(G))||(tk?`토큰이 모자랍니다. (${o.tok} 필요)`:"");const tag=[KEY?"⏳"+c:(c?"⏳"+c:""),o.tok?"💳"+o.tok:"",val(o.tagText)||""] /* B-2: 예약 안건은 모든 선택지에 같은 기준으로 비용 표시 */.filter(Boolean).join(" ");const L="ABCD"[i];
+    return `<button class="opt" aria-pressed="${sel===o.k&&!partial}" ${short||dis?"disabled":""} ${A(()=>{sel=o.k;partial=false;draw();})}><span class="k">${L}</span><span>${val(o.t)}${glHtml(o)}</span><span class="cost">${tag}</span>${dis?`<span class="why">${dis}</span>`:short?`<span class="why">${lackText(lack)}</span>`:""}</button>${short&&!dis?borrowLink(lack,draw)+partialLink(o,L,c):""}`}).join("")}</div>
    <div class="foot"><span class="note">결정한 뒤에는 고칠 수 없습니다.</span><button class="btn main" ${sel?"":"disabled"} ${A(()=>{const c=s.common;if(!c){finish();return;}const nolist=false;if(nolist&&!c.noWhy){G.judge=(G.judge||0)+1;}step=c.noWhy||nolist?((c.noTell||O().noTell)?null:"tell"):"why";if(!step){finish();return;}draw();})}>결정</button></div></div>`);
   }else if(step==="why"){
    const GL=gradeList(),PL=principleList(),TR=teamRules(),pk=Array.isArray(why)?why:[];
@@ -376,7 +379,7 @@ function SC_CHOICE(s,opt={}){
    <div class="foot"><span class="note num">${pk.length}/2</span><button class="btn main" ${pk.length?"":"disabled"} ${A(()=>{const r=judgeWhy(s,sel,pk);G.cons.push({scene:s.id,choice:sel,why:pk.join(" · "),fit:r.fit,half:has("rule_silent")&&pk.includes("AI 활용 효과")});consNote=r.note;if(has("rule_silent")&&pk.includes("AI 활용 효과")&&s.rel)applyFx(s.rel+"-1");if(s.common.noTell||O().noTell){finish();}else{step="tell";draw();}})}>다음</button></div></div>`);
   }else if(step==="tell"){
    const left=tellLeft();
-   shell(`<div class="pane"><div class="eyebrow">알리기</div><h2>누구에게 어떻게 알릴까요?</h2>${s.tellNote?`<p class="note">${s.tellNote}</p>`:""}<div class="opts">${TELL.map(t=>{const lack=t.c-Math.max(0,left),short=!KEY&&t.c>0&&t.c>left;return `<button class="opt" aria-pressed="${tell===t.id}" ${short?"disabled":""} ${A(()=>{tell=t.id;draw();})}><span class="k">·</span><span>${t.t}</span><span class="cost">${t.c?(KEY?"예약 ⏳":"⏳")+t.c:"0"}</span>${short?`<span class="why">${lackText(lack)}</span>`:""}</button>${short?borrowLink(lack,draw):""}`}).join("")}</div>${tell&&tell!=="none"?`<p><b>누구에게 알릴까요?</b></p><div class="opts">${TELL_TO.map(x=>`<button class="opt tgt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${tellTo===x.id}" ${A(()=>{tellTo=x.id;draw();})}><span class="k">·</span><span>${x.t}<span class="note" style="display:block">${x.d}</span></span></button>`).join("")}</div>`:""}${KEY?RSV_NOTE:""}
+   shell(`<div class="pane"><div class="eyebrow">알리기</div><h2>누구에게 어떻게 알릴까요?</h2>${s.tellNote?`<p class="note">${s.tellNote}</p>`:""}<div class="opts">${TELL.map(t=>{const lack=t.c-Math.max(0,left),short=!KEY&&t.c>0&&t.c>left;return `<button class="opt" aria-pressed="${tell===t.id}" ${short?"disabled":""} ${A(()=>{tell=t.id;draw();})}><span class="k">·</span><span>${t.t}</span><span class="cost">${KEY?"⏳"+t.c:(t.c?"⏳"+t.c:"0")}</span>${short?`<span class="why">${lackText(lack)}</span>`:""}</button>${short?borrowLink(lack,draw):""}`}).join("")}</div>${tell&&tell!=="none"?`<p><b>누구에게 알릴까요?</b></p><div class="opts">${TELL_TO.map(x=>`<button class="opt tgt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${tellTo===x.id}" ${A(()=>{tellTo=x.id;draw();})}><span class="k">·</span><span>${x.t}<span class="note" style="display:block">${x.d}</span></span></button>`).join("")}</div>`:""}${KEY?RSV_NOTE:""}
    <div class="foot"><span></span><button class="btn main" ${tell&&(tell==="none"||tellTo)?"":"disabled"} ${A(finish)}>확정</button></div></div>`);
   }
  };

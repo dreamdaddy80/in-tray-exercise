@@ -3,6 +3,7 @@ const REVIEW2=[["7-1 받은편지함","초록불은 사실일 수 있습니다. 
 const TITLE_L={"기준을 보여주는 팀장":"무엇으로 정할지 먼저 말했고, 말한 대로 정했습니다.","조용한 팀의 팀장":"올해 팀은 조용했습니다.","약속을 지키는 팀장":"장부의 약속이 모두 지켜졌습니다.","혼자 다 하는 해결사":"문제는 풀렸습니다. 다음에 풀 사람은 아직 없습니다.","숫자를 믿는 심판":"숫자는 정확했습니다. 숫자에 없는 일은 없는 일이 되었습니다.","일을 부르는 팀장":"팀은 많은 일을 받았습니다. 무엇을 내려놓았는지는 적혀 있지 않습니다.","말 없는 실행가":"결정은 빨랐습니다. 이유는 소문이 대신 말했습니다.","줄 위의 팀장":"어느 쪽으로도 떨어지지 않았습니다."};
 const PROM_TXT={P1:["3월에 알렸습니다.","구성원은 끝내 보지 못했습니다."],P2:["표가 바뀌었습니다.","표는 그대로였습니다."],P3:["올해는 지켰습니다.","8월의 공문에 그 사유가 있었습니다."],P4:["답을 주었습니다.","9월은 지나갔습니다."],P5:["맡겼습니다.","\"설계를 맡을 줄 알았습니다.\""],P6:["고쳤습니다.","10월은 지나갔습니다."],P7:["발표자 칸에 이름이 있었습니다.","다른 사람이 발표했습니다."],P8:["아직 지키는 중입니다.","—"]};
 function consPct(){const c=G.cons;if(!c.length)return null;let n=0;c.forEach(x=>{if(x.fit)n+=x.half?.5:1;});return Math.round(n/c.length*100);}
+const OFFRES=["올랐지만 자원은 다른 곳에","고른 두 장은 올랐습니다. 다만 칸과 토큰을 놓은 곳은 고른 방향과 달랐습니다. 무엇이 점수를 올렸는지 따로 보세요."];
 function resultType(){
  const pr=G.prio,g=k=>G.score[k]-50;const avg=pr.reduce((a,k)=>a+g(k),0)/pr.length;
  const others=SCORES.filter(k=>!pr.includes(k));const c=G.cells||{};
@@ -10,8 +11,10 @@ function resultType(){
  const al={성과:(c.GROW||0)+(c.AI||0)>=4,재무:!!(G.f.token_low||G.f.token_mid)&&!G.f.ct_cut&&!G.f.quote_cut,사람:G.over===0&&talk>=.4,안정:(c.SEC||0)+(c.RUN||0)>=4};
  const aligned=pr.every(k=>al[k]);
  if(others.some(k=>g(k)>avg+5))return["방향 이탈","고르지 않은 성적표가 더 크게 움직였습니다. 말한 우선순위와 쓴 자원이 달랐습니다."];
- if(avg>=10){if(others.some(k=>g(k)<=-15)||G.burnout>=4||G.over>=3)return["고른 두 장은 올렸지만 대가","고른 두 장은 올랐습니다. 다른 곳에서 치른 값을 함께 보세요."];if(aligned&&G.over<=1&&G.burnout<=2)return["정렬된 성공","고른 두 장이 실제로 올랐고, 자원도 그쪽에 놓였습니다."];return["궤도 진입","방향은 맞았습니다. 움직임은 아직 작습니다."];}
+ if(avg>=10){if(others.some(k=>g(k)<=-15)||G.burnout>=4||G.over>=3)return["고른 두 장은 올렸지만 대가","고른 두 장은 올랐습니다. 다른 곳에서 치른 값을 함께 보세요."];if(aligned&&G.over<=1&&G.burnout<=2)return["정렬된 성공","고른 두 장이 실제로 올랐고, 자원도 그쪽에 놓였습니다."];if(!aligned)return OFFRES;return["궤도 진입","방향은 맞았습니다. 움직임은 아직 작습니다."];}
  if(avg>=3&&aligned)return["궤도 진입","방향은 맞았습니다. 움직임은 아직 작습니다."];
+ /* B-9②: 평균이 3 이상 올랐는데 자원 배치가 고른 방향과 달랐다면 "표류"가 아니다 */
+ if(avg>=3)return OFFRES;
  return["표류","고른 두 장이 거의 움직이지 않았습니다."];
 }
 function titleOf(){
@@ -40,7 +43,7 @@ function forcedHtml(){const r=forcedRows();const ot=G.borrowed||0;
    시간 부족으로 강제된 선택은 axScore에서 이미 빠져 있다 */
 const AXIS_GAP=15;
 function axisBox(d,v){if(v==null)return "기록이 적어 판단하지 않습니다.";const g=d-v;
- if(g>=AXIS_GAP)return `과대평가(맹점). 스스로 본 것보다 기록이 ${g}%p 낮습니다.`;if(g<=-AXIS_GAP)return `숨은 강점. 스스로 본 것보다 기록이 ${-g}%p 높습니다.`;
+ if(g>=AXIS_GAP)return `자가진단 대비 차이 −${g}%p. 스스로 본 것보다 기록이 낮습니다(맹점 후보).`;if(g<=-AXIS_GAP)return `자가진단 대비 차이 +${-g}%p. 스스로 본 것보다 기록이 높습니다.${v>=50?" 스스로 낮게 본 강점입니다.":" 다만 기록 자체는 아직 실무자 습관 쪽(리더 행동 "+v+"%)입니다."}`;
  return v>=50?"알고 있는 강점. 스스로 본 것과 기록이 비슷하고, 리더 행동 쪽입니다.":"알고 있는 과제. 스스로 본 것과 기록이 비슷하고, 실무자 습관 쪽입니다.";}
 function fairHtml(){const L=(G.fairLog||[]);if(!L.filter(Boolean).length)return "";const sg=v=>(v>0?"+":"")+v;
  return `<details class="ref"><summary>펄스 "업무 배분이 공정하다"를 움직인 것</summary><div class="prose" style="font-size:14.5px;margin-top:8px">${L.map((x,i)=>x?`<p><b>${i+1}분기 ${x.v}</b> · 구성원 점수의 영향 ${sg(x.people)}${x.adj.length?"<br>"+x.adj.map(a=>`${sg(a[1])} ${a[0]}`).join("<br>"):"<br>이 분기에는 이 문항을 따로 움직인 결정이 없었습니다."}</p>`:"").join("")}<p class="note">깨진 약속, 초과 부하, 도착한 청구서도 이 문항을 내립니다.</p></div></details>`;}
