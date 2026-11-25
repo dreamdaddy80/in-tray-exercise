@@ -6,7 +6,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap");
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 
-:root,:root[data-theme="light"],:root[data-theme="dark"]{
+/* 2026-11-25: OS 다크 모드에서 index.html의 :root:not([data-theme="light"]) 규칙(우선순위가 더 높음)이 테마 색을 덮어쓰던 문제를 막으려고 같은 선택자를 함께 건다 */
+:root,:root[data-theme="light"],:root[data-theme="dark"],:root:not([data-theme="light"]){ --glass:rgba(255,255,255,.72);
   --bg:#F4F3E7; --bg2:#ECEBDC; --panel:#FFFFFF; --sunk:#F4F3E7; --ink:#0E150E; --muted:#6F7067; --line:#DCDACB;
   --accent:#00473C; --accent-press:#0E150E; --accent-soft:#D8E5D6; --accent-ink:#00473C; --on-accent:#E6FF55;
   --forest:#00473C; --chartreuse:#E6FF55; --sage:#D8E5D6; --wheat:#E8DCC6; --oxblood:#A72700;

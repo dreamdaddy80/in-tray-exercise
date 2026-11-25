@@ -5,7 +5,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Michroma&display=swap");
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 
-:root,:root[data-theme="light"],:root[data-theme="dark"]{
+/* 2026-11-25: OS 다크 모드에서 index.html의 :root:not([data-theme="light"]) 규칙(우선순위가 더 높음)이 테마 색을 덮어쓰던 문제를 막으려고 같은 선택자를 함께 건다 */
+:root,:root[data-theme="light"],:root[data-theme="dark"],:root:not([data-theme="light"]){
   --bg:#05090C; --bg2:#0A1218; --panel:#0E1A21; --glass:rgba(12,22,28,.74); --sunk:#12232C; --ink:#E9EEF0; --muted:#8FA3AB; --line:#1F3540;
   --accent:#F0A020; --accent-press:#D88C12; --accent-soft:#2A2314; --accent-ink:#F4BC5C; --on-accent:#0B0F12;
   --ice:#8FCDD9; --steel:#457280; --navy:#082534; --sand:#D6CAAE; --bronze:#876138;
