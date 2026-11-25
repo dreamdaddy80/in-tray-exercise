@@ -96,12 +96,15 @@
   items.forEach(it=>{const k=kind(it);cnt[k]++;if(!it.classList.contains("done"))un[k]++;});
   const sel=list.querySelector(".item.on");
   if(sel)tab=kind(sel);else if(!tab||!cnt[tab])tab=un.mail?"mail":"chat";
+  let bar=null;
+  const setTab=k=>{tab=k;apply();mailFolders(cnt,un,tab,setTab);};
+  if(mailFolders(cnt,un,tab,setTab)){apply();m.dataset.kind=sel?kind(sel):tab;return;}
   if(!cnt.chat||!cnt.mail){m.dataset.kind=cnt.chat?"chat":"mail";return;}
-  let bar=list.querySelector(".dk-tabs");
+  bar=list.querySelector(".dk-tabs");
   if(!bar){bar=document.createElement("div");bar.className="dk-tabs";bar.setAttribute("role","tablist");const h=list.querySelector(".listhead");(h?h.nextSibling:list.firstChild)&&list.insertBefore(bar,h?h.nextSibling:list.firstChild);}
   bar.innerHTML=["mail","chat"].map(k=>`<button type="button" role="tab" data-k="${k}" aria-selected="${tab===k}">${k==="mail"?"메일":"메신저"}${un[k]?` <span class="n">${un[k]}</span>`:""}</button>`).join("");
   bar.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.k;apply();}));
-  function apply(){items.forEach(it=>{it.hidden=kind(it)!==tab&&!it.classList.contains("on");});bar.querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===tab?"true":"false"));}
+  function apply(){items.forEach(it=>{it.hidden=kind(it)!==tab&&!it.classList.contains("on");});if(bar)bar.querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===tab?"true":"false"));}
   apply();
   m.dataset.kind=sel?kind(sel):tab;
  }
@@ -163,10 +166,107 @@
   if(pane.querySelector(".dk-lounge"))return;
   pane.insertAdjacentHTML("afterbegin",`<div class="dk-lounge"><b>익명 라운지</b><span class="cert">퓨쳐테크 인증</span><span class="tabs"><b>우리 회사</b> 팀 이야기 · 업계 · 회사생활</span></div>`);
  }
+ /* ---------- 4단계: 앱 구조로 재배치 (메일 3단 · 화상 회의 · 메신저) ----------
+    장면이 그린 본문·대사·선택 버튼 노드를 앱의 자리로 "옮긴다". 버튼은 그대로라 클릭·점수는 같다. */
+ const esc=t=>String(t||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ function nameMap(){const m={};if(typeof LD!=="undefined")for(const k in LD)m[LD[k].n]=k;if(typeof PP!=="undefined")for(const k in PP)m[PP[k].n]=k;return m;}
+ function who(k){return (typeof LD!=="undefined"&&LD[k])||(typeof PP!=="undefined"&&PP[k])||null;}
+ function faceOf(k){try{return face(k,G.trust&&G.trust[k]);}catch(e){return "";}}
+ function keyByName(n){n=String(n||"").trim();const m=nameMap();if(m[n])return m[n];const hit=Object.keys(m).find(x=>n.startsWith(x)||x.startsWith(n.replace(/\s*\(.*$/,"")));return hit?m[hit]:null;}
+ function speakerOf(pane,s){
+  if(s.rel&&who(s.rel))return s.rel;
+  const b=pane.querySelector(".say b");if(b){const k=keyByName(b.textContent);if(k)return k;}
+  for(const c of pane.querySelectorAll(".cond span")){const m=c.textContent.match(/^\s*([^:"“]{2,8})\s*:/);if(m){const k=keyByName(m[1]);if(k)return k;}}
+  const eb=(pane.querySelector(".eyebrow")||{}).textContent||"";const m=eb.match(/^([^·]+)·/);if(m){const k=keyByName(m[1]);if(k)return k;}
+  return null;
+ }
+ const picked={};
+ window.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#view .foot .btn.main");if(!b||!on())return;
+  const o=document.querySelector("#view .opt[aria-pressed=true]");if(!o)return;const s=CONTENT[G.idx]||{};
+  const t=o.querySelector(".k + span");picked[s.id]=t?[...t.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join("").trim():"";},true);
+
+ function meetApp(pane,s){
+  if(pane.dataset.dk)return;pane.dataset.dk="meet";
+  const old=pane.querySelector(".dk-meet");if(old)old.remove();
+  const sp=speakerOf(pane,s);const P=who(sp);
+  const title=strip(val(s.title)||(pane.querySelector("h2")||{}).textContent||"리더 회의");
+  const lead=typeof LD!=="undefined"?Object.keys(LD):[];
+  const tile=(k,cls)=>{const p=who(k);return `<div class="dkm-t ${cls||""}">${faceOf(k)}<span>${esc(p.n)}<small>${esc(p.m)}</small></span></div>`;};
+  const me=`<div class="dkm-t me"><span class="me-av">나</span><span>팀장<small>나</small></span></div>`;
+  const stage=document.createElement("section");stage.className="dkm-stage";
+  stage.innerHTML=`<div class="dkm-top"><span class="rec"><i></i>회의 중</span><b>${esc(title)}</b><span class="cnt">참석 6명</span></div>`+
+   (P?`<div class="dkm-main"><div class="dkm-big">${faceOf(sp)}</div><span class="dkm-tag">${esc(P.n)} · ${esc(P.m)} <em>말하는 중</em></span><div class="dkm-cap"></div></div>
+     <div class="dkm-strip">${lead.filter(k=>k!==sp).map(k=>tile(k)).join("")}${me}</div>`
+     :`<div class="dkm-gal">${lead.map(k=>tile(k)).join("")}${me}</div><div class="dkm-cap gal"></div>`)+
+   `<div class="dkm-ctl"><span class="c" aria-hidden="true">마이크</span><span class="c" aria-hidden="true">카메라</span><span class="c" aria-hidden="true">화면 공유</span><button type="button" class="c">참석자 보기</button></div>`;
+  const cap=stage.querySelector(".dkm-cap");
+  const qs=[...pane.querySelectorAll(":scope > .say, :scope > .cond")];
+  if(qs.length&&!pane.querySelector(".opts")&&/일어난 일/.test((pane.querySelector(".eyebrow")||{}).textContent||""))qs.length=0;
+  qs.forEach(q=>cap.appendChild(q));if(!qs.length)cap.remove();
+  stage.querySelector("button.c").addEventListener("click",()=>toggleTeam(true));
+  const side=document.createElement("aside");side.className="dkm-side";
+  side.innerHTML=`<div class="dkm-sh"><b>회의 안건</b><span>${esc(val(s.when)||(G.month?G.month+"월":""))}</span></div><div class="dkm-body"></div><div class="dkm-foot"></div>`;
+  const body=side.querySelector(".dkm-body"),foot=side.querySelector(".dkm-foot");
+  const opts=pane.querySelector(":scope > .opts"),ft=pane.querySelector(":scope > .foot");
+  [...pane.childNodes].forEach(n=>{if(n!==opts&&n!==ft)body.appendChild(n);});
+  if(opts){const hasQ=[...body.querySelectorAll("p > b")].some(b=>/\?$/.test(b.textContent.trim()));
+   if(!hasQ)body.insertAdjacentHTML("beforeend",`<p class="dkm-q">회의 자리에서 어떻게 답할까요?</p>`);body.appendChild(opts);}
+  if(ft)foot.appendChild(ft);else foot.remove();
+  const wrap=document.createElement("div");wrap.className="dkm";wrap.append(stage,side);pane.appendChild(wrap);
+ }
+
+ function chatApp(pane,s){
+  if(pane.dataset.dk)return;pane.dataset.dk="chat";
+  const k=speakerOf(pane,s);const P=who(k)||{n:"대화",m:""};
+  const opts=pane.querySelector(":scope > .opts"),ft=pane.querySelector(":scope > .foot");
+  const says=[...pane.querySelectorAll(":scope > .say, :scope > .cond")];
+  const first=(pane.querySelector(".say .voice")||{}).textContent||"";
+  const lead=typeof LD!=="undefined"?Object.keys(LD).filter(x=>x!==k):[];
+  const room=(x,on,prev)=>{const p=who(x);return `<div class="dkc-r ${on?"on":""}">${faceOf(x)}<span><b>${esc(p.n)}</b><small>${esc(prev||p.m)}</small></span></div>`;};
+  const app=document.createElement("div");app.className="dkc";
+  app.innerHTML=`<aside class="dkc-rooms"><div class="dkc-rh"><b>채팅</b><span class="srch" aria-hidden="true">이름 검색</span></div>${k?room(k,1,first.slice(0,26)+(first.length>26?"…":"")):""}${lead.map(x=>room(x,0)).join("")}</aside>
+   <section class="dkc-room"><header>${k?faceOf(k):""}<span><b>${esc(P.n)}</b><small>${esc(P.m)}${P.m?" · ":""}1:1 대화</small></span></header><div class="dkc-log"></div><div class="dkc-cmp"></div></section>`;
+  const log=app.querySelector(".dkc-log"),cmp=app.querySelector(".dkc-cmp");
+  const eb=pane.querySelector(":scope > .eyebrow");if(eb){eb.classList.add("dkc-day");log.appendChild(eb);}
+  const narr=document.createElement("div");narr.className="dkc-narr";
+  [...pane.childNodes].forEach(n=>{if(n===opts||n===ft||says.includes(n))return;narr.appendChild(n);});
+  if(narr.textContent.trim())log.appendChild(narr);
+  says.forEach(q=>{q.classList.add("dkc-b");log.appendChild(q);});
+  if(!opts&&picked[s.id])narr.insertAdjacentHTML("beforebegin",`<div class="dkc-me"><span>${esc(picked[s.id])}</span></div>`);
+  if(opts){cmp.insertAdjacentHTML("beforeend",`<p class="dkc-lab">답장 고르기</p>`);cmp.appendChild(opts);}
+  if(ft){const b=ft.querySelector(".btn.main");if(b&&opts&&b.textContent.trim()==="결정")b.textContent="보내기";cmp.appendChild(ft);}
+  if(!cmp.childNodes.length)cmp.remove();
+  pane.appendChild(app);
+ }
+
+ function mailApp(){
+  const m=document.querySelector("#view .mail");if(!m||m.dataset.dk)return;m.dataset.dk="mail";
+  const nav=document.createElement("nav");nav.className="dkf";nav.setAttribute("aria-label","메일함");m.insertBefore(nav,m.firstChild);
+  const nm=nameMap();
+  m.querySelectorAll(".item").forEach(it=>{const top=it.querySelector(".top");if(!top||it.querySelector(".dkav"))return;
+   const tag=top.querySelector(".tag");const sender=[...top.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join("").trim();
+   const k=keyByName(sender);const alert=tag&&tag.classList.contains("ALERT");
+   it.insertAdjacentHTML("afterbegin",`<span class="dkav ${alert?"al":""}">${k?faceOf(k):`<i>${alert?"!":esc(sender.slice(0,1)||"?")}</i>`}</span>`);
+   if(!it.classList.contains("read")&&!it.classList.contains("done"))it.classList.add("dk-unread");});
+  const rh=m.querySelector(".rhead");
+  if(rh&&!rh.querySelector(".dkav")){const on=m.querySelector(".item.on");const av=on&&on.querySelector(".dkav");
+   if(av){rh.insertAdjacentHTML("afterbegin",av.outerHTML);rh.insertAdjacentHTML("beforeend",`<p class="to">받는 사람: 팀장</p>`);rh.classList.add("withav");}}
+ }
+ function mailFolders(cnt,un,tab,setTab){
+  const nav=document.querySelector("#view .mail .dkf");if(!nav)return false;
+  const pend=(G.pending&&G.pending.length)||0;const head=document.querySelector("#view .listhead .num");
+  nav.innerHTML=`<div class="dkf-h">메일함</div>`+[["mail","받은편지함"],["chat","메신저"]].map(([k,n])=>`<button type="button" data-k="${k}" aria-pressed="${tab===k}"${cnt[k]?"":" disabled"}><span>${n}</span>${un[k]?`<b>${un[k]}</b>`:`<i>${cnt[k]||0}</i>`}</button>`).join("")+
+   `<div class="dkf-x"><span>미결</span><i>${pend}</i></div><div class="dkf-x"><span>보낸편지함</span></div><div class="dkf-foot">오늘 처리 ${head?esc(head.textContent.replace(/\s*처리/,"")):""}</div>`;
+  nav.querySelectorAll("button[data-k]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.k)));
+  return true;
+ }
  function decorate(){
   const s=CONTENT[G.idx]||{};if(s.bare)return;const app=appOf(s);
   const pane=document.querySelector("#view .pane");
-  if(app==="meet"&&pane)meetStrip(pane,s);
+  if(app==="meet"&&pane)meetApp(pane,s);
+  if(app==="chat"&&pane)chatApp(pane,s);
+  if(app==="mail")mailApp();
+  root.dataset.dkfix=(app==="meet"&&pane&&pane.dataset.dk)||(app==="chat"&&pane&&pane.dataset.dk)||(app==="mail"&&document.querySelector("#view .mail"))?app:"";
   if(app==="hr"&&pane)hrBand(pane,s);
   if(app==="dash")dashTabs();
   if(app==="err"&&pane)errPane(pane,s);
@@ -176,15 +276,57 @@
  }
  window.deskDecorate=decorate;
 
+ /* ---------- 첫 화면: 업무 PC 잠금 화면 ----------
+    선택지는 "출근하기"(+이어서 하기) 하나. 과정 안내는 창으로 따로 열고, 화면 테마는 밝게/어둡게 한 개 버튼,
+    화면 방식(업무 PC/기본 화면)은 운영자 메뉴로 옮긴다. */
+ function isDark(){return root.dataset.skin==="night";}
+ function lockScreen(){
+  const lp=document.querySelector("#view .lp");if(!lp||lp.dataset.dk)return;lp.dataset.dk="lock";
+  root.dataset.dklock="1";
+  const hero=lp.querySelector(".lp-hero");const btns=hero&&hero.querySelector(".btns");
+  const op=document.querySelector("#view .opmenu");
+  const main=btns&&btns.querySelector(".btn.main");const resume=btns&&btns.querySelector(".btn:not(.main)");
+  if(main&&!resume)main.textContent="출근하기";
+  const L=document.createElement("div");L.className="dkl";
+  L.innerHTML=`<div class="dkl-top"><b>퓨쳐테크 워크스페이스</b><span class="sp"></span><button type="button" class="dkl-theme"></button></div>
+   <div class="dkl-mid"><p class="dkl-date">1월 첫 주 · 월요일</p><p class="dkl-clock">08:40</p>
+    <div class="dkl-card"><span class="dkl-av" aria-hidden="true">나</span><b>신임 팀장</b><span class="dkl-team">퓨쳐테크 헬씨푸드 운영팀 · 30명</span>
+     <p class="dkl-lead">어제까지 옆자리 동료였던 사람들이 오늘부터 당신을 팀장이라고 부릅니다. 받은편지함에 여덟 통이 와 있습니다.</p>
+     <div class="btns dkl-btns"></div><button type="button" class="dkl-guide-btn">과정 안내 보기</button></div></div>
+   <p class="dkl-foot">3라운드 · 1년 · 라운드마다 약 20분 · 정답 없음 · 입력한 내용은 인사 평가와 연결되지 않습니다</p>`;
+  const bx=L.querySelector(".dkl-btns");
+  if(resume){resume.classList.add("main");if(main)main.classList.remove("main");bx.appendChild(resume);if(main)bx.appendChild(main);}else if(main)bx.appendChild(main);
+  if(op){L.querySelector(".sp").replaceWith(op);}
+  const tb=L.querySelector(".dkl-theme");const paintT=()=>{tb.textContent=isDark()?"밝은 화면":"어두운 화면";tb.setAttribute("aria-label",isDark()?"밝은 화면으로 바꾸기":"어두운 화면으로 바꾸기");};paintT();
+  tb.addEventListener("click",()=>{try{setTheme(isDark()?"food":"night");}catch(e){}paintT();});
+  /* 과정 안내 창 */
+  const gw=document.createElement("div");gw.className="dkl-gw";gw.hidden=true;gw.setAttribute("role","dialog");gw.setAttribute("aria-modal","true");gw.setAttribute("aria-label","과정 안내");
+  gw.innerHTML=`<div class="dkl-win"><div class="dkl-wt"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>과정 안내</b><button type="button" class="x">닫기</button></div><div class="dkl-wb"></div></div>`;
+  const wb=gw.querySelector(".dkl-wb");
+  [...lp.childNodes].forEach(n=>{if(n!==hero)wb.appendChild(n);});
+  if(hero){hero.querySelectorAll(".lp-theme").forEach(x=>x.remove());hero.hidden=true;wb.prepend(hero);}
+  wb.querySelectorAll(".lp-end .btns").forEach(x=>x.remove());
+  const close=()=>{gw.hidden=true;L.querySelector(".dkl-guide-btn").focus();};
+  gw.querySelector(".x").addEventListener("click",close);
+  gw.addEventListener("click",e=>{if(e.target===gw)close();});
+  gw.addEventListener("keydown",e=>{if(e.key==="Escape")close();});
+  L.querySelector(".dkl-guide-btn").addEventListener("click",()=>{gw.hidden=false;wb.scrollTop=0;gw.querySelector(".x").focus();});
+  lp.append(L,gw);
+ }
+ function uiMenuItem(){
+  const pop=document.querySelector("#view .opmenu .oppop");if(!pop||pop.querySelector(".dk-uiitem"))return;
+  const desk=on();
+  pop.insertAdjacentHTML("beforeend",`<button class="opitem dk-uiitem" role="menuitem" type="button" onclick="setUI('${desk?"classic":"desk"}')">${desk?"기본 화면으로 보기 (업무 PC 끄기)":"업무 PC 화면으로 보기"}</button>`);
+ }
+
  /* ---------- 그릴 때마다 ---------- */
  const _sh=shell;
- shell=function(){const r=_sh.apply(this,arguments);try{if(on()){splitInbox();decorate();}paintFrame();}catch(e){}return r;};
+ shell=function(){const r=_sh.apply(this,arguments);try{root.dataset.dklock="";uiMenuItem();if(on()){lockScreen();mailApp();splitInbox();decorate();}else root.dataset.dkfix="";paintFrame();}catch(e){}return r;};
 
  /* ---------- 첫 화면: 화면 방식 고르기 ---------- */
  const _r=render;
  render=function(){const r=_r.apply(this,arguments);
-  try{const th=document.querySelector(".lp-theme");if(th&&!document.querySelector(".lp-ui")){
-   th.insertAdjacentHTML("afterend",`<div class="lp-theme lp-ui" role="group" aria-label="화면 방식"><span>화면 방식</span>${UI_MODES.map(([k,n])=>`<button type="button" data-k="${k}" aria-pressed="${root.dataset.ui===k}" onclick="setUI('${k}')">${n}</button>`).join("")}</div>`);}
+  try{uiMenuItem();
    paintFrame();
    const s=CONTENT[G.idx]||{};if(s.bare)toggleTeam(false);
   }catch(e){}
