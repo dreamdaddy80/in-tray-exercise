@@ -737,3 +737,15 @@ html[data-urgent="call"] #dkurg2{background:#16a34a}
  html[data-ui="desk"] .dkm-strip{height:clamp(72px,13vh,110px)}
 }
 html[data-ui="desk"][data-bare="1"] .dk-pop>*:not(.bgmbtn){display:none!important}
+
+/* --- 운영자 검토 막대: 독에 가리지 않게 독 바로 위로 --- */
+@media (min-width:900px){
+ html[data-ui="desk"][data-rv="1"] #rv.rvbar{bottom:90px!important;z-index:46}
+ html[data-ui="desk"][data-rv="1"] body{padding-bottom:0}
+}
+@media (min-width:900px) and (min-height:620px){
+ html[data-ui="desk"][data-rv="1"]:not([data-dklock="1"]) #dkwin{height:calc(100vh - 222px)!important}
+}
+@media (min-width:900px) and (max-height:619px){
+ html[data-ui="desk"][data-rv="1"] #dkwin{margin-bottom:170px}
+}
