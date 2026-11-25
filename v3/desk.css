@@ -1,0 +1,165 @@
+/* ===== 업무 PC 화면 층 (2026-11-25) · html[data-ui="desk"]에서만 적용 ===== */
+
+/* 바탕화면 (html에 깔아야 화면 전체를 덮는다) */
+html[data-ui="desk"]{background:#1d2a24 url(img/veg.jpg) center/cover fixed!important;min-height:100%}
+html[data-ui="desk"][data-skin="orange"]{background:#2b1d12 url(img/bowl.jpg) center/cover fixed!important}
+html[data-ui="desk"][data-skin="night"]{background:#05090c!important}
+html[data-ui="desk"] body{background:transparent!important;min-height:100vh}
+html[data-ui="desk"] body::after{content:"";position:fixed;inset:0;background:rgba(10,16,13,.38);pointer-events:none;z-index:-1}
+html[data-ui="desk"][data-skin="night"] body::after{background:none}
+
+/* 메뉴바 */
+html[data-ui="desk"] .bar{background:color-mix(in srgb,var(--panel) 86%,transparent)!important;backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);border-bottom:0!important;box-shadow:none!important;position:sticky;top:0;z-index:50}
+html[data-ui="desk"] .bar .wrap{min-height:40px;padding-block:4px}
+html[data-ui="desk"] .bar .months{display:none!important}
+html[data-ui="desk"] .bar .who b{font-size:14px}
+html[data-ui="desk"] #res{gap:14px;align-items:center;flex-wrap:nowrap}
+html[data-ui="desk"] #res>.r{font-size:13.5px}
+html[data-ui="desk"] .dk-menu{position:relative}
+html[data-ui="desk"] .dk-menu>summary{list-style:none;cursor:pointer;font-size:13.5px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+html[data-ui="desk"] .dk-menu>summary::-webkit-details-marker{display:none}
+html[data-ui="desk"] .dk-pop{position:absolute;right:0;top:calc(100% + 8px);min-width:240px;padding:8px;border-radius:14px;background:var(--panel);border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:2px;z-index:60}
+html[data-ui="desk"] .dk-pop>*{display:flex!important;justify-content:flex-start;gap:6px;flex-wrap:wrap;text-align:left;width:100%;padding:9px 12px!important;border-radius:9px!important;border:0!important;background:none!important;font-size:14px!important;color:var(--ink)!important}
+html[data-ui="desk"] .dk-pop>*:hover{background:var(--sunk)!important}
+
+/* 창 */
+@media (min-width:900px){
+ html[data-ui="desk"] #dkwin{max-width:1240px;margin:20px auto 40px;background:var(--bg);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.35);padding:0!important}
+ html[data-ui="desk"] #dkwin>.shell{padding:16px 22px 28px}
+}
+html[data-ui="desk"] #dktitle{display:flex;align-items:center;gap:12px;height:46px;padding:0 18px;background:var(--bg2,var(--sunk));border-bottom:1px solid var(--line);border-radius:16px 16px 0 0;font-size:14px}
+html[data-ui="desk"] #dktitle[hidden]{display:none}
+html[data-ui="desk"] #dktitle .dots{display:flex;gap:7px}
+html[data-ui="desk"] #dktitle .dots i{width:12px;height:12px;border-radius:50%;background:#ec6a5e}
+html[data-ui="desk"] #dktitle .dots i:nth-child(2){background:#f4bf4f}
+html[data-ui="desk"] #dktitle .dots i:nth-child(3){background:#61c554}
+html[data-ui="desk"] #dktitle .app{font-weight:700}
+html[data-ui="desk"] #dktitle .sub{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+html[data-ui="desk"] #dktitle .team{margin-left:auto;font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;flex:none}
+html:not([data-ui="desk"]) #dktitle{display:none}
+
+/* 팀 패널: 오른쪽에서 여는 서랍 */
+html[data-ui="desk"] .shell{grid-template-columns:minmax(0,1fr)!important}
+html[data-ui="desk"] .people{position:fixed!important;top:52px;right:12px;bottom:12px;width:310px;max-width:calc(100vw - 24px);overflow:auto;z-index:55;transform:translateX(calc(100% + 30px));transition:transform .25s ease;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.35);background:var(--panel)!important}
+html[data-ui="desk"] .people.dk-open{transform:none}
+@media (prefers-reduced-motion:reduce){html[data-ui="desk"] .people{transition:none}}
+
+/* 신뢰 변화 알림 */
+#dknote{position:fixed;top:56px;right:20px;z-index:70;display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:14px;background:var(--panel);color:var(--ink);box-shadow:0 16px 40px rgba(0,0,0,.28);font-size:14px;max-width:340px}
+#dknote b{font-size:12px;color:var(--muted);font-weight:600}
+#dknote.go{animation:dkin .3s ease-out}
+@keyframes dkin{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#dknote.go{animation:none}}
+html:not([data-ui="desk"]) #dknote{display:none}
+
+/* 받은편지함: 메일 · 메신저 탭 */
+html[data-ui="desk"] .dk-tabs{display:flex;gap:6px;padding:8px 10px 6px;position:sticky;top:38px;z-index:1;background:inherit}
+html[data-ui="desk"] .dk-tabs button{font:inherit;font-size:14px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+html[data-ui="desk"] .dk-tabs button[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+html[data-ui="desk"] .dk-tabs .n{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#e5483b;color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+html[data-ui="desk"] .item[hidden]{display:none!important}
+/* 메신저로 연 메시지: 말풍선 */
+html[data-ui="desk"] .mail[data-kind="chat"] .reader .body{background:color-mix(in srgb,var(--accent-soft,#d8e5d6) 55%,var(--panel));border-radius:18px}
+html[data-ui="desk"] .mail[data-kind="chat"] .reader .body p.voice{display:inline-block;background:var(--panel);padding:12px 16px;border-radius:4px 18px 18px 18px;box-shadow:0 1px 2px rgba(0,0,0,.08);margin:14px;max-width:560px}
+html[data-ui="desk"] .mail[data-kind="chat"] .rhead p::before{content:"메신저 · "}
+html[data-ui="desk"] .mail[data-kind="mail"] .rhead p::before{content:"메일 · "}
+
+/* 휴대폰 폭: 바탕화면 없이 앱 한 화면 */
+@media (max-width:899px){
+ html[data-ui="desk"],html[data-ui="desk"][data-skin]{background:var(--bg)!important}
+ html[data-ui="desk"] body::after{display:none}
+ html[data-ui="desk"] #dktitle{border-radius:0;height:40px}
+ html[data-ui="desk"] #dktitle .dots{display:none}
+ html[data-ui="desk"] .people{top:0;right:0;bottom:0;border-radius:0;width:86vw}
+ html[data-ui="desk"] #res>.r:not(:first-child):not(:nth-child(2)){display:none}
+}
+@media (max-width:899px){
+ html[data-ui="desk"] .bar .who{display:none}
+ html[data-ui="desk"] #res{gap:10px;width:100%;justify-content:space-between}
+ html[data-ui="desk"] #res>*{white-space:nowrap}
+ html[data-ui="desk"] #res .tool{font-size:13px;padding:5px 10px}
+}
+
+/* ===== 2단계: 앱별 꾸밈 ===== */
+/* 화상 회의: 참석자 타일 줄 */
+html[data-ui="desk"] .dk-meet{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:-4px 0 18px;padding:10px;border-radius:14px;background:#1b1f1d}
+html[data-ui="desk"] .dk-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;border-radius:10px;background:#2b302d;color:#eef0ec;text-align:center;border:2px solid transparent}
+html[data-ui="desk"] .dk-tile .av{width:38px;height:38px;border-radius:50%;background:#d8e5d6;color:#1b1f1d;display:flex;align-items:center;justify-content:center;font-weight:700}
+html[data-ui="desk"] .dk-tile .nm{font-size:12.5px;line-height:1.3}
+html[data-ui="desk"] .dk-tile .nm small{display:block;color:#a9b0ab;font-size:11px}
+html[data-ui="desk"] .dk-tile.talk{border-color:#E6FF55}
+html[data-ui="desk"] .dk-tile em{font-style:normal;font-size:11px;color:#E6FF55}
+html[data-ui="desk"] .dk-tile.away{opacity:.45}
+html[data-ui="desk"] .dk-tile.me{background:#00473C}
+html[data-ui="desk"] .dk-tile.me .av{background:#E6FF55;color:#00473C}
+html[data-ui="desk"][data-app="meet"] #view .say p.voice{background:#1b1f1d;color:#f2f3f0;padding:10px 14px;border-radius:10px}
+/* 메신저: 말풍선 */
+html[data-ui="desk"][data-app="chat"] #view .pane{background:color-mix(in srgb,#b9cbd6 45%,var(--panel))}
+html[data-ui="desk"][data-app="chat"] #view .say p.voice{display:inline-block;background:var(--panel);padding:10px 14px;border-radius:4px 16px 16px 16px;box-shadow:0 1px 2px rgba(0,0,0,.08);margin-top:4px}
+html[data-ui="desk"][data-app="chat"] #view .opts::before{content:"답장 고르기";display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+/* 인사시스템: 상단 띠와 단계 */
+html[data-ui="desk"] .dk-hr{display:flex;align-items:center;gap:12px;margin:-4px 0 16px;padding:10px 16px;border-radius:10px;background:#00473C;color:#fff;font-size:14px}
+html[data-ui="desk"] .dk-hr span{opacity:.82}
+html[data-ui="desk"] .dk-steps{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 0 18px;padding:0}
+html[data-ui="desk"] .dk-steps li{padding:8px 0;border-bottom:3px solid var(--line);font-size:14px;color:var(--muted)}
+html[data-ui="desk"] .dk-steps li.on{border-color:#00473C;color:var(--ink);font-weight:700}
+html[data-ui="desk"] .dk-steps li.done{border-color:color-mix(in srgb,#00473C 45%,var(--line));color:var(--ink)}
+/* 팀 대시보드: 탭 3개 + 자세히 */
+html[data-ui="desk"] .sctabs{align-items:center}
+html[data-ui="desk"] .dk-more{position:relative}
+html[data-ui="desk"] .dk-more>summary{list-style:none;cursor:pointer;padding:7px 14px;border-radius:999px;font-size:14px;border:1px solid var(--line);background:var(--panel)}
+html[data-ui="desk"] .dk-more>summary::-webkit-details-marker{display:none}
+html[data-ui="desk"] .dk-more.on>summary{background:var(--ink);color:var(--panel)}
+html[data-ui="desk"] .dk-more .dk-pop{left:0;right:auto}
+html[data-ui="desk"] .dk-more .dk-pop .sctab{display:block!important}
+
+/* ===== 3단계: 돌발 화면 ===== */
+html[data-ui="desk"][data-app="err"] body::after,html[data-ui="desk"][data-app="sec"] body::after,html[data-ui="desk"][data-app="news"] body::after{background:rgba(8,6,10,.66)}
+/* 에러 창 */
+html[data-ui="desk"][data-app="err"] #dktitle{background:#2a2d33;color:#fff;border-bottom-color:#2a2d33}
+html[data-ui="desk"][data-app="err"] #dktitle .sub{color:#c9ced8}
+html[data-ui="desk"][data-app="err"] #dkwin{outline:3px solid #ff3b30}
+html[data-ui="desk"] .dk-err{display:flex;gap:16px;align-items:center;margin:-4px 0 14px}
+html[data-ui="desk"] .dk-err .ic{width:56px;height:56px;flex:none;border-radius:14px;background:#ff3b30;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900}
+html[data-ui="desk"] .dk-err b{display:block;color:#b3261e;font-size:15px}
+html[data-ui="desk"] .dk-err span{font-size:13px;color:var(--muted)}
+html[data-ui="desk"] .dk-log{background:#111418;color:#d6dde6;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.75;padding:12px 16px;border-radius:8px;margin-bottom:18px}
+html[data-ui="desk"] .dk-log .cur{animation:dkblink 1s steps(1) infinite}
+@keyframes dkblink{50%{opacity:0}}
+html[data-ui="desk"] #dkwin.dk-jolt{animation:dkjolt .45s ease-out}
+@keyframes dkjolt{0%{transform:none}20%{transform:translate(-6px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}100%{transform:none}}
+/* 보안 경고 */
+html[data-ui="desk"][data-app="sec"] #dkwin{outline:4px solid #ff3b30}
+html[data-ui="desk"][data-app="sec"] #dktitle{background:#16181d;color:#fff;border-bottom-color:#16181d}
+html[data-ui="desk"][data-app="sec"] #dktitle .sub{color:#c9ced8}
+html[data-ui="desk"] .dk-sec{display:flex;gap:14px;align-items:center;margin:-4px 0 18px;padding:14px 18px;border-radius:12px;background:#ff3b30;color:#fff}
+html[data-ui="desk"] .dk-sec .ic{width:46px;height:46px;flex:none;border-radius:50%;background:#fff;color:#ff3b30;display:flex;align-items:center;justify-content:center;animation:dkpulse 1.6s ease-out infinite}
+@keyframes dkpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}50%{box-shadow:0 0 0 12px rgba(255,255,255,0)}}
+html[data-ui="desk"] .dk-sec b{display:block;font-size:18px}
+html[data-ui="desk"] .dk-sec span{font-size:13px;opacity:.9}
+/* 속보 */
+html[data-ui="desk"][data-app="news"] #dktitle{background:#0b1220;color:#fff;border-bottom-color:#0b1220}
+html[data-ui="desk"][data-app="news"] #dktitle .sub{color:#c4cee0}
+html[data-ui="desk"] .dk-news{display:flex;gap:8px;align-items:center;margin:-4px 0 14px;font-size:14px}
+html[data-ui="desk"] .dk-news .live{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;background:#d7141a;color:#fff;font-weight:900}
+html[data-ui="desk"] .dk-news .live i{width:9px;height:9px;border-radius:50%;background:#fff;animation:dkblink 1.2s steps(1) infinite}
+html[data-ui="desk"] .dk-news .ch{padding:5px 12px;background:#0b1220;color:#fff;font-weight:700}
+html[data-ui="desk"] .dk-news .tm{color:var(--muted)}
+html[data-ui="desk"][data-app="news"] #view .pane h2{display:flex;align-items:stretch;gap:0;background:#fff;color:#0b1220;border:1px solid #d5dbe6;padding:0;font-size:26px;line-height:1.35}
+html[data-ui="desk"][data-app="news"] #view .pane h2 .dk-lbl{flex:none;display:flex;align-items:center;padding:0 16px;margin-right:16px;background:#d7141a;color:#fff;font-size:18px;font-weight:900}
+html[data-ui="desk"] .dk-ticker{display:flex;align-items:center;margin:22px -4px 0;height:40px;background:#d7141a;color:#fff;overflow:hidden;border-radius:4px}
+html[data-ui="desk"] .dk-ticker b{flex:none;height:40px;display:flex;align-items:center;padding:0 14px;background:#0b1220;position:relative;z-index:1}
+html[data-ui="desk"] .dk-ticker>div{display:inline-flex;white-space:nowrap;animation:dkcrawl 40s linear infinite;font-size:15px}
+html[data-ui="desk"] .dk-ticker span{padding:0 60px 0 20px}
+@keyframes dkcrawl{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* 익명 라운지 */
+html[data-ui="desk"][data-app="lounge"] #dktitle{background:#fff4f2}
+html[data-ui="desk"] .dk-lounge{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-4px 0 16px;padding:12px 16px;border-radius:12px;background:#fff;border:1px solid #f1d3cf}
+html[data-ui="desk"] .dk-lounge>b{font-size:18px;letter-spacing:-.02em}
+html[data-ui="desk"] .dk-lounge .cert{font-size:12px;padding:3px 9px;border-radius:10px;background:#ffe9e6;color:#c22e24}
+html[data-ui="desk"] .dk-lounge .tabs{margin-left:auto;font-size:13px;color:var(--muted)}
+html[data-ui="desk"] .dk-lounge .tabs b{color:var(--ink);border-bottom:2px solid #ff4a3d}
+html[data-ui="desk"][data-app="lounge"] #view .pane h2{font-size:22px}
+@media (prefers-reduced-motion:reduce){html[data-ui="desk"] #dkwin.dk-jolt,html[data-ui="desk"] .dk-ticker>div,html[data-ui="desk"] .dk-sec .ic,html[data-ui="desk"] .dk-log .cur,html[data-ui="desk"] .dk-news .live i{animation:none}}
+html[data-ui="desk"] .people:not(.dk-open){visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+html[data-ui="desk"] .people.dk-open{visibility:visible;transition:transform .25s ease}
