@@ -440,10 +440,14 @@ SCENES.v3final=function(s){
    <label class="label" for="pwho">함께 확인할 사람 (직책만)</label><input id="pwho" value="${(plan.who||"").replace(/"/g,"")}" placeholder="예: 선배 팀장, HRBP" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:100%">
    <p class="note" style="margin-top:8px">30일 뒤 동료 코칭 · 90일 뒤 행동 진단 재측정 · 다음 평가 시즌 전 리마인드</p>
    <h3 class="sch">최종 결과 코드</h3>${window.rcExplain?rcExplain(3):""}<div class="btns" style="margin-top:8px"><button class="btn" ${A(()=>{grab();dl();})}>채점용 응답 묶음 내려받기</button><button class="btn" ${A(()=>{grab();try{navigator.clipboard.writeText(window.v3ResultCode(3));toast("최종 결과 코드를 복사했습니다.");}catch(e){}})}>최종 결과 코드 복사</button></div><div class="codebox">${window.v3ResultCode?window.v3ResultCode(3):""}</div>`;}];
+ /* 2026-11-26 WOW: 청구의 순간 → 숫자가 말하지 않은 것 → 인생극장 → 운의 장부 → 이론 → 칭호 → 360 → 1년의 흔적 → 액션 플랜 */
+ if(window.wxClaimPage){const old=pages.slice(),th=window.theoryYearPage?1:0,stamp=old[th],plan=old[old.length-1];
+  pages.length=0;pages.push(()=>wxClaimPage(act,self),()=>wxHiddenPage(),()=>wxCinePage(),()=>wxLuckPage(),...(th?[old[0]]:[]),stamp,()=>wx360Page(r360,act,self),()=>wxTracePage(),plan);}
+ const relabel=h=>String(h).replace(/<div class="eyebrow">결산(?: \d+\/\d+)? · /,`<div class="eyebrow">결산 ${page+1}/${pages.length} · `);
  const grab=()=>{const a=$("pst"),b=$("psp"),c=$("pwho");if(a)plan.start=a.value;if(b)plan.stop=b.value;if(c)plan.who=c.value;save();};
  const dl=()=>{let base={};try{base=JSON.parse(exportBundle());}catch(e){}const o=Object.assign(base,{v3:{별칭:G.nick||"",세개의설명:G.written.three||null,평가공지:(G.written||{})["12-6"]||null,액션플랜:{축:AXN4[plan.ax],Start:plan.start,Stop:plan.stop,지표:plan.kpi,함께:plan.who}}});
   const blob=new Blob([JSON.stringify(o,null,1)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=`intray_v3_${(G.nick||"응답").replace(/[^\w가-힣]/g,"")}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(u),500);};
- const draw=()=>{paint("");shell(`<div class="pane">${pages[page]()}<div class="foot">${page?`<button class="btn" ${A(()=>{grab();page--;draw();window.scrollTo(0,0);})}>← 이전</button>`:"<span></span>"}${page<pages.length-1?`<button class="btn main" ${A(()=>{grab();page++;draw();window.scrollTo(0,0);})}>다음</button>`:`<button class="btn main" ${A(()=>{grab();next();})}>더 보기: 상세 결산</button>`}</div></div>`);};
+ const draw=()=>{paint("");shell(`<div class="pane wx-fin">${relabel(pages[page]())}<div class="foot">${page?`<button class="btn" ${A(()=>{grab();page--;draw();window.scrollTo(0,0);})}>← 이전</button>`:"<span></span>"}${page<pages.length-1?`<button class="btn main" ${A(()=>{grab();page++;draw();window.scrollTo(0,0);})}>다음</button>`:`<button class="btn main" ${A(()=>{grab();next();})}>더 보기: 상세 결산</button>`}</div></div>`);};
  draw();};
 
 /* ===================== 첫 페이지: 과정 개요 (03-1 P0 · 01 기획요약) ===================== */
@@ -455,6 +459,7 @@ SCENES.title=function(s){
  const btns=`<div class="btns"><button class="btn main" ${A(start)}>처음부터 시작</button>${has0?`<button class="btn" ${A(cont)}>이어서 하기 (${rd})</button>`:""}</div>`;
  shell(paint(`<div class="lp">
  <section class="lp-hero">
+
   <div class="eyebrow">퓨쳐테크 신임 팀장 In-Tray 시뮬레이션 · v3</div>
   <h1>헬씨푸드 운영팀 신임 팀장, 첫 1년</h1>
   <p class="lp-lead"><b>월요일 아침 8시 40분.</b> 받은편지함에 여덟 통이 와 있고, 곧 전화가 한 통 울립니다. 어제까지 옆자리에서 함께 일하던 동료들이 오늘부터 당신을 팀장이라고 부릅니다.</p>

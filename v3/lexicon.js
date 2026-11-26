@@ -481,7 +481,7 @@
   const title=c=>{const t=strip(val(c.sc.title)||"");return t||({"R3-0":"여력 재배분","11-4":"강태식과의 갈림길","12-3":"7명 직접 평가","12-4":"이의제기","12-6":"평가 결과 공지"}[c.id])||c.id;};
   const card=c=>`<details class="dcard"${c.match===false?" open":""}><summary><span class="dt">${esc(title(c))}</span><span class="note">${esc(strip(val(c.sc.when)||""))}</span>${c.match==null?"":c.match?`<span class="pill good">이론과 같은 방향</span>`:`<span class="pill bad">이론과 다른 방향</span>`}</summary>
    <div class="dbody">${c.co.sit?`<p><span class="seclab">상황</span><br>${esc(c.co.sit)}</p>`:""}${c.co.pt?`<p><span class="seclab">쟁점</span><br>${esc(c.co.pt)}</p>`:""}${theoryBox(c,esc(c.co.ld||""))}</div></details>`;
-  return `<div class="eyebrow">결산 1/7 · Round 3 결정과 이론</div><h2>4분기의 결정을 이론으로 돌아봅니다</h2>
+  return `<div class="eyebrow">결산 · Round 3 결정과 이론</div><h2>4분기의 결정을 이론으로 돌아봅니다</h2>
    <div class="prose"><p>위기, 고객 압박, 바뀐 평가 지침, 연말 평가. 결정마다 근거가 되는 이론과 그 이론이 권하는 행동을 내 선택과 나란히 놓았습니다. 다르게 간 결정은 처음부터 펼쳐 두었습니다.</p></div>
    ${judged.length?`<div class="happen"><span class="label">한눈에</span>판정한 결정 ${judged.length}개 중 <b>${mN}개</b>가 이론이 권하는 방향과 같았습니다.</div>`:""}
    <div class="dlist">${cards.map(card).join("")}</div>${theorySummary(cards)}

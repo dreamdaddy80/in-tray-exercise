@@ -392,6 +392,42 @@ const R31b={id:"R3-1b",type:"choice",month:10,when:"10월 · 새벽 3시 20분",
 /* ---------- 청구서 슬롯 (02-3 G) ---------- */
 const S1={id:"S1",type:"bills",month:9,when:"3분기 말",pool:["B1","B5","B7","B8"],max:2};
 const S2={id:"S2",type:"bills",month:12,when:"평가 직전",pool:["B1","B3","B4","B5","B6","B7","B8","B10","B11"],max:2,wow:true};
+/* 12월 · 떠나겠다는 사람들 (2026-11-26 병준님 확정: 팀 전체 30명을 숫자로 · 기준선을 넘으면 반드시 · 점수에도 작게 · 떠나는 날은 내년 1월이라 연말 평가 인원은 그대로)
+   기준선
+   - 12월 펄스 '이 팀에서 계속 일하고 싶다'(QS["12-1"] 셋째 값): 55 이상 0명 · 45~54 1명 · 35~44 2명 · 35 미만 3명 (팀 전체)
+   - 모듈 리더 신뢰: 20 이하면 그 모듈에서 2명 · 21~30이면 1명
+   - 12월 청구서 '보이지 않는 기여의 이탈'(B4)이 왔으면 가공 모듈 최소 1명 (청구서의 그 사람으로 셈)
+   - 병가: 모듈 스트레스 80 이상(지금 또는 4분기에 넘긴 적) 모듈마다 1명 · 청구서 '초과 부하 번아웃'(B7)이 왔으면 1명
+   - 떠남은 6명까지, 한 모듈 4명까지
+   - 점수: 떠남 1명당 구성원 -1(최대 -4) · 떠남 2명당 서비스 안정 -1(최대 -2) · 병가 1명당 서비스 안정 -1(최대 -2)
+   난수를 쓰지 않는다. 같은 상태면 같은 결과 */
+const S3={id:"S3",type:"exodus",month:12,when:"평가 직전",title:"떠나겠다는 사람들"};
+window.EXODUS_RULE={stay:[[55,0],[45,1],[35,2],[-1,3]],trust:[[20,2],[30,1]],stress:80,maxOut:6,maxMod:4};
+window.exodusCalc=function(g){
+ const LK=Object.keys(LD),R=EXODUS_RULE;let S=null;try{S=Math.round(QS["12-1"](Object.assign({},g))[2]);}catch(e){S=Math.round(g.score.사람*.6+g.safe*.4);}
+ const mods={};LK.forEach(k=>mods[k]={out:0,sick:0});const rows=[];
+ const stayN=(R.stay.find(([t])=>S>=t)||[0,0])[1];
+ LK.forEach(k=>{const T=g.trust[k];const n=T<=R.trust[0][0]?R.trust[0][1]:T<=R.trust[1][0]?R.trust[1][1]:0;if(n){mods[k].out+=n;rows.push({kind:"trust",k,n,v:T,t:`${LD[k].m} 모듈 · ${LD[k].n} 리더 신뢰 ${T}`,lim:T<=R.trust[0][0]?"20 이하":"30 이하"});}});
+ if((g.bills||[]).includes("B4")&&mods.prc.out<1){mods.prc.out=1;rows.push({kind:"b4",k:"prc",n:1,t:"가공 모듈 · 12월 청구서 '보이지 않는 기여의 이탈'",lim:"청구서"});}
+ if(stayN){const order=LK.slice().sort((a,b)=>(g.trust[a]-g.trust[b])||(((g.mod&&g.mod.s)||{})[b]||0)-(((g.mod&&g.mod.s)||{})[a]||0));let left=stayN;let i=0;const hit={};
+  while(left>0&&i<40){const k=order[i%order.length];if(mods[k].out<R.maxMod){mods[k].out++;hit[k]=(hit[k]||0)+1;left--;}i++;}
+  rows.push({kind:"stay",n:stayN,v:S,t:`팀 전체 · '이 팀에서 계속 일하고 싶다' ${S}`,lim:S>=45?"55 미만":S>=35?"45 미만":"35 미만",to:hit});}
+ const st=(g.mod&&g.mod.s)||{},s80=g.str80||{};
+ LK.forEach(k=>{if((st[k]||0)>=R.stress||s80[k+"3"]){mods[k].sick++;rows.push({kind:"stress",k,n:1,v:st[k]||0,t:`${LD[k].m} 모듈 · 스트레스 ${st[k]||0}`,lim:"80 이상"});}});
+ if((g.bills||[]).includes("B7")){const k=LK.slice().sort((a,b)=>(st[b]||0)-(st[a]||0))[0];mods[k].sick++;rows.push({kind:"b7",k,n:1,t:"청구서 '초과 부하 번아웃'",lim:"청구서"});}
+ let n=LK.reduce((a,k)=>a+mods[k].out,0);if(n>R.maxOut){const raw=n;let over=n-R.maxOut;LK.slice().sort((a,b)=>mods[b].out-mods[a].out).forEach(k=>{while(over>0&&mods[k].out>1){mods[k].out--;over--;}});n=R.maxOut;rows.push({kind:"cap",n:raw,t:`기준선대로면 ${raw}명이지만, 한 해에 떠나는 사람은 ${R.maxOut}명까지로 셈했습니다`,lim:"상한"});}
+ const sick=LK.reduce((a,k)=>a+mods[k].sick,0);
+ const dP=Math.min(4,n),dS=Math.min(2,Math.floor(n/2))+Math.min(2,sick);
+ const fx=[dP?"사람-"+dP:"",dS?"안정-"+dS:""].filter(Boolean).join(" ");
+ return {n,sick,S,mods,rows,fx,dP,dS,trust:{...g.trust}};
+};
+SCENES.exodus=function(s){
+ if(!G.exodus){const x=exodusCalc(G);G.exodus=x;if(x.fx)applyFx(x.fx+" `exodus_"+Math.min(9,x.n)+"`");}
+ const x=G.exodus;if(!x.n&&!x.sick){next();return;}
+ paint("");if(typeof beep==="function")beep(180,.2,"sine");
+ const html=window.exodusHtml?exodusHtml(x,{scene:true}):`<p>${x.n}명이 떠납니다.</p>`;
+ shell(`<div class="pane"><div class="eyebrow">12월 · 인사시스템 알림</div><h2>내년 1월, 팀을 떠나겠다는 사람이 ${x.n}명입니다${x.sick?` · 병가 ${x.sick}명`:""}</h2><div class="prose"><p>연말 평가를 앞두고 인사팀이 퇴직·전보 신청과 병가 현황을 보내왔습니다. 이름은 공개되지 않습니다. 떠나는 날은 내년 1월이라 이번 연말 평가 대상은 그대로입니다.</p></div>${html}<div class="foot"><span></span><button class="btn main" ${A(next)}>다음</button></div></div>`);
+};
 
 /* ---------- 연말 평가 7명 · 평가 결과는 팀 공지 하나 (03-4) ---------- */
 {const V3_EVAL_R={
@@ -551,6 +587,7 @@ SCENES.roundEnd=function(s){
  T[0]=()=>`${(()=>{const L=window.violationsOf?violationsOf(r):[];return L.length?`<div class="happen alertbox"><span class="label">넘어서는 안 되는 선을 넘은 결정 ${L.length}건</span>${L.map(x=>`· ${x.text}`).join("<br>")}<br><small>장애 절차·보안·현장 안전은 다른 점수와 관계없이 지켜야 하는 선입니다. 이 결정은 결산에서 기준 미달로 판정됩니다.</small></div>`:"";})()}${(()=>{const P=(G.pending||[]).filter(x=>x.r===r);return P.length?`<div class="happen"><span class="label">미결 안건 ${P.length}건</span>${P.map(x=>`· ${x.month}월 ${x.from} · ${x.sub}`).join("<br>")}<br><small>받은편지함 시간이 끝날 때까지 정하지 못한 보안·장애 안건입니다. 거절로 기록하지 않았습니다. 실제 업무라면 누가 언제까지 정할지부터 정해야 하는 일입니다.</small></div>`:"";})()}${window.critGapHtml?critGapHtml(r):""}<div class="prose"><p><b>${RT[0]}</b>. ${RT[1]}</p><p>이 성적표는 점수를 매기는 표가 아니라 <b>배우는 시간</b>입니다. 내 결정이 리더들과 계기판, 모듈의 업무량과 스트레스에 무엇을 남겼는지 보고, 좋은 리더라면 어떻게 판단했을지 비교한 뒤, 다음 라운드에 무엇에 주의할지 정합니다.</p></div>
   ${(()=>{const L=((G.undo&&G.undo.log)||[]).filter(x=>x.r===r);const e=t=>String(t||"").replace(/</g,"&lt;");return L.length?`<div class="secbox"><div class="seclab">이번 라운드에 되돌린 횟수 ${L.length}회</div><p>${L.map(x=>(x.same?`${x.m?x.m+"월 · ":""}<b>${e(x.to)}</b> 장면을 처음부터 다시 함`:`${x.m?x.m+"월 · ":""}<b>${e(x.from)}</b>에서 <b>${e(x.to)}</b>(으)로 돌아감`)).join("<br>")}</p><div class="seclab">피드백 시간에 생각해 볼 질문</div><p>무엇을 보고 결정을 바꾸고 싶었나요? 실제 팀장이라면 그 정보를 결정하기 전에 어떻게 얻을 수 있었을까요?</p></div>`:"";})()}
   ${prevFocus?`<div class="secbox"><div class="seclab">지난 라운드에 내가 정한 주안점</div><p>${String(prevFocus).replace(/</g,"&lt;")}</p></div>`:""}
+  ${window.voicePanel?voicePanel(r):""}
   <div class="sum3">
    <button class="sumc" ${go(1)}><span class="seclab">① 결정 돌아보기</span><b>${judged.length?`핵심 결정 ${judged.length}개 중 ${matchN}개`:"핵심 결정 없음"}</b><small>좋은 리더의 선택과 같은 길을 고른 수</small><em>결정별로 보기 →</em></button>
    <button class="sumc" ${go(2)}><span class="seclab">② 팀에 남은 것</span><b>${up.dv>0?`${up.l} ${sg(up.dv)}`:"오른 점수 없음"} · <span style="color:var(--bad)">${dn.dv<0?`${dn.l} ${sg(dn.dv)}`:"내린 점수 없음"}</span></b><small>가장 많이 오른 점수 · 내린 점수</small><b>${trDn.dv<0?`${LD[trDn.k].n} 신뢰 ${sg(trDn.dv)}`:"신뢰가 떨어진 리더 없음"}</b><small>신뢰가 가장 많이 떨어진 리더</small><em>계기판·리더·모듈 보기 →</em></button>
@@ -579,7 +616,7 @@ SCENES.roundEnd=function(s){
   return sec({what:"이번 라운드에 내린 결정을 하나씩 다시 펼쳐, 각 선택지가 무엇을 얻고 잃는지, 내 선택이 실제로 리더 신뢰·계기판·업무량에 무엇을 남겼는지, 좋은 리더라면 어떻게 판단했을지 비교합니다.",
    how:["결정마다 <b>상황 → 쟁점 → 이론으로 점검하기(근거 이론 · 이론이 권하는 행동 · 내 행동 · 차이 · 다음에 해 볼 행동)</b> 순서입니다. 선택지 비교와 점수 변화는 맨 아래 '선택지 비교와 실제로 일어난 일'을 누르면 펼쳐집니다. 이론 이름을 누르면 리더십 사전이 열립니다. 제목을 누르면 펼치고 접습니다. 좋은 리더와 다른 길을 고른 결정은 처음부터 펼쳐 둡니다.","<b>좋은 리더의 선택</b>은 이 과정이 가르치는 리더 행동(맡기기·기준 공개·우선순위·설명)에 가장 가까운 선택지입니다. 정답이 하나라는 뜻은 아닙니다. 다른 길을 골랐다면 그 이유를 스스로 설명할 수 있는지가 중요합니다.","선택지에 붙은 <b>리더 행동 / 실무자 습관</b> 표시는 ④ 습관 탭의 기록 기준입니다. 리더 행동 표시가 둘 이상인 장면에서는, 이 상황에서 대가가 가장 적은 쪽을 좋은 리더의 선택으로 골랐습니다. 세 선택지가 모두 리더 행동인 장면은 맞고 틀림을 판정하지 않습니다.","칩의 초록은 좋아진 것, 빨강은 나빠진 것입니다. 업무량은 늘면 빨강입니다."],
    body:`${judged.length?`<div class="happen"><span class="label">한눈에</span>핵심 결정 ${judged.length}개 중 <b>${matchN}개</b>가 좋은 리더의 선택과 같았습니다.${judged.length-matchN?` 다른 길을 고른 ${judged.length-matchN}개를 먼저 펼쳐 보세요.`:""}</div>`:""}<div class="dlist">${cards.map(cardHtml).join("")}${inbox}</div>
-   ${window.cinemaHtml&&cinemaHtml("R"+r)?`<div class="label" style="margin-top:16px">가장 큰 갈림길 · 고르지 않은 길의 추정 결과</div><p class="note">결정 직전 상태에서 다른 선택지를 골랐다면 어땠을지 게임이 다시 계산한 값입니다. 초록이 그 지표에서 더 나은 쪽입니다.</p>${cinemaHtml("R"+r)}`:""}`,
+   ${window.cinemaHtml&&cinemaHtml("R"+r)?`<div class="label" style="margin-top:16px">인생극장 · 가장 큰 갈림길에서 고르지 않은 길</div>${window.wxCineHtml?wxCineHtml(cinema("R"+r),{compact:true,q:false}):cinemaHtml("R"+r)}`:""}`,
    interp:[],q:"좋은 리더와 다른 길을 고른 결정 하나를 골라 보세요. 그때 무엇을 지키려고 그 길을 골랐나요? 같은 것을 지키면서 리더 행동에 더 가까운 방법은 없었을까요?"});};
  /* ② 팀에 남은 것 */
  T[2]=()=>{const it=[];
@@ -679,7 +716,7 @@ const ORDER=[
  "RET2","4-1","4-2","4-3","4-5","6-1","6-1p","5-4","END6","8-1a","8-1b","8-1c","6-3","4-4",S1,{id:"6-2",type:"write3",month:9,when:"9월",title:"하반기 계약을 세 사람에게"},"9-7","END9",
  {id:"ROUND2",type:"roundEnd",round:2,month:9,title:"2·3분기 · 배분과 상충"},{id:"WAIT2",type:"wait",round:2,month:9},
  {id:"GATE3",type:"gate",round:3,month:10,when:"Round 3"},{id:"R3-0",type:"realloc",month:10,when:"Round 3"},
- R31a,R31b,"9-4","11-4","6-4a","6-4b",S2,"12-3a","12-3","12-4","12-6","END12",{id:"V3END",type:"v3final",month:12,bare:true,title:"결산"},"FINALE"];
+ R31a,R31b,"9-4","11-4","6-4a","6-4b",S2,S3,"12-3a","12-3","12-4","12-6","END12",{id:"V3END",type:"v3final",month:12,bare:true,title:"결산"},"FINALE"];
 const MONTH={"RET2":4,"6-1":6,"6-1p":6,"5-4":6,"END6":6,"8-1a":8,"8-1b":8,"8-1c":8,"6-3":8,"4-4":8,"6-2":9,"9-7":9,"END9":9,"9-4":10,"11-4":11,"6-4a":11,"6-4b":11};
 const list=ORDER.map(x=>typeof x==="string"?get(x):x);
 list.forEach(s=>{if(MONTH[s.id])s.month=MONTH[s.id];});
