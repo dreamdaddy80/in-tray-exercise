@@ -439,7 +439,7 @@ SCENES.v3final=function(s){
    <label class="label">90일 뒤 확인할 지표</label><div class="btns">${P.kpi.map(x=>`<button class="btn ${plan.kpi===x?"main":""}" ${A(()=>{grab();plan.kpi=x;draw();})}>${x}</button>`).join("")}</div>
    <label class="label" for="pwho">함께 확인할 사람 (직책만)</label><input id="pwho" value="${(plan.who||"").replace(/"/g,"")}" placeholder="예: 선배 팀장, HRBP" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:100%">
    <p class="note" style="margin-top:8px">30일 뒤 동료 코칭 · 90일 뒤 행동 진단 재측정 · 다음 평가 시즌 전 리마인드</p>
-   <h3 class="sch">최종 결과 코드</h3>${window.rcExplain?rcExplain(3):""}<div class="btns" style="margin-top:8px"><button class="btn" ${A(()=>{grab();dl();})}>채점용 응답 묶음 내려받기</button><button class="btn" ${A(()=>{grab();try{navigator.clipboard.writeText(window.v3ResultCode(3));toast("최종 결과 코드를 복사했습니다.");}catch(e){}})}>최종 결과 코드 복사</button></div><div class="codebox">${window.v3ResultCode?window.v3ResultCode(3):""}</div>`;}];
+   ${G.selfStudy?"":window.rcCard?rcCard(3):`<div class="codebox">${window.v3ResultCode?window.v3ResultCode(3):""}</div>`}<div class="btns" style="margin-top:10px"><button class="btn" ${A(()=>{grab();dl();})}>채점용 응답 묶음 내려받기</button></div>`;}];
  /* 2026-11-26 WOW: 청구의 순간 → 숫자가 말하지 않은 것 → 인생극장 → 운의 장부 → 이론 → 칭호 → 360 → 1년의 흔적 → 액션 플랜 */
  if(window.wxClaimPage){const old=pages.slice(),th=window.theoryYearPage?1:0,stamp=old[th],plan=old[old.length-1];
   pages.length=0;pages.push(()=>wxClaimPage(act,self),()=>wxHiddenPage(),()=>wxCinePage(),()=>wxLuckPage(),...(th?[old[0]]:[]),stamp,()=>wx360Page(r360,act,self),()=>wxTracePage(),plan);}

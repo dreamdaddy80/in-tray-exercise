@@ -342,3 +342,55 @@ html[data-skin="night"] .wx-line{background:#05090B;box-shadow:inset 0 0 0 1px r
 html[data-skin="night"] .wx-ex-q{background:#020608;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(242,145,127,.35)}
 .wx-trace .wx-ex-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.wx-trace .wx-ex-p{grid-template-columns:repeat(3,14px);gap:4px}.wx-trace .pp{transform:scale(.78);transform-origin:center}
 @media (max-width:899px){.wx-ex-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.wx-ex-k{flex-wrap:wrap}}
+
+/* ---------- 결과 코드 보내기 카드 (탭 대신) ---------- */
+.rc-card{margin:16px 0 14px;padding:20px 22px 16px;border-radius:20px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line),0 10px 30px rgba(0,0,0,.05)}
+.rc-hd{display:flex;gap:14px;align-items:flex-start}
+.rc-ic{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink)}
+.rc-ic svg{width:22px;height:22px}
+.rc-hd b{display:block;font-size:18px;font-weight:750;letter-spacing:-.02em;color:var(--ink)}
+.rc-hd span{display:block;font-size:14px;color:var(--muted);line-height:1.55;margin-top:2px}
+.rc-steps{list-style:none;margin:16px 0 12px;padding:0;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:10px}
+.rc-steps li{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--sunk);min-width:0}
+.rc-steps li>i{flex:none;position:relative;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:800 13px var(--sans);font-style:normal;background:var(--accent);color:var(--on-accent,#fff)}
+.rc-steps li>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
+.rc-steps b{font-size:12.5px;font-weight:700;color:var(--muted)}
+.rc-steps small{font-size:11.5px;color:var(--muted);line-height:1.4}
+.rc-steps input{font:inherit;font-size:15px;padding:8px 11px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:var(--panel);color:var(--ink);width:100%;min-width:0}
+.rc-steps input:focus{outline:none;box-shadow:inset 0 0 0 2px var(--accent)}
+.rc-copy{font:700 15px var(--sans);padding:9px 18px;border:0;border-radius:999px;background:var(--accent);color:var(--on-accent,#fff);cursor:pointer;align-self:flex-start;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 12px rgba(0,0,0,.12)}
+.rc-copy:hover{filter:brightness(1.08)}.rc-copy:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.rc-where{font-size:14px;font-weight:650;color:var(--ink)}
+.rc-card.sent .rc-steps li:nth-child(-n+2)>i{background:var(--good);color:transparent}
+.rc-card.sent .rc-steps li:nth-child(-n+2)>i::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:14px}
+.rc-card.sent #rc-ok b{color:var(--good)}
+.rc-code{display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:12px;background:var(--sunk);box-shadow:inset 0 0 0 1px var(--line)}
+.rc-code code{flex:1;min-width:0;font:500 12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-tail{flex:none;font-size:12px;color:var(--muted)}.rc-tail b{font:700 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink);margin-left:3px}
+.rc-mores{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.rc-more{flex:0 1 auto}
+.rc-more[open]{flex:1 1 100%;padding:10px 14px 12px;border-radius:14px;background:var(--sunk)}
+.rc-more>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;color:var(--muted);padding:6px 12px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);background:var(--panel)}
+.rc-more>summary::-webkit-details-marker{display:none}
+.rc-more>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .2s}
+.rc-more[open]>summary::before{transform:rotate(45deg)}
+.rc-more[open]>summary{background:transparent;box-shadow:none;padding-left:0}
+.rc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rc-chips span{font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--panel)}
+.rc-chips span.in::before{content:"✓ ";color:var(--good);font-weight:800}
+.rc-chips span.out{color:var(--muted);background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.rc-chips span.out::before{content:"✕ ";color:var(--bad);font-weight:800}
+#rc-full{width:100%;margin-top:8px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1px var(--line);background:var(--panel);color:var(--ink);resize:vertical}
+.rc-fac{margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.6}
+.rc-fac li{margin:3px 0}
+/* 성적표 요약: 읽는 순서 */
+.rd-flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;margin:12px 0 4px;padding:10px 12px;border-radius:14px;background:var(--sunk)}
+.rd-lab{font-size:12px;font-weight:700;color:var(--muted);margin-right:6px}
+.rd-step{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink);text-decoration:none;padding:6px 12px;border-radius:999px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line)}
+a.rd-step:hover{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.rd-step b{color:var(--accent-ink);font-weight:800}
+.rd-step.end{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent-ink);font-weight:650}
+.rd-arr{width:7px;height:7px;border-right:1.5px solid var(--muted);border-top:1.5px solid var(--muted);transform:rotate(45deg);margin:0 4px;opacity:.6}
+.rc-card,.rd-flow{min-width:0;max-width:100%;box-sizing:border-box}
+@media (max-width:899px){.rc-steps{grid-template-columns:minmax(0,1fr)}.rd-arr{display:none}.rc-card{padding:16px}.rc-hd{gap:10px}.rc-ic{width:36px;height:36px}.rc-ic svg{width:18px;height:18px}.rc-code{gap:8px;padding:8px 12px}}
+.rc-save{display:block;margin:4px 0 8px}.rc-save[open]{padding:10px 14px 12px}

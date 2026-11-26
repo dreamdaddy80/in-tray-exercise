@@ -576,7 +576,7 @@ SCENES.roundEnd=function(s){
  if(G.trust[lowT]<45)focus.push(`<b>${LD[lowT].n}(${LD[lowT].m})</b> · 신뢰가 ${G.trust[lowT]}로 가장 낮습니다. 다음 라운드에서 이 리더가 걸린 결정은 먼저 1:1로 듣고, 프로필 카드에서 걱정과 거슬려하는 것을 확인하세요.`);
  if(hiS.length)focus.push(`<b>${LD[hiS[0]].m} 모듈 부담</b> · 스트레스 ${S(hiS[0])}입니다. 다음 배분에서 이 모듈의 칸을 늘리거나 부하 완화 조치를 먼저 쓰세요.`);
  if(!focus.length)focus.push("이번 라운드의 균형을 유지하세요. 다음 라운드는 더 무거운 상충이 기다립니다. 결정 전에 '누가 영향을 받는가, 그 사람에게 무엇을 설명할 것인가'를 먼저 확인하세요.");
- const TABS=["요약","① 결정 돌아보기","② 팀에 남은 것","③ 판단의 질","④ 습관","⑤ 다음 라운드 준비","결과 코드"];
+ const TABS=["요약","① 결정 돌아보기","② 팀에 남은 것","③ 판단의 질","④ 습관","⑤ 다음 라운드 준비"]; /* 2026-11-26: 결과 코드 탭은 라운드 끝 화면의 보내기 카드로 옮김 */
  let tab=0;
  const sec=o=>`<div class="secbox"><div class="seclab">무엇을 보나</div><p>${o.what}</p>${o.how?`<div class="seclab">읽는 법</div><ul class="secul">${o.how.map(x=>`<li>${x}</li>`).join("")}</ul>`:""}</div>${o.body}${o.interp&&o.interp.length?`<div class="happen"><span class="label">내 결과 해석</span>${o.interp.map(x=>`· ${x}`).join("<br>")}</div>`:""}${o.q?`<div class="tcard"><span class="label">피드백 세션에서 생각해 볼 질문</span><p>${o.q}</p></div>`:""}`;
  const ok=b=>b?`<b style="color:var(--good)">✓</b>`:`<b style="color:var(--bad)">✕</b>`;
@@ -595,7 +595,7 @@ SCENES.roundEnd=function(s){
   </div>
   ${window.theorySummary?theorySummary(cards):""}
   <div class="secbox"><div class="seclab">이번 라운드에서 가장 부족했던 점</div><p>${weak[0]||"눈에 띄게 부족한 점은 없었습니다."}</p><div class="seclab">다음 라운드 첫 번째 주안점</div><p>${focus[0]}</p><p><a href="javascript:void 0" class="link" ${go(5)}>⑤ 다음 라운드 준비에서 전체 보기 →</a></p></div>
-  <div class="secbox"><div class="seclab">읽는 순서</div><p>위의 탭을 차례로 넘기며 읽으세요. ①에서 결정 하나하나를 좋은 리더의 판단과 비교하고, ②에서 그 결과가 팀에 무엇을 남겼는지 보고, ③④에서 판단 방식과 습관을 점검한 뒤, ⑤에서 다음 라운드의 주안점을 정합니다. 마지막 '결과 코드' 탭에서 코드를 복사해 강사에게 보내면 이 라운드가 끝납니다.</p></div>`;
+  <div class="rd-flow" role="list" aria-label="읽는 순서"><span class="rd-lab">읽는 순서</span>${[[1,"①","결정을 좋은 리더와 비교"],[2,"②","팀에 남은 것"],[3,"③④","판단과 습관"],[5,"⑤","다음 라운드 주안점"]].map(([i,n,t])=>`<a href="javascript:void 0" role="listitem" class="rd-step" ${go(i)}><b>${n}</b>${t}</a>`).join('<i class="rd-arr" aria-hidden="true"></i>')}${G.selfStudy?"":'<i class="rd-arr" aria-hidden="true"></i><span class="rd-step end" role="listitem"><b>끝</b>강사에게 코드 보내기</span>'}</div>`;
  /* ① 결정 돌아보기 */
  T[1]=()=>{
   const cardHtml=c=>{const co=C[c.id]||{};const sc=c.sc;const title=nameOf(c.id)||strip(sc.title);
@@ -676,11 +676,6 @@ SCENES.roundEnd=function(s){
    ${(window.NEXT_PREVIEW||{})[r]?`<div class="secbox"><div class="seclab">다음 라운드에 기다리는 일</div><p>${NEXT_PREVIEW[r]}</p></div>`:""}
    <label class="label" for="focusw" style="margin-top:14px;display:block">나의 다음 라운드 다짐 (한두 문장)</label><textarea id="focusw" placeholder="예: 다음 배분에서는 업무량 70 이상인 모듈을 먼저 확인하고, 줄인 이유를 리더들에게 직접 설명하겠다.">${String(fv).replace(/</g,"&lt;")}</textarea>`,
    interp:[],q:"다음 라운드에서 같은 상황이 오면, 이번과 무엇을 다르게 하겠습니까? 그 행동을 팀원이 알아챈다면 어떤 모습일까요?"});};
- /* 결과 코드 */
- T[6]=()=>`${window.rcExplain?rcExplain(r):""}
-  <label class="label" for="nick">별칭 (실명·사번 쓰지 않기)</label><input id="nick" value="${(G.nick||"").replace(/"/g,"")}" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:200px">
-  <div class="codebox" id="rc">${resultCode(r)}</div>
-  <div class="btns" style="margin-top:8px"><button class="btn" ${A(()=>{const n=$("nick");if(n)G.nick=n.value.trim().slice(0,20);const c=resultCode(r);if($("rc"))$("rc").textContent=c;try{navigator.clipboard.writeText(c);toast("결과 코드를 복사했습니다.");}catch(e){toast("코드를 직접 선택해 복사해 주세요.");}save();})}>코드 복사</button></div>`;
  const keepFocus=()=>{const f=$("focusw");if(f){G.written=G.written||{};G.written["focus"+r]=f.value.trim().slice(0,400);}};
  const draw=()=>{paint("");
   const last=tab===TABS.length-1;
@@ -688,8 +683,7 @@ SCENES.roundEnd=function(s){
   <div class="sctabs" role="tablist">${TABS.map((t,i)=>`<button class="sctab" role="tab" aria-selected="${i===tab}" ${A(()=>{keepFocus();tab=i;draw();window.scrollTo(0,0);})}>${t}</button>`).join("")}</div>
   <h3 class="sch">${TABS[tab]}</h3>
   <div class="sccontent">${T[tab]()}</div>
-  <div class="foot">${tab>0?`<button class="btn" ${A(()=>{keepFocus();tab--;draw();window.scrollTo(0,0);})}>← ${TABS[tab-1]}</button>`:"<span></span>"}${last?`<button class="btn main" ${A(()=>{const n=$("nick");if(n)G.nick=n.value.trim().slice(0,20);save();next();})}>${r<3?"저장하고 마치기":"결산으로"}</button>`:`<button class="btn main" ${A(()=>{keepFocus();tab++;draw();window.scrollTo(0,0);})}>다음: ${TABS[tab+1]} →</button>`}</div></div>`);
-  const n=$("nick");if(n)n.oninput=e=>{G.nick=e.target.value.trim().slice(0,20);const rc=$("rc");if(rc)rc.textContent=resultCode(r);};
+  <div class="foot">${tab>0?`<button class="btn" ${A(()=>{keepFocus();tab--;draw();window.scrollTo(0,0);})}>← ${TABS[tab-1]}</button>`:"<span></span>"}${last?`<button class="btn main" ${A(()=>{keepFocus();save();next();})}>${r<3?(G.selfStudy?"라운드 마치기 →":"다음: 결과 보내기 →"):"결산으로"}</button>`:`<button class="btn main" ${A(()=>{keepFocus();tab++;draw();window.scrollTo(0,0);})}>다음: ${TABS[tab+1]} →</button>`}</div></div>`);
   const f=$("focusw");if(f)f.oninput=()=>keepFocus();
  };
  draw();
@@ -697,8 +691,10 @@ SCENES.roundEnd=function(s){
 /* 라운드 사이 대기 화면 */
 SCENES.wait=function(s){
  const sc=window.v3MakeSaveCode?window.v3MakeSaveCode():"";
- shell(paint(`<div class="pane"><div class="eyebrow">Round ${s.round} 끝</div><h2>피드백 세션까지 기다려 주세요</h2><div class="prose"><p>${s.round===1?"다음 라운드는 내일 강의 뒤에 진행합니다. 강사가 안내하면 아래 '다음 라운드 화면으로'를 누르세요.":"마지막 라운드는 내일 완결 강의 뒤에 진행합니다. 강사가 안내하면 아래 '다음 라운드 화면으로'를 누르세요."} 진행은 이 브라우저에 저장되었습니다. 창을 닫아도 됩니다.</p></div>
- ${sc?`<details class="ref"><summary>기기·브라우저 변경 대비 이어하기 코드 (다른 PC나 태블릿으로 옮길 때만 복사)</summary><div style="margin-top:8px;display:grid;gap:6px"><div class="codebox" id="sv_box" style="max-height:72px;overflow-y:auto;font-size:11.5px">${sc}</div><div class="btns"><button class="btn" ${A(()=>{try{navigator.clipboard.writeText(sc);toast("기기 이전용 복원 코드를 복사했습니다.");}catch(e){toast("코드를 직접 선택해 복사해 주세요.");}})}>복원 코드 복사</button></div></div></details>`:""}
+ shell(paint(`<div class="pane"><div class="eyebrow">Round ${s.round} 끝</div><h2>Round ${s.round}${s.round===2?"를":"을"} 마쳤습니다</h2>
+ ${G.selfStudy?"":(window.rcCard?rcCard(s.round):"")}
+ <div class="prose"><p>${G.selfStudy?"준비되면 아래 '다음 라운드 화면으로'를 눌러 이어서 하세요.":s.round===1?"다음 라운드는 내일 강의 뒤에 진행합니다. 강사가 안내하면 아래 '다음 라운드 화면으로'를 누르세요.":"마지막 라운드는 내일 완결 강의 뒤에 진행합니다. 강사가 안내하면 아래 '다음 라운드 화면으로'를 누르세요."} 진행은 이 브라우저에 저장되었습니다. 창을 닫아도 됩니다.</p></div>
+ ${sc?`<details class="rc-more rc-save"><summary>다른 PC·태블릿에서 이어하기 코드</summary><div style="margin-top:8px;display:grid;gap:6px"><div class="codebox" id="sv_box" style="max-height:72px;overflow-y:auto;font-size:11.5px">${sc}</div><div class="btns"><button class="btn" ${A(()=>{try{navigator.clipboard.writeText(sc);toast("기기 이전용 복원 코드를 복사했습니다.");}catch(e){toast("코드를 직접 선택해 복사해 주세요.");}})}>복원 코드 복사</button></div></div></details>`:""}
  <div class="foot"><span></span><button class="btn main" ${A(next)}>다음 라운드 화면으로</button></div></div>`));
 };
 
@@ -962,6 +958,33 @@ if(!document.getElementById("sc-css")){const st=document.createElement("style");
 .sccard .v{font-size:19px;margin-top:2px}
 .sccard .why{font-size:12px;line-height:1.55;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:auto}`;document.head.appendChild(st);}
 
+/* 결과 코드 보내기 카드 (2026-11-26): 성적표의 '결과 코드' 탭 대신, 라운드 끝 화면과 결산 마지막 쪽에 한 장으로.
+   코드 내용·형식은 그대로. 설명은 단계 그림과 접는 칸으로 줄였다 */
+window.rcCard=function(r){
+ const esc=x=>String(x??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ const code=v3ResultCode(r),when=r<3?"내일 아침 피드백 세션":"종합 디브리핑";
+ const IN=["별칭","이끄는 방식","주요 결정의 선택","다섯 가지 점수","자가진단과 실제 습관","걸린 시간"],OUT=["실명·사번","직접 쓴 글","메일 답장 내용"];
+ const copy=()=>{const n=document.getElementById("rc-nick");if(n)G.nick=n.value.trim().slice(0,20);save();const c=v3ResultCode(r);rcPaint(r,c);
+  const ok=document.getElementById("rc-ok"),done=()=>{if(ok)ok.innerHTML=`<b>✓ 복사했습니다</b> · 끝 네 글자 ${esc(c.slice(-4))}`;const cd=document.querySelector(".rc-card");if(cd)cd.classList.add("sent");toast(r<3?"결과 코드를 복사했습니다. 안내받은 곳에 붙여 넣어 주세요.":"최종 결과 코드를 복사했습니다.");};
+  const fail=()=>{const d=document.getElementById("rc-full-d");if(d)d.open=true;const t=document.getElementById("rc-full");if(t){t.focus();t.select();}if(ok)ok.textContent="자동 복사가 막혔습니다. 아래 칸에서 직접 복사해 주세요.";};
+  try{navigator.clipboard.writeText(c).then(done,fail);}catch(e){fail();}};
+ return `<section class="rc-card" aria-labelledby="rc-h" data-r="${r}">
+  <div class="rc-hd"><span class="rc-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.4 11.2 19.6 4.3c.8-.3 1.5.4 1.2 1.2l-6.9 16.2c-.3.8-1.5.8-1.8-.1l-2-6.1-6.1-2c-.9-.3-.9-1.5-.1-1.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m10.4 13.6 4.4-4.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+   <div><b id="rc-h">${r<3?"결과 코드를 강사에게 보내 주세요":"최종 결과 코드를 강사에게 보내 주세요"}</b><span>결과는 자동으로 모이지 않습니다. 보낸 코드로 ${when}에서 반 전체 결과를 함께 봅니다.</span></div></div>
+  <ol class="rc-steps">
+   <li><i>1</i><div><b>별칭</b><input id="rc-nick" value="${esc(G.nick||"")}" placeholder="예: 판교곰" maxlength="20" aria-label="별칭, 실명과 사번은 쓰지 않기" autocomplete="off"><small>실명·사번 대신. 비워 둬도 됩니다.</small></div></li>
+   <li><i>2</i><div><b>복사</b><button type="button" class="rc-copy" ${A(copy)}>코드 복사</button><small id="rc-ok" aria-live="polite">버튼 한 번이면 됩니다.</small></div></li>
+   <li><i>3</i><div><b>붙여 넣기</b><span class="rc-where">강사가 안내한 단톡방·설문</span><small>처음부터 끝까지 그대로</small></div></li>
+  </ol>
+  <div class="rc-code" title="${esc(code)}"><code id="rc">${esc(code.slice(0,22))}…${esc(code.slice(-10))}</code><span class="rc-tail">끝 네 글자 <b id="rc-tail">${esc(code.slice(-4))}</b></span></div>
+  <div class="rc-mores">
+   <details class="rc-more"><summary>코드에 담기는 것</summary><div class="rc-chips">${IN.map(x=>`<span class="in">${x}</span>`).join("")}${OUT.map(x=>`<span class="out">${x}</span>`).join("")}</div><p class="note0">결과는 교육에만 쓰이고 인사 평가와 이어지지 않습니다.</p></details>
+   <details class="rc-more" id="rc-full-d"><summary>코드 전체 보기</summary><textarea id="rc-full" readonly rows="3" aria-label="결과 코드 전체">${esc(code)}</textarea></details>
+   <details class="rc-more"><summary>강사는 이 코드를 어디에 쓰나요?</summary><ol class="rc-fac"><li>강사가 <a href="facilitator.html" target="_blank" rel="noopener">진행자 집계 페이지</a>에 모인 코드를 한 줄에 하나씩 붙여 넣습니다.</li><li>같은 갈림길에서 각 선택을 고른 인원, 그 사람들의 지표 평균, 반 전체의 습관 맹점, 걸린 시간이 나옵니다.</li><li>'발표 모드'로 별칭을 가린 채 화면에 띄워 피드백 세션을 진행합니다.</li></ol><p class="note0">계산은 강사의 브라우저 안에서만 하고 어디로도 보내지 않습니다. 따로 로그인하는 강사 모드는 없습니다.</p></details>
+  </div></section>`;};
+window.rcPaint=function(r,c0){const c=c0||v3ResultCode(r);const e=document.getElementById("rc"),t=document.getElementById("rc-tail"),f=document.getElementById("rc-full"),cd=document.querySelector(".rc-card");
+ if(e)e.textContent=c.slice(0,22)+"…"+c.slice(-10);if(t)t.textContent=c.slice(-4);if(f)f.value=c;if(cd)cd.querySelector(".rc-code").title=c;};
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="rc-nick"){G.nick=e.target.value.trim().slice(0,20);const cd=document.querySelector(".rc-card");if(cd){if(cd.classList.contains("sent")){cd.classList.remove("sent");const ok=document.getElementById("rc-ok");if(ok)ok.textContent="별칭이 바뀌었습니다. 다시 복사해 주세요.";}rcPaint(+cd.dataset.r||1);}try{save();}catch(err){}}});
 /* 결과 코드 설명 (2026-11-20) */
 window.rcExplain=function(r){return `<div class="prose" style="font-size:14.5px"><p>아래 긴 글자 줄은 <b>이번 라운드 결과를 한 줄로 압축한 코드</b>입니다. 이 게임은 각자의 브라우저에서만 돌아가서, 결과가 강사에게 자동으로 모이지 않습니다. 그래서 이 코드를 강사에게 보내는 방식으로 반 전체 결과를 모읍니다.</p></div>
 <div class="steps"><div><b>1</b> <span> · '코드 복사'를 누르고, 강사가 안내한 곳(메신저, 설문 등)에 붙여 넣어 보냅니다.</span></div><div><b>2</b> <span> · 강사가 모든 코드를 집계 페이지에 한꺼번에 넣습니다.</span></div><div><b>3</b> <span> · ${r<3?"다음 날 아침 피드백 세션":"종합 피드백 세션"}에서 반 전체 결과를 함께 봅니다. 같은 갈림길에서 동료들은 어떤 길을 골랐고 결과가 어땠는지, 반 전체가 자주 놓친 습관은 무엇인지를 봅니다.</span></div></div>
