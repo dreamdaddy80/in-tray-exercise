@@ -52,6 +52,9 @@
   if(o){const nb=document.getElementById("dknote");if(nb)nb.hidden=true;teamOpener=document.activeElement;teamHead();setTimeout(()=>{const c=p.querySelector(".dk-pclose");if(c)c.focus();},30);}
   else if(was){try{if(teamOpener&&document.contains(teamOpener))teamOpener.focus();}catch(e){}teamOpener=null;}}
  window.toggleTeam=toggleTeam;
+ /* Liquid Glass: 빛 반사가 마우스를 따라 움직임(움직임 줄이기 설정이면 고정) */
+ {let raf=0;const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)");
+  window.addEventListener("pointermove",e=>{if(raf||(rm&&rm.matches))return;raf=requestAnimationFrame(()=>{raf=0;root.style.setProperty("--lx",(e.clientX/innerWidth*100).toFixed(1)+"%");root.style.setProperty("--ly",(e.clientY/innerHeight*100).toFixed(1)+"%");});},{passive:true});}
  /* 운영자 검토 막대(#rv)가 있으면 표시해 두고, 독 위로 올리고 창 높이를 줄인다(CSS) */
  {const mark=()=>{root.dataset.rv=document.getElementById("rv")?"1":"";};new MutationObserver(mark).observe(document.body,{childList:true});mark();}
  /* 펼침 메뉴(메뉴·운영자 메뉴): 바깥을 누르거나 Esc를 누르면 닫는다 */
