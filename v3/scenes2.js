@@ -132,7 +132,7 @@ function SC_WRITE(s){
  let why=null,draftUsed=false;const texts={};s.targets.forEach(t=>texts[t.k]="");
  const list=principleList().concat(gradeList());
  const d1=()=>{paint("");
-  shell(`<div class="pane"><div class="eyebrow">${(s.targets||[]).length===1?"평가 결과 공지":"세 개의 설명"}</div><h2>${val(s.title)}</h2><div class="prose">${para(s.intro||[])}</div><p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}<div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const f=fitSet(val(s.fit)||[]);const fit=f.any||f.grade.includes(why)||f.prin.includes(why);G.cons.push({scene:s.id,choice:"글",why,fit});}d2();})}>쓰기 시작</button></div></div>`);
+  shell(`<div class="pane"><div class="eyebrow">${(s.targets||[]).length===1?"평가 결과 공지":"세 개의 설명"}</div><h2>${val(s.title)}</h2><div class="prose">${para(s.intro||[])}</div><p><b>이 결정의 근거를 고르세요.</b></p>${list.length?(()=>{/* 7단계 #26: 팀 원칙과 3월에 공개한 기준을 두 묶음으로 나눠, 비슷한 이름이 같은 말처럼 보이지 않게 한다 */const pl=principleList(),gl=gradeList().filter(x=>!pl.includes(x));let n=0;const btn=w=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${++n}</span><span>${w}</span></button>`;return `<div class="opts">${pl.length?`<p class="optgrp"><b>팀 운영 원칙</b> <span class="note">퓨쳐테크가 정한 원칙</span></p>${pl.map(btn).join("")}`:""}${gl.length?`<p class="optgrp"><b>등급 기준</b> <span class="note">3월에 공개한 평가 기준</span></p>${gl.map(btn).join("")}`:""}</div>`;})():'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}<div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const f=fitSet(val(s.fit)||[]);const fit=f.any||f.grade.includes(why)||f.prin.includes(why);G.cons.push({scene:s.id,choice:"글",why,fit});}d2();})}>쓰기 시작</button></div></div>`);
  };
  /* AI 초안은 받는 사람마다 다르고, 그럴듯하지만 고쳐야 할 곳이 하나씩 섞여 있다 */
  const dOf=t=>{const ds=val(s.drafts);return (ds&&ds[t.k]&&ds[t.k].t)||val(s.draft);};
@@ -143,7 +143,7 @@ function SC_WRITE(s){
   const can=(G.token||0)>=5&&!draftUsed;
   shell(`<div class="pane"><div class="eyebrow">${(s.targets||[]).length===1?"평가 결과 공지":"세 개의 설명"}</div><h2>${(s.targets||[]).length===1?`${val(s.targets[0].n)}에게 3~5문장으로 쓰세요`:"세 사람에게 각각 3~5문장으로 쓰세요"}</h2><p class="note">⏳은 들지 않습니다. 보낸 뒤에는 고칠 수 없습니다.</p>${cl?`<div class="cond">${cl}</div>`:""}
   ${s.targets.map(t=>`<div class="task"><b>${val(t.n)}</b><span class="voice" style="font-size:15px">${val(t.q)}</span><label class="label" for="w${t.k}">${t.form}</label><textarea id="w${t.k}" style="min-height:110px">${texts[t.k]}</textarea></div>`).join("")}
-  <div class="foot"><button class="btn" ${can?"":"disabled"} ${A(()=>{grab();draftUsed=true;G.token-=5;G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+5;G.f.ai_draft=true;s.targets.forEach(t=>texts[t.k]=dOf(t));d2();})}>승인 도구로 초안 받기 💳5</button><button class="btn main" ${A(send)}>세 편 보내기</button></div>${warn?`<div class="happen"><span class="label">보내기 전에</span>${warn}</div>`:""}</div>`);
+  <div class="foot"><button class="btn" ${can?"":"disabled"} ${A(()=>{grab();draftUsed=true;G.token-=5;G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+5;G.f.ai_draft=true;s.targets.forEach(t=>texts[t.k]=dOf(t));d2();})}>승인 도구로 초안 받기 💳5</button><button class="btn main" ${A(send)}>${(s.targets||[]).length===1?"보내기":"세 편 보내기"}</button></div>${warn?`<div class="happen"><span class="label">보내기 전에</span>${warn}</div>`:""}</div>`);
  };
  let warn="";
  const send=()=>{grab();
@@ -221,21 +221,21 @@ const BILL={
 };
 const BILL_CAUSE={
  B1:[["d_M13","M13 스크립트 직접 처리","M13",1],["fam_direct","M11 직접 복구","M11",1],["oh_depends","5-3 이후 오 사원이 팀장에게 먼저 물음","5-3",5],["c_7-3_A","7-3 배포 옆자리","7-3",7]],
- B2:[["unfam_direct","M08 낯선 로그 직접 확인","M08",1],["src_direct","7-4 조달 결재 직접","7-4",7],["inc_direct","9-1 원격 직접 지휘","9-1",9]],
- B3:[["pub_items","3-1 항목만 공개","3-1",3],["pub_leaders","3-1 리더들과만 맞춤","3-1",3],["renotice_part","6-4 리더에게만 설명","6-4",6],["rule_silent","6-4 다시 알리지 않음","6-4",6]],
+ B2:[["unfam_direct","M08 낯선 로그 직접 확인","M08",1],["src_direct","7-4 조달 결재 직접","7-4",7],["inc_direct","R3-1a 원격 직접 지휘","R3-1a",10]],
+ B3:[["pub_items","3-1 항목만 공개","3-1",3],["pub_leaders","3-1 리더들과만 맞춤","3-1",3],["renotice_part","6-4b 리더에게만 설명","6-4b",11],["rule_silent","6-4b 다시 알리지 않음","6-4b",11]],
  B4:[["mfg_soft","3-4 예방 없는 생산 KPI","3-4",3],["award_fix","5-4 생산 모듈로 추천","5-4",5],["report_mkt","7-5 정다은 모듈 이름만","7-5",7],["han_left","8-6 한 선임 이동","8-6",8],["credit_fix","9-2 복구자만 포상","9-2",9]],
  B5:[["alloc_num","4-2 배분 숫자만 알림","4-2",4],["alloc_none","4-2 공지 안 보냄","4-2",4],["r2_more","4-5 신규 과제 추가","4-5",4],["small_win","5-6 소규모 수주","5-6",5],["ct_more","6-1 신규 2건","6-1",6],["prop_full","7-2 전 범위 수락","7-2",7],["auto_wide","8-5 전면 자동화","8-5",8]],
  B6:[["f_140","M21~M23 140시간이 밖으로 나감","M22",4],["ct_cut","6-1 5% 인하","6-1",6],["ct_more","6-1 신규 2건","6-1",6],[g=>!g.f.planb_contract,"6-1 재검토 조건 없음","6-1",6],["ai_draft","6-2 AI 초안","6-2",6]],
  B7:[["kim_fragile","6-3 \"괜찮습니다\"로 끝남","6-3",6],["prop_full","7-2 전 범위 수락","7-2",7],["mfg_acting","7-4 강태식 겸임","7-4",7],["cha_left","8-3 차 선임 결심","8-3",8]],
  B8:[()=>G.sig.filter(x=>x.choice==="안 알림"&&!x.forced).map(x=>[nm(x.scene)+" 결정을 알리지 않음",x.scene])],
  B9:[()=>G.sig.filter(x=>x.choice==="안 알림"&&!x.forced).map(x=>[nm(x.scene)+" 결정을 알리지 않음",x.scene])],
- B10:[["rule_silent","6-4 다시 알리지 않음","6-4",6],["p3_spin","8-1 차출이라고 구분","8-1",8]],
+ B10:[["rule_silent","6-4b 다시 알리지 않음","6-4b",11],["p3_spin","8-1c 차출이라고 구분","8-1c",8]],
  B11:[()=>Object.values(G.prom).filter(p=>p.status==="파기").map(p=>["지키지 못한 약속: "+p.text,p.due])],
 };
-const MON=sc=>{const m=String(sc).match(/^(\d+)-/);if(m)return +m[1];const mm=String(sc).match(/^M(\d+)/);if(mm)return +mm[1]<=17?1:+mm[1]<=30?4:7;const d=String(sc).match(/^(\d+)월/);return d?+d[1]:null;};
-function billCauses(b){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"){c(G).forEach(x=>out.push({t:x[0],m:MON(x[1])}));return;}const ok=typeof c[0]==="function"?c[0](G):(G.f[c[0]]&&!(G.forcedF||{})[c[0]]);if(ok)out.push({t:nm(c[2])+" — "+stripId(c[1]),m:c[3]});});if((b==="B5"||b==="B7")&&G.over>0)out.push({t:`초과 부하가 ${G.over}번 쌓였습니다`,m:null});if(b==="B7"&&G.fatigue>0)out.push({t:`큰 변화가 ${G.fatigue}번 이어졌습니다`,m:null});const seen={};return out.filter(x=>{const k=x.t;if(seen[k])return false;seen[k]=1;return true;});}
+const MON=sc=>{if(window.sceneMonthOf&&/^(\d+-|M\d|R\d|RET)/.test(String(sc))){const v=sceneMonthOf(sc);if(v)return v;}const m=String(sc).match(/^(\d+)-/);if(m)return +m[1];const mm=String(sc).match(/^M(\d+)/);if(mm)return +mm[1]<=17?1:+mm[1]<=30?4:7;const d=String(sc).match(/^(\d+)월/);return d?+d[1]:null;};
+function billCauses(b){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"){c(G).forEach(x=>out.push({t:x[0],m:MON(x[1])}));return;}const ok=typeof c[0]==="function"?c[0](G):(G.f[c[0]]&&!(G.forcedF||{})[c[0]]);if(ok){/* 7단계 #7: v3에 없는 장면 번호는 '그달의 안건' 대신 원인 문구만 쓴다 */const known=!!(sceneOf(c[2])||(typeof mailOf==="function"&&mailOf(String(c[2]).split("~")[0])));out.push({t:known?nm(c[2])+" — "+stripId(c[1]):`${c[3]}월 ${stripId(c[1])}`,m:known&&window.sceneMonthOf?(sceneMonthOf(c[2])||c[3]):c[3]});}});if((b==="B5"||b==="B7")&&G.over>0)out.push({t:`초과 부하가 ${G.over}번 쌓였습니다`,m:null});if(b==="B7"&&G.fatigue>0)out.push({t:`큰 변화가 ${G.fatigue}번 이어졌습니다`,m:null});const seen={};return out.filter(x=>{const k=x.t;if(seen[k])return false;seen[k]=1;return true;});}
 /* 청구서와 이어지지만 시간이 모자라 고를 수 없었던 결정. 원인으로 세지 않고 따로 보여 준다 */
-function billForced(b,at){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"||typeof c[0]==="function")return;if(G.f[c[0]]&&(G.forcedF||{})[c[0]]&&(!at||c[3]<=at))out.push(nm(c[2])+" — "+stripId(c[1]));});
+function billForced(b,at){const out=[];(BILL_CAUSE[b]||[]).forEach(c=>{if(typeof c==="function"||typeof c[0]==="function")return;if(G.f[c[0]]&&(G.forcedF||{})[c[0]]&&(!at||((window.sceneMonthOf&&sceneMonthOf(c[2]))||c[3])<=at))out.push(sceneOf(c[2])?nm(c[2])+" — "+stripId(c[1]):`${c[3]}월 ${stripId(c[1])}`);});
  if(b==="B8"||b==="B9")G.sig.filter(x=>x.choice==="안 알림"&&x.forced).forEach(x=>{const m=MON(x.scene);if(!at||!m||m<=at)out.push(nm(x.scene)+" 결정을 알리지 못함");});
  return out.filter((x,i,a)=>a.indexOf(x)===i);}
 function forcedNote(b,at){const fs=billForced(b,at);return fs.length?`<p class="note"><b>시간이 없어 고르지 못한 결정 ${fs.length}건</b> (원인으로 세지 않았습니다)<br>${fs.join("<br>")}</p>`:"";}
@@ -361,8 +361,8 @@ function SC_EVAL(s){
   G.badEvid=bad;G.evalGood=good;G.evalN=people.length;G.goal6a=good===people.length;
   G.noEvid=people.filter(e=>!st[e.k].fit).map(e=>name(e.k)); /* C-7: 근거 없이 확정한 사람 */
   /* 3월 기준 선택 때문에 증빙이 막힌 사람: 쓸 수 있는 기록은 2개 이상인데, 공개한 기준과 이어지는 기록이 2개가 안 되는 경우 */
-  G.evalBlocked=people.map(e=>{const rs=recs(e).filter(r=>!r[3]&&(r[2]||[]).length);const usable=rs.filter(r=>r[2].some(x=>G.pub.includes(x))).length;
-   if(rs.length<2||(usable>=2&&!has("pub_leaders")))return null;const need=[];rs.filter(r=>!r[2].some(x=>G.pub.includes(x))).forEach(r=>r[2].forEach(x=>{if(!need.includes(x))need.push(x);}));
+  G.evalBlocked=people.map(e=>{/* 7단계 #14: '리더 종합 판단'은 공개해야 할 기준이 아니므로 막힌 증빙의 이유로 세지 않는다 (성적표 critGap과 같은 기준) */const rs=recs(e).filter(r=>!r[3]&&r[4]!=="kpi"&&(r[2]||[]).filter(x=>x!=="리더 종합 판단").length);const usable=rs.filter(r=>r[2].some(x=>G.pub.includes(x))).length;
+   if(rs.length<2||(usable>=2&&!has("pub_leaders")))return null;const need=[];rs.filter(r=>!r[2].some(x=>G.pub.includes(x))).forEach(r=>r[2].forEach(x=>{if(x!=="리더 종합 판단"&&!need.includes(x))need.push(x);}));
    return{k:e.k,need:has("pub_leaders")?[]:need};}).filter(Boolean);
   if(good>=8)applySig("②L",1,"12-3","근거 충족");if(good<5)applySig("②P",1,"12-3","근거 부족");if(used){applySig("②P",1,"12-3","KPI 순서로 채우기");G.f.kpi_fill=true;}
   {const rk={S:0,A:1,B:2,C:3};const ord=[...people].sort((a,b)=>KPIORD[val(a.kpi)]-KPIORD[val(b.kpi)]);let same=true;for(let x=1;x<ord.length;x++){if(rk[st[ord[x].k].g]<rk[st[ord[x-1].k].g])same=false;}if(same&&good<5){applySig("②P",1,"12-3","KPI 순서대로");G.f.kpi_order=true;}}

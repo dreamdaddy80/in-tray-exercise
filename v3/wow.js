@@ -78,7 +78,7 @@
   </div>`;}catch(e){console.warn("voicePanel",e);return "";}};
 
  /* ---------- 인생극장 ---------- */
- const CELL={RUN:["운영","c1"],AI:["AI","c3"],GROW:["성장","c2"],SEC:["예방","c4"]};
+ const CELL={RUN:["RUN 기존 운영","c1"],AI:["AI 전환","c3"],GROW:["GROW 추가 제안","c2"],SEC:["SEC 예방·보안","c4"]}; /* 7단계 #29: 배분 화면과 같은 칸 이름 */
  const cellsOf=s=>{const o={};String(s||"").replace(/(RUN|AI|GROW|SEC) (\d+)/g,(_,k,n)=>{o[k]=+n;});return o;};
  const strip10=c=>`<span class="wx-cells" role="img" aria-label="${Object.keys(CELL).map(k=>CELL[k][0]+" "+(c[k]||0)+"칸").join(", ")}">${Object.keys(CELL).map(k=>Array.from({length:c[k]||0},()=>`<i class="${CELL[k][1]}"></i>`).join("")).join("")}</span>`;
  const cellLegend=c=>`<span class="wx-cleg">${Object.keys(CELL).map(k=>`<span><i class="${CELL[k][1]}"></i>${CELL[k][0]} ${c[k]||0}</span>`).join("")}</span>`;
@@ -169,12 +169,15 @@
   stress:k=>`${LD[k].m} 모듈 병가 신청서: "몸이 먼저 신호를 보냈습니다."`,b7:()=>`병가 신청서: "몸이 먼저 신호를 보냈습니다."`};
  window.exodusHtml=function(x,o={}){if(!x)return "";const LK=Object.keys(LD);const N0=typeof teamN==="function"?teamN():30;const stay=N0-x.n-x.sick; /* 피드백 5단계: 차출 뒤 인원에서 센다 */
   const grid=LK.map(k=>{const m=x.mods[k]||{out:0,sick:0};const ps=Array.from({length:6},(_,i)=>i<m.out?"out":i<m.out+m.sick?"sick":"stay");
-   return `<div class="wx-ex-m${m.out||m.sick?" hit":""}"><b>${LD[k].m}</b><span class="wx-ex-p" role="img" aria-label="${LD[k].m} 6명 중 떠남 ${m.out}명, 병가 ${m.sick}명">${ps.map(c=>`<i class="pp ${c}"></i>`).join("")}</span><small>${LD[k].n} 신뢰 ${(x.trust||G.trust)[k]}</small></div>`;}).join("");
+   return `<div class="wx-ex-m${m.out||m.sick?" hit":""}"><b>${LD[k].m}</b><span class="wx-ex-p" role="img" aria-label="${LD[k].m} 6명 중 떠남 ${m.out}명, 병가 ${m.sick}명">${ps.map(c=>`<i class="pp ${c}"></i>`).join("")}</span><small>${LD[k].n} 신뢰 ${(x.trust||G.trust)[k]}</small></div>`;}).join("")
+   /* 7단계 #9: 8월 본사 차출 인원은 회색으로 따로 보여 30칸과 머리 숫자를 맞춘다 */+(N0<30?`<div class="wx-ex-m hq"><b>본사 차출</b><span class="wx-ex-p" role="img" aria-label="8월 본사 차출 ${30-N0}명">${Array.from({length:30-N0},()=>`<i class="pp hq"></i>`).join("")}</span><small>8월부터 본사</small></div>`:"");
+  /* 7단계 #8: 결산에서는 관계도(연말 값)와 같은 화면에 나오므로, 떠남을 정한 시점의 신뢰라는 것을 밝힌다 */
+  const trDiff=!!(o.compact&&x.trust&&LK.some(k=>x.trust[k]!==G.trust[k]));
   const rows=(x.rows||[]).map(r=>`<div class="wx-ex-r ${r.kind}"><span class="n">${r.kind==="cap"?"상한 "+EXODUS_RULE.maxOut:(r.kind==="stress"||r.kind==="b7"?"병가":"떠남")+" "+r.n}</span><p>${esc(r.t)} <em>${esc(r.lim)}</em></p></div>`).join("");
   const qs=[];(x.rows||[]).forEach(r=>{const f=EXQ[r.kind];if(f&&qs.length<3)qs.push(f(r.k));});if(G.safe<35&&qs.length<3)qs.push(`퇴직 면담: "말해도 바뀌지 않을 것 같아서, 말 대신 신청서를 냈어요."`);
   return `<div class="wx-ex${o.compact?" compact":""}"><div class="wx-ex-top"><div class="wx-ex-n"><b class="num">${N0} <span>→</span> ${N0-x.n}</b><small>내년 1월 운영팀 인원${x.sick?` · 그중 병가 ${x.sick}명`:""}${N0<30?` · 지금 인원은 8월 본사 차출 ${30-N0}명을 뺀 수`:""}</small></div>
-    <div class="wx-ex-k"><span><i class="pp out"></i>떠남 ${x.n}</span>${x.sick?`<span><i class="pp sick"></i>병가 ${x.sick}</span>`:""}<span><i class="pp stay"></i>남음 ${stay}</span></div></div>
-   <div class="wx-ex-grid">${grid}</div>
+    <div class="wx-ex-k"><span><i class="pp out"></i>떠남 ${x.n}</span>${x.sick?`<span><i class="pp sick"></i>병가 ${x.sick}</span>`:""}<span><i class="pp stay"></i>남음 ${stay}${x.sick?` (병가 ${x.sick}명 별도)`:""}</span></div></div>
+   <div class="wx-ex-grid">${grid}</div>${trDiff?`<p class="note0">모듈 아래 신뢰는 12월 인사 알림 때 값입니다. 떠남은 그 값으로 정했습니다. 아래 관계도는 연말 최종 값입니다.</p>`:""}
    ${rows?`<div class="wx-ex-why"><span class="wx-lab">넘어선 기준선</span>${rows}</div>`:""}
    ${o.scene&&qs.length?`<div class="wx-ex-q">${qs.map(q=>`<p>${esc(q)}</p>`).join("")}</div>`:""}
    ${o.scene&&(x.dP||x.dS)?`<p class="note0">이 일로 바뀐 점수: ${[x.dP?`구성원 -${x.dP}`:"",x.dS?`서비스 안정 -${x.dS}`:""].filter(Boolean).join(" · ")}. 떠난 자리는 남은 사람의 일이 됩니다.</p>`:""}</div>`;};
@@ -251,12 +254,12 @@
    ${cs.length?cs.map(x=>wxCineHtml(x.c,{round:"Round "+x.r.slice(1),compact:true,hl:big&&big.r===x.r})).join(""):'<p class="note">비교할 갈림길 기록이 없습니다.</p>'}
    ${big?`<div class="happen"><span class="label">가장 큰 갈림길 · ${esc(big.c.label)}</span>이 결정을 다시 한다면, 무엇을 먼저 확인하겠습니까?</div>`:""}`;};
  /* ④ 운이었나, 실력이었나 */
- window.wxLuckPage=function(){const L=(G.luck||[]).slice();const top=L.sort((a,b)=>b.p-a.p).slice(0,5);const cats={};(G.luck||[]).forEach(x=>cats[x.cat]=(cats[x.cat]||0)+1);
+ window.wxLuckPage=function(){/* 7단계 #3: 결국 도착한 청구서는 '일어나지 않은 일'에서 뺀다 */const got=new Set(G.bills||[]),isLate=x=>x.scene==="bill"&&got.has(x.b),late=(G.luck||[]).filter(isLate);const L=(G.luck||[]).filter(x=>!isLate(x));const top=L.slice().sort((a,b)=>b.p-a.p).slice(0,5);const cats={};L.forEach(x=>cats[x.cat]=(cats[x.cat]||0)+1);const lateP=late.length?`<p class="note0">한 번 비켜 갔다가 결국 도착한 청구서 ${late.length}장은 여기서 뺐습니다: ${late.map(x=>`${x.m}월에 피한 "${esc((BILL[x.b]||{}).t||x.b)}"`).join(", ")}.</p>`:"";
   return `${EB("확률의 호의 장부")}<h2>${L.length?`운 좋게 피해 간 나쁜 결과 ${L.length}건`:"올해는 운에 기댄 결정이 없었습니다"}</h2>
    ${L.length?`<div class="wx-cats">${Object.entries(cats).map(([k,v])=>`<span><b class="num">${v}</b>${esc(k)}</span>`).join("")}</div>
    <div class="wx-dleg"><span><span class="wx-dots"><i class="b"></i></span> 같은 선택을 10번 했을 때 나쁜 일이 따라오는 경우</span><span><span class="wx-dots"><i class="o now"></i></span> 올해 실제로 떨어진 자리</span></div>
-   <div class="wx-luck">${top.map(x=>`<div class="wx-lk">${dots(x.p,{now:"ok"})}<div><b>${x.m}월 · ${esc(x.title)}${x.choice?` <small>고른 안: ${esc(x.choice)}${x.choice.length>=40?"…":""}</small>`:""}</b><p><span class="wx-lab">일어나지 않은 일 · 확률 ${x.p}%</span>${esc(String(x.t).replace(/""/g,'"'))}</p></div></div>`).join("")}</div>${L.length>top.length?`<p class="note0">확률이 높았던 ${top.length}건만 보여 드렸습니다. 나머지 ${L.length-top.length}건도 같은 성격입니다.</p>`:""}
-   <p class="voice">무사했던 달을 실력이라고 할 수 있습니까?</p><p class="note0">결과가 좋았던 것과 결정이 좋았던 것은 다릅니다. 같은 선택을 다시 하면 위의 일들은 일어날 수 있습니다.</p>`:`<p>위험한 선택 뒤에 운 좋게 피해 간 나쁜 결과가 없었습니다. 결과가 결정을 그대로 보여 준 해였습니다.</p>`}`;};
+   <div class="wx-luck">${top.map(x=>`<div class="wx-lk">${dots(x.p,{now:"ok"})}<div><b>${x.m}월 · ${esc(x.title)}${x.choice?` <small>고른 안: ${esc(x.choice.length>=40?cutW(x.choice,39):x.choice)}</small>`:""}</b><p><span class="wx-lab">일어나지 않은 일 · 확률 ${x.p}%</span>${esc(String(x.t).replace(/""/g,'"'))}</p></div></div>`).join("")}</div>${L.length>top.length?`<p class="note0">확률이 높았던 ${top.length}건만 보여 드렸습니다. 나머지 ${L.length-top.length}건도 같은 성격입니다.</p>`:""}
+   <p class="voice">무사했던 달을 실력이라고 할 수 있습니까?</p><p class="note0">결과가 좋았던 것과 결정이 좋았던 것은 다릅니다. 같은 선택을 다시 하면 위의 일들은 일어날 수 있습니다.</p>${lateP}`:`<p>위험한 선택 뒤에 운 좋게 피해 간 나쁜 결과가 없었습니다. 결과가 결정을 그대로 보여 준 해였습니다.</p>${lateP}`}`;};
  /* ⑦ 세 개의 나 (360) */
  window.wx360Page=function(r360,act,self){
   const AX={1:"① 일 맡기기",2:"② 평가하기",3:"③ 자원 나누기",4:"④ 설명하기"};
@@ -282,6 +285,6 @@
   return `${EB("약속 · 청구서 · 사람들")}<h2>1년의 흔적</h2>
    <div class="wx-trace"><div><h3 class="wx-h3">약속 장부</h3>${prom||'<p class="note0">맺은 약속이 없습니다.</p>'}
     <h3 class="wx-h3">도착한 청구서 ${(G.bills||[]).length}장</h3>${bills||'<p class="note0">청구서가 한 장도 오지 않았습니다.</p>'}${near}</div>
-    <div><h3 class="wx-h3">1년 뒤 · 운영팀 30명</h3>${G.exodus&&(G.exodus.n||G.exodus.sick)?exodusHtml(G.exodus,{compact:true}):`<p class="note0">내년 1월에도 ${typeof teamN==="function"?teamN():30}명 모두 남습니다. 12월에 '이 팀에서 계속 일하고 싶다'는 ${G.exodus?G.exodus.S:"-"}이었습니다.</p>`}
+    <div><h3 class="wx-h3">1년 뒤 · 운영팀 ${typeof teamN==="function"?teamN():30}명</h3>${G.exodus&&(G.exodus.n||G.exodus.sick)?exodusHtml(G.exodus,{compact:true}):`<p class="note0">내년 1월에도 ${typeof teamN==="function"?teamN():30}명 모두 남습니다. 12월에 '이 팀에서 계속 일하고 싶다'는 ${G.exodus?G.exodus.S:"-"}이었습니다.</p>`}
     <h3 class="wx-h3">리더를 아는 정도 ${kn}/${kt}칸</h3>${typeof relationMap==="function"?relationMap():""}<div class="table">${ppl}</div></div></div>`;};
 })();

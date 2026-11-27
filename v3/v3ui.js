@@ -101,7 +101,7 @@ const CELLMAP={RUN:["mfg","prc"],AI:["rd","src"],GROW:["mkt","rd"],SEC:["prc","s
 const MD=()=>{if(!G.mod){G.mod={add:{},s:{}};LK.forEach(k=>{G.mod.add[k]=0;G.mod.s[k]=MBASE[k].s;});}return G.mod;};
 /* B-8 (2026-11-25): 스트레스 바닥값. 업무량이 낮아도 10 아래로는 내려가지 않는다. 오르는 규칙과 80 이상 이벤트(str80)는 그대로 */
 const STR_MIN=10;window.STR_MIN=STR_MIN;
-const CN={RUN:"운영(RUN)",AI:"AI 전환",GROW:"성장",SEC:"보안"};
+const CN={RUN:"RUN 기존 운영",AI:"AI 전환",GROW:"GROW 추가 제안",SEC:"SEC 예방·보안"}; /* 7단계 #29 */
 function strWhy(k){const M=MD(),w=workload(k),st=M.s[k],c=G.cellsDraft||G.cells;
  if(st<=STR_MIN&&w<=50)return "바닥값 10: 업무량이 낮아 더 내려가지 않습니다.";
  if(w<70)return "";
@@ -208,7 +208,7 @@ if(SPEC["6-2"])SPEC["6-2"].targets.forEach(t=>{if(t.n==="사업부장")t.n="본�
 SCENES.write3=function(s){
  const spec=SPEC["6-2"],ct=G.f.ct_cut?"cut":G.f.ct_more?"more":"measure",T=spec.targets,list=principleList().concat(gradeList());
  let why=null,direct=null,text="",pick={};G.ord3=G.ord3||{};
- const d1=()=>{paint("");shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>하반기 계약을 세 사람에게</h2><div class="prose"><p>6월 헬씨푸드 협상에서 정한 하반기 계약을, 3분기를 마무리하며 헬씨푸드 임원, 본부장, 팀 전체에게 다시 설명합니다. <b>한 사람에게는 직접 쓰고</b>, 나머지 둘에게는 준비된 문장 중에서 고릅니다.</p></div>${condLines(spec)}<p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}
+ const d1=()=>{paint("");shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>하반기 계약을 세 사람에게</h2><div class="prose"><p>6월 헬씨푸드 협상에서 정한 하반기 계약을, 3분기를 마무리하며 헬씨푸드 임원, 본부장, 팀 전체에게 다시 설명합니다. <b>한 사람에게는 직접 쓰고</b>, 나머지 둘에게는 준비된 문장 중에서 고릅니다.</p></div>${condLines(spec)}<p><b>이 결정의 근거를 고르세요.</b></p>${list.length?(()=>{/* 7단계 #26: 팀 운영 원칙과 등급 기준을 나눠 보여 준다 */const pl=principleList(),gl=gradeList().filter(x=>!pl.includes(x));let n=0;const btn=w=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${++n}</span><span>${w}</span></button>`;return `<div class="opts">${pl.length?`<p class="optgrp"><b>팀 운영 원칙</b> <span class="note">퓨쳐테크가 정한 원칙</span></p>${pl.map(btn).join("")}`:""}${gl.length?`<p class="optgrp"><b>등급 기준</b> <span class="note">3월에 공개한 평가 기준</span></p>${gl.map(btn).join("")}`:""}</div>`;})():'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}
   <p><b>누구에게 직접 쓸까요?</b></p><div class="btns">${T.map(t=>`<button class="btn ${direct===t.k?"main":""}" ${A(()=>{direct=t.k;d1();})}>${val(t.n)}</button>`).join("")}</div>
   <div class="foot"><span></span><button class="btn main" ${(why||!list.length)&&direct?"":"disabled"} ${A(d2)}>다음</button></div></div>`);};
  const d2=()=>{paint("");const t=T.find(x=>x.k===direct);
@@ -271,7 +271,7 @@ const CINE={
  R1:{scene:"3-1-2",label:"KPI 기준을 어디까지 알렸나",keys:["구성원","발언량","이수진 신뢰","강태식 신뢰","기준 인지(추정)"],
   mine:()=>G.f["c_3-1-2_A"]?"A":G.f["c_3-1-2_B"]?"B":G.f["c_3-1-2_C"]?"C":null,alt:{A:"C",B:"A",C:"A"},opts:()=>CONTENT.find(x=>x.id==="3-1").levels,
   names:{A:"전체 공개",B:"항목만 공개",C:"리더에게만"},pubv:{A:65,B:55,C:42},
-  say:{A:[["prc","예방 기록이 처음으로 기준표에 들어갔네요."],["board","점검 몇 번이면 몇 점이에요? 다들 계산 중."]],B:[["oh","항목은 봤는데 비중은 리더님마다 말이 달라요."]],C:[["src","저희 모듈은 제가 알아서 설명하겠습니다."],["board","다른 모듈은 기준이 다르다던데?"]]}},
+  say:{/* 7단계 #11: 예방을 기준에 넣지 않은 회차에는 '예방이 들어갔다'는 대사를 쓰지 않는다 */get A(){const pv=!!(G.f.pub_prevent||(G.pub||[]).includes("장애 예방 활동"));return pv?[["prc","예방 기록이 처음으로 기준표에 들어갔네요."],["board","점검 몇 번이면 몇 점이에요? 다들 계산 중."]]:[["prc","기준은 다 보이는데, 예방은 여전히 빠져 있네요."],["board","기준표가 다 보이니 다들 자기 점수를 계산 중이에요."]];},B:[["oh","항목은 봤는데 어떻게 적용하는지는 리더님마다 말이 달라요."]],C:[["src","저희 모듈은 제가 알아서 설명하겠습니다."],["board","다른 모듈은 기준이 다르다던데?"]]}},
  R2:{scene:"4-2",label:"팀 여력 10칸을 어떻게 나눴나",keys:["모듈 업무량 최고","리더 신뢰 평균","고객","재무","서비스 안정"]},
  R3:{scene:"R3-1b",label:"새벽 3시, 3번 라인",keys:["서비스 안정","헬씨푸드 만족","발언량","강태식 신뢰","고객"],
   mine:()=>G.f["c_R3-1b_A"]?"A":G.f["c_R3-1b_B"]?"B":G.f["c_R3-1b_C"]?"C":null,alt:{A:"B",B:"A",C:"A"},opts:()=>CONTENT.find(x=>x.id==="R3-1b").options,
@@ -396,7 +396,7 @@ const FACT360=(who,a,lv)=>{const f=G.f,pub=G.pub||[],c=G.cells||{},hasPub=n=>pub
  if(who==="mfg"&&a===3)return lv===1&&G.cells&&(c.RUN||0)<2?"RUN 칸은 작았지만, 야간 사정을 먼저 물어 준 건 알아.":null;
  if(who==="mkt"&&a===2)return lv===1&&!(f.credit_rule||f.report_both||f.kpi_mkt_credit)?"누가 썼는지 따로 물어봐 주셨어요.":null;
  if(who==="team"&&a===2)return lv===1&&f.pub_leaders?"기준은 리더한테서 전해 들었어요. 연말엔 그 말대로 받았어요.":null;
- if(who==="boss"&&a===2)return !ap?(lv===1?"등급 이의가 올라오지 않더군.":"등급 기준을 묻는 사람이 여전히 많더군."):null;
+ if(who==="boss"&&a===2)return !ap?(lv===1?"등급 이의가 올라오지 않더군.":"등급 기준을 묻는 사람이 여전히 많더군."):G.appealOK===false?"이의 건, 등급 이유를 설명할 기록이 없더군.":null; /* 7단계 #4: 이의 면담에서 근거를 제시하지 못했으면 점수 구간 문장('처리 근거가 깔끔했네')을 쓰지 않는다 */
  return null;};
 const TAIL360={rd:["내년에도 이러면 다른 길을 볼 것 같아요.","내년엔 제가 먼저 제안할게요."],src:["조달은 올해도 뒤에 있었어요.","내년에도 이 순서면 됩니다."],mfg:["나는 올해도 버텼다. 그게 다야.","내년 야간도 같이 짜자."],prc:["말해야 아시는 건 여전하네요.","예전보다 말하기가 쉬웠어요."],mkt:["저만 숫자로 남는 기분이었어요.","다음 제안서는 처음부터 같이 봐요."]};
 function axOf(filter){const a={1:{L:0,P:0},2:{L:0,P:0},3:{L:0,P:0},4:{L:0,P:0}};G.sig.filter(x=>habitSig(x)&&(!filter||filter(x))).forEach(x=>{a[x.a][x.s]+=x.w;});const o={};for(const k in a){const t=a[k].L+a[k].P;o[k]={v:t?a[k].L/t:null,n:t};}return o;}
@@ -464,20 +464,20 @@ window.v3RubricHtml=function(r){
   const rb=evalRubricR1(allTxt);if(rb)items.push(["1월 핵심 과제 근거 (3개)",rb.badge]);
  }
  if(r===2&&G.written){
-  if(G.written.notice&&G.written.notice.글){const rb=evalRubric3(G.written.notice.글,2);if(rb)items.push(["R2-2 여력 배분 공지문",rb.badge]);}
-  if(G.written.three&&G.written.three.직접&&G.written.three.직접.글){const rb=evalRubric3(G.written.three.직접.글);if(rb)items.push(["R2-7 세 개의 설명 ("+G.written.three.직접.대상+" 직접 작성)",rb.badge]);}
+  if(G.written.notice&&G.written.notice.글){const rb=evalRubric3(G.written.notice.글,2);if(rb)items.push(["4월 여력 배분 공지",rb.badge]);}
+  if(G.written.three&&G.written.three.직접&&G.written.three.직접.글){const rb=evalRubric3(G.written.three.직접.글);if(rb)items.push(["9월 계약 설명 ("+G.written.three.직접.대상+" 직접 작성)",rb.badge]);}
  }
  if(r===3&&G.written&&G.written["12-6"]){
   const w=G.written["12-6"];const txt=typeof w==="string"?w:(w.team||w.글||JSON.stringify(w));
-  const rb=evalRubric3(txt);if(rb)items.push(["R3-6 연말 평가 결과 팀 공지",rb.badge]);
+  const rb=evalRubric3(txt);if(rb)items.push(["12월 평가 결과 공지",rb.badge]);
  }
  if(!items.length)return `<p class="note">이번 라운드에 작성한 서술형 답안이 없습니다.</p>`;
  return `<div class="rubric-box"><span class="label">서술형 답안 미리 보기 · 최종 점수는 강사가 채점</span><p class="note" style="margin:4px 0 6px">${r===1?"1월 핵심 과제 근거는 입력 안내와 같은 세 요소로 점검했습니다. ① 메모에서 본 숫자나 사실 ② 누가, 무엇이 ③ 어떻게 흔들리는지.":"이번 라운드에 직접 쓴 글을 세 가지 요소로 점검했습니다. ① 기준·원칙을 밝혔나 ② 상대의 맥락을 반영했나 ③ 다음 행동과 기한을 적었나."} ○ 있음 · ✕ 없음. 자동 점검은 정해 둔 낱말과 숫자가 들어 있는지만 보는 참고 표시이고, 문장이 맞는지는 보지 않습니다.</p>${items.map(x=>`<div><b>${x[0]}</b>: <span class="num">${x[1]}</span></div>`).join("")}</div>`;
 };
-const SELF_COMMENTARY={
- 1:"[Round 1 자율 학습 해설] 1라운드의 핵심은 '실무자 습관(직접 처리) 내려놓기'와 '연말 평가의 잣대가 될 기준을 미리 공개하기(규칙 ①)'입니다. R1-4에서 드러나지 않는 기여(예방·온보딩)를 기준에 넣고 전체 공개(A)했는지, R1-5에서 만나지 못한 리더가 자기 마음대로 KPI를 적어 온 균열을 확인해 보세요.",
- 2:"[Round 2 자율 학습 해설] 2라운드의 핵심은 '세 자원(⏳·💳·👥)의 교환비'와 '대상별 다른 언어(세 개의 설명)'입니다. R2-2에서 모든 모듈을 만족시키려다 핵심 칸이 얇아지면 R2-5 차출에서 와블러가 터집니다. 또한 같은 계약 결과라도 고객(일정·품질), 본부장(손익·리스크), 팀원(업무량·배분 기준)에게 설명하는 초점이 달라야 수용성이 높아집니다.",
- 3:"[Round 3 자율 학습 해설] 3라운드의 핵심은 '새벽 위기에서의 심리적 안전·절차 준수'와 '기억이 아닌 관찰 기록 기반 평가'입니다. R3-1에서 납기 압박 때문에 안전 인터록 우회(C)를 택하면 단기 고객 만족은 올라도 기준 미달(Red Line 위반)이 됩니다. 연말 평가와 이의제기에서 연초 공개한 기준과 일관된 근거를 제시했는지 가상 360 피드백으로 대조해 보세요."
+const SELF_COMMENTARY={ /* 7단계 #19: 내부 장면 번호와 원래 글자 대신 장면 이름으로 */
+ 1:"[Round 1 자율 학습 해설] 1라운드의 핵심은 '실무자 습관(직접 처리) 내려놓기'와 '연말 평가의 잣대가 될 기준을 미리 공개하기'입니다. 3월 KPI 합의서에서 드러나지 않는 기여(예방·온보딩)를 기준에 넣고 팀 전체에 공개했는지, KPI 면담에서 만나지 못한 리더가 자기 방식대로 KPI를 적어 온 곳이 어디인지 확인해 보세요.",
+ 2:"[Round 2 자율 학습 해설] 2라운드의 핵심은 '세 자원(시간·토큰·팀 여력)을 어떻게 바꿔 쓰는가'와 '받는 사람에 맞는 말(세 개의 설명)'입니다. 4월 여력 배분에서 모든 모듈을 만족시키려다 핵심 칸이 얇아지면 8월 본사 차출 때 버틸 여유가 없습니다. 같은 계약 결과라도 고객(일정·품질), 본부장(손익·위험), 팀원(업무량·배분 기준)에게 설명하는 초점이 달라야 받아들여집니다.",
+ 3:"[Round 3 자율 학습 해설] 3라운드의 핵심은 '새벽 위기에서의 심리적 안전과 절차 준수'와 '기억이 아닌 관찰 기록에 근거한 평가'입니다. 10월 새벽 장애에서 납기 압박 때문에 안전 인터록 우회를 고르면 고객 만족은 잠시 올라도 넘어서는 안 되는 선을 넘은 결정이 됩니다. 연말 평가와 이의 면담에서 연초에 공개한 기준과 맞는 근거를 제시했는지 가상 360 피드백과 대조해 보세요."
 };
 window.v3SelfStudyHtml=function(r){
  return `<div class="happen" style="margin-top:8px"><span class="label">💡 자율 학습 코멘터리</span>${SELF_COMMENTARY[r]||""}</div>`;
@@ -500,7 +500,7 @@ SCENES.v3final=function(s){
   ()=>{const tt=V3TITLE()||((G.unsent||[]).length>=3?["조용한 팀의 팀장","올해 팀은 조용했습니다."]:null)||(typeof titleOf==="function"?(()=>{const t=titleOf();let l=(typeof TITLE_L!=="undefined"&&TITLE_L[t])||"";/* 피드백 3단계 #39: 드러나지 않는 기여를 기준에 넣은 해에는 그 사실을 함께 쓴다 */if(t==="숫자를 믿는 심판"&&(G.f.pub_prevent||G.f.pub_support||(G.pub||[]).some(x=>/예방|온보딩/.test(x))))l="드러나지 않는 기여도 기준표에 넣었습니다. 그래도 실제로 판단할 때는 숫자를 먼저 보는 습관이 더 자주 나왔습니다.";return[t,l];})():["",""]);const rt=typeof resultType==="function"?resultType():null;
    return `<div class="eyebrow">결산 2/7 · 도장과 칭호</div><h2>${brs.length?"기준 미달":"기준 통과"}</h2><div class="prose">${brs.length?`<p>다른 점수와 관계없이, 아래의 선택은 넘어서는 안 되는 선을 넘었습니다.</p>${brs.map(b=>`<p>· ${b}</p>`).join("")}`:"<p>올해 장애 절차, 보안, 현장 안전 기준을 벗어난 선택이 없었습니다.</p>"}${(G.noEvid||[]).length?`<p style="margin-top:10px"><b>근거 없이 확정한 평가 ${G.noEvid.length}명</b> · ${G.noEvid.join(", ")}. 확정은 됐지만, 이 사람들이 이의를 내면 등급의 이유를 설명할 기록이 없습니다.</p>`:""}${(()=>{const C=window.gradeCInfo?gradeCInfo():[];return C.length?`<p style="margin-top:10px"><b>C를 준 사람</b> · ${C.map(c=>`${c.n} (연결한 근거 기록 ${c.ev}건${c.fit?"":", 근거 부족"})`).join(", ")}<br><span class="note">배분 가이드 때문에 C는 누군가 받아야 했습니다. 그 사람이 이유를 물으면, 연초에 공개한 기준과 이어지는 기록 몇 건을 보여 줄 수 있습니까?</span></p>`:"";})()}
    <p style="margin-top:12px"><b>칭호 · ${tt[0]}</b><br>${tt[1]}</p>${rt?`<p><b>결과 유형 · ${rt[0]}</b> ${rt[1]}</p>`:""}<p class="note">선임 다짐: "${G.pledge||""}"</p></div>
-   <div class="kv">${SCORES.map(k=>`<div><span>${SL(k)}</span><b>${G.score[k]}</b></div>`).join("")}<div><span>헬씨푸드 만족</span><b>${G.fsat}</b></div><div><span>팀 발언량</span><b>${voice()}</b></div><div><span>연간 토큰 효율</span><b>${(()=>{const tot=Object.values(G.roundTok||{}).reduce((a,b)=>a+b,0);if(!tot)return "미사용";const e=tokEffOf(((G.score.성과-50)+(G.score.안정-50))/2,tot,20);return e.v!=null?e.v+" <span class=\"note\">토큰 10당 오른 점수</span>":"측정 안 함 <span class=\"note\">("+e.why+")</span>";})()}</b> <span class="note">(총 💳${Object.values(G.roundTok||{}).reduce((a,b)=>a+b,0)})</span></div></div>
+   <div class="kv">${SCORES.map(k=>`<div><span>${SL(k)}</span><b>${G.score[k]}</b></div>`).join("")}<div><span>헬씨푸드 만족</span><b>${G.fsat}</b></div><div><span>팀 발언량</span><b>${voice()}</b></div><div><span>연간 토큰 손익</span><b>${(()=>{if(!window.tokYear)return "—";const y=tokYear();return TOK_TYPE[y.type][0];})()}</b> <span class="note">${(()=>{if(!window.tokYear)return "";const y=tokYear();return `💳${y.used} · 재무 ${y.cost?"−"+y.cost:"0"}${y.risk?` · 위험 ${y.risk}건 낮춤(${y.avoided}건 일어나지 않음)`:""}${y.timeSaved?` · ⏳${y.timeSaved} 아낌`:""}${y.locks?` · 잠긴 기회 ${y.locks}건`:""}${y.wrongTok?` · 좋은 리더의 선택이 아닌 곳에 💳${y.wrongTok}`:""}`;})()}</span></div></div>
    ${typeof trendChart==="function"?(()=>{const t=trendChart();if(t&&t.bind)setTimeout(t.bind,0);return t&&t.html||t||"";})():""}<p class="note">스타일: ${(G.styleLog||[]).map(x=>"R"+x.r+" "+STYLE[x.style||"bal"].n).join(" → ")}</p>`;},
   ()=>{const u=G.unsent||[];return `<div class="eyebrow">결산 3/7 · 보내지 않은 메시지</div><h2>올해 당신의 받은편지함에 도착하지 않은 메시지가 ${u.length}건 있었습니다</h2><div class="unsent">${u.map(x=>`<p class="voice">${x}</p>`).join("")||'<p>올해는 말하려던 것이 모두 도착했습니다. 시끄러웠던 받은편지함을 기억하시나요.</p>'}</div><p class="note">1년 동안 숨겨 둔 값: 팀의 심리적 안전 ${G.safe} (0~100, 시작 50). 팀 전체가 말하기 쉬웠던 정도이고, 발언량은 이 값의 겉모습이었습니다.${(()=>{const n=u.length,sf=G.safe;/* B-10: 값과 이야기가 엇갈려 보일 때 설명 */
    if(n&&sf>=60)return ` 값이 높았는데도 위의 ${n}건은 도착하지 않았습니다. 이 값은 팀 전체의 분위기를 재는 것이라, 한 사람이 한 주제를 끝내 말하지 못한 일은 따로 잡히지 않습니다. 분위기가 좋은 팀에서도 특정한 사람에게, 특정한 일은 말하기 어려울 수 있습니다.`;

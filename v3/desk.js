@@ -112,7 +112,7 @@
    if(s.type==="inbox"){const st=s._st||{};const L=(G.inboxLog||[]).slice(-1)[0];const m=(s.mail||[]).find(x=>x.id===(st.sel||(L&&L.id)));
     if(m){const who=String(m.from||"").replace(/^[^가-힣A-Za-z]+/,"").replace(/\s*[·(].*$/,"").trim();const k=L&&L.id===m.id?L.k:"처리";return ` · ${who} ${m.t==="CALL"?"전화":m.t==="DM"?"메시지":"메일"} ${k}`;}return "";}
    const n=(window.SC_NICK&&SC_NICK[s.id])||String(s.title||"").replace(/<[^>]*>/g,"");return n?` · ${n} 결정`:"";}catch(e){return "";}}
- function deskNote(head,text,trust){{const pp=document.getElementById("people");if(pp&&pp.classList.contains("dk-open"))return;}let n=document.getElementById("dknote");if(!n){n=document.createElement("div");n.id="dknote";n.setAttribute("role","status");document.body.appendChild(n);}
+ function deskNote(head,text,trust){{const pp=document.getElementById("people");if(pp&&pp.classList.contains("dk-open"))return;}{const s0=(typeof CONTENT!=="undefined"&&CONTENT[G.idx])||{};if(/^(roundEnd|v3final|finale)$/.test(s0.type||""))return;}let n=document.getElementById("dknote");if(!n){n=document.createElement("div");n.id="dknote";n.setAttribute("role","status");document.body.appendChild(n);}
   n.innerHTML=`<span class="ai" style="--c:#5b6770">${typeof ICO!=="undefined"?ICO.users:""}</span><span class="tx"><span class="hd"><b>리더 신뢰·업무량</b><small>지금</small></span><b class="tt">${head}</b><span>${text}</span>${trust?'<small class="dk-go">눌러서 리더 신뢰 보기</small>':""}</span>`;n.classList.toggle("dk-click",!!trust);n.onclick=trust?()=>{n.hidden=true;clearTimeout(noteT);toggleTeam(true);}:null;n.hidden=false;n.classList.remove("go");void n.offsetWidth;n.classList.add("go");clearTimeout(noteT);noteT=setTimeout(()=>{n.hidden=true;},trust?6500:3200);}
  window.deskNote=deskNote;
 
@@ -507,7 +507,7 @@
   const L=document.createElement("div");L.className="dkl";
   L.innerHTML=`<div class="dkl-top"><b>퓨쳐테크 워크스페이스</b><span class="sp"></span><button type="button" class="dkl-theme"></button></div>
    <div class="dkl-mid"><p class="dkl-date">1월 첫 주 · 월요일</p><p class="dkl-clock">08:40</p>
-    <div class="dkl-card"><span class="dkl-av" aria-hidden="true">나</span><b>신임 팀장</b><span class="dkl-team">퓨쳐테크 헬씨푸드 운영팀 · 30명</span>
+    <div class="dkl-card"><span class="dkl-av" aria-hidden="true">나</span><b>신임 팀장</b><span class="dkl-team">퓨쳐테크 헬씨푸드 운영팀 · ${typeof teamN==="function"?teamN():30}명</span>
      <p class="dkl-lead">어제까지 옆자리 동료였던 사람들이 오늘부터 당신을 팀장이라고 부릅니다. 받은편지함에 여덟 통이 와 있습니다.</p>
      <div class="btns dkl-btns"></div><button type="button" class="dkl-guide-btn">과정 안내 보기</button></div></div>
    <p class="dkl-foot">3라운드 · 1년 · 라운드마다 약 20분 · 정답 없음 · 입력한 내용은 인사 평가와 연결되지 않습니다</p>`;
@@ -547,6 +547,7 @@
   try{uiMenuItem();
    paintFrame();
    const s=CONTENT[G.idx]||{};if(s.bare)toggleTeam(false);
+   /* 7단계 #25: 성적표·결산 화면에 들어가면 앞 장면의 신뢰 알림을 닫는다 (390px에서 탭 줄을 가리던 문제) */if(/^(roundEnd|v3final|finale|wait)$/.test(s.type||"")){const nb=document.getElementById("dknote");if(nb){nb.hidden=true;clearTimeout(noteT);}}
   }catch(e){}
   return r;};
 })();

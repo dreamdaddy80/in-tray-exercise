@@ -1,6 +1,6 @@
 /* 헬씨푸드 운영팀 첫 해 · 엔진. 원고 내용은 c00.js, c01.js ... 에 있다. */
 const LD={rd:{n:"서하준",m:"R&D",h:1},src:{n:"문지원",m:"조달",h:2},mfg:{n:"강태식",m:"생산",h:3},prc:{n:"이수진",m:"가공",h:4},mkt:{n:"정다은",m:"마케팅",h:5}};
-const PP={kim:{n:"김 사원",m:"생산",lead:"mfg",h:1},yoon:{n:"윤 책임",m:"조달",lead:"src",h:3},oh:{n:"오 사원",m:"가공",lead:"prc",h:5},han:{n:"한 선임",m:"마케팅",lead:"mkt",h:2},cha:{n:"차 선임",m:"R&D",lead:"rd",h:4},bae:{n:"배 책임",m:"생산",lead:"mfg",h:3},anon:{n:"○ 사원",m:"",lead:"mfg",h:2}};
+const PP={kim:{n:"김 사원",m:"생산",lead:"mfg",h:1},yoon:{n:"윤 책임",m:"조달",lead:"src",h:3},oh:{n:"오 사원",m:"가공",lead:"prc",h:5},han:{n:"한 선임",m:"마케팅",lead:"mkt",h:2},cha:{n:"차 선임",m:"R&D",lead:"rd",h:4},bae:{n:"배 책임",m:"생산",lead:"mfg",h:3},anon:{n:"익명 구성원",m:"",lead:"mfg",h:2}};
 const ALLY={rd:"mkt",mkt:"rd",mfg:"src",src:"mfg"};
 const FOE={mfg:["prc"],prc:["mfg","mkt"],mkt:["prc"],rd:["src"],src:["rd"]};
 const SCORES=["성과","재무","사람","안정"];
@@ -398,7 +398,7 @@ function SC_CHOICE(s,opt={}){
   /* 결정하는 순간, 팀장 시간이 모자라 잠겨 있던 선택지와 알리기 방식을 적어 둔다 (야근으로 빌리지 않은 경우도 포함) */
   const lockedO=KEY?[]:shown.filter(x=>{const c=val(x.cost)||0;return x.k!==o.k&&c>G.time&&!(x.dis&&x.dis(G));}).map(x=>x.k);
   const lockedT=KEY||!tell?[]:TELL.filter(t=>t.c>0&&t.c>tellLeft()).map(t=>"알리기:"+t.id);
-  /* 피드백 6단계 #38: 토큰이 모자라 잠겨 있던 선택지. 판정(좋은 리더와 같음/다름)에서만 쓰고, 습관 기록과 강제된 선택 목록에는 넣지 않는다 */
+  /* 토큰이 모자라 잠겨 있던 선택지. 성적표의 '토큰 잠김' 쟁점과 토큰 장부에서만 쓰고, 판정·습관 기록·강제된 선택 목록에는 넣지 않는다 (2026-11-27 A안) */
   const lockedK=shown.filter(x=>{const t=val(x.tok)||0;return x.k!==o.k&&t>0&&(G.token||0)<t&&!(x.dis&&x.dis(G));}).map(x=>x.k);
   const forcedO=lockedO.length>0,forcedT=tell==="none"&&lockedT.includes("알리기:short");
   const f0=forcedO?Object.assign({},G.f):null;
@@ -419,6 +419,8 @@ function SC_CHOICE(s,opt={}){
   const spared=badP>=20&&!hit;
   const hits2=(o.tw2||[]).filter(t=>Math.random()*100<val(t.p));luckLog(s,o,hit,hits2);hits2.forEach(t=>applyFx(val(t.fx),{live,rel:s.rel}));
   if(hit){applyFx(val(hit.fx),{live,rel:s.rel,mult,...ex,neg:neg!==1?neg:undefined});if(hit.ending)G.ends[ENDKEY[base]||base]=hit.ending;if(hit.settle)settle(hit.settle[0],hit.settle[1]==="이행",PROM_MEMBER[hit.settle[0]]);}
+  /* 토큰 장부용: 이 결정에서 어떤 전개가 일어났는지(전개 번호, 없으면 -1)만 남긴다. 효과·확률에는 쓰지 않는다 */
+  {const d=G.decisions[G.decisions.length-1];if(d&&d.scene===s.id&&d.choice===o.k&&(o.tw||[]).length)d.tw=hit?o.tw.indexOf(hit):-1;}
   G.nextMult=hit&&hit.nextMult!=null?hit.nextMult:o.nextMult;
   if(o.onDone)o.onDone(G,hit);
   let tellLine="";
@@ -617,10 +619,11 @@ const TYPE_NAME={evalc:"연말 평가",appeal:"이의 면담",kpi:"KPI 합의서
 function nm(id){id=String(id);{const mm=id.match(/^(.*)-1$/);const bs=mm&&sceneOf(mm[1]);if(bs&&bs.type==="med")id=mm[1];}
  {const rt=id.match(/^RET(\d+)(M\d+)$/);if(rt){const ml=mailOf(rt[2]);return `${rt[1]}월 되돌아온 일「${ml?ml.m.sub:"맡긴 일"}」`;}}
  {const ap=id.match(/^12-4([a-z]+)$/);if(ap&&(LD[ap[1]]||PP[ap[1]]))return `12월 「${name(ap[1])}의 이의 면담」`;}
- const ml=mailOf(id.split("~")[0]);if(ml)return `${ml.month}월 「${ml.m.sub}」`;const R={"R-6":"6월 반기 회고 재배분","4-2":"4월 자원 배분","4-2공지":"4월 배분 공지"};if(R[id])return R[id];
- let s=sceneOf(id);if(s&&s.type==="branch"&&Array.isArray(s.cases)){const i=(G.cases||{})[s.id];s=Object.assign({month:s.month},s.cases[i!=null&&s.cases[i]?i:0]||{});}
- const mo=(MON?MON(id):null)||(s&&s.month)||null;if(s&&s.type==="interview")return (mo?mo+"월 ":"")+"면담";
- const t=s&&(cleanTitle(s.title)||TYPE_NAME[s.type]||cleanTitle(s.tag));return (mo?mo+"월 ":"")+`「${t||"그달의 안건"}」`;}
+ const ml=mailOf(id.split("~")[0]);if(ml){/* 7단계 #7: 전화는 제목('전화가 옵니다') 대신 건 사람으로 부른다 */const who=String(ml.m.from||"").replace(/^[^가-힣A-Za-z]+/,"").replace(/\s*\([^)]*\)\s*$/,"").replace(/^헬씨푸드 담당 임원$/,"헬씨푸드 임원");return `${ml.month}월 「${ml.m.t==="CALL"&&who?who+" 전화":ml.m.sub}」`;}const R={"R-6":"6월 반기 회고 재배분","4-2":"4월 자원 배분","4-2공지":"4월 배분 공지","4-2b":"4월 「AI 토큰 배분」"};if(R[id])return R[id];
+ let s=sceneOf(id);if(s&&s.type==="branch"&&Array.isArray(s.cases)){const i=(G.cases||{})[s.id];s=Object.assign({},s.cases[i!=null&&s.cases[i]?i:0]||{},{month:s.month});}
+ /* 7단계 #6: 장면 번호 앞자리보다 v3가 정한 장면 월을 먼저 쓴다 (5-4는 6월, 6-3은 8월, 9-4는 10월 …) */
+ const par=CONTENT.find(x=>Array.isArray(x.cases)&&x.cases.some(c=>c&&c.id===id));const mo=(par&&par.month)||(s&&s.month)||(MON?MON(id):null)||null;if(s&&s.type==="interview")return (mo?mo+"월 ":"")+"면담";
+ const NK=window.SC_NICK||{};const t=s&&(NK[id]||NK[s.id]||cleanTitle(s.title)||TYPE_NAME[s.type]||cleanTitle(s.tag));return (mo?mo+"월 ":"")+`「${t||"그달의 안건"}」`;} /* 7단계 #7: v3 장면 별칭을 먼저 쓴다 */
 /* 선택지 요약: 결과 문장이 있으면 그 첫 문장, 없으면 선택지 문장을 문장 단위로 줄인다 */
 function shortSentence(t){t=String(t||"").replace(/\s*⏳[\d.]*/g,"").trim();const first=(t.match(/^[^.!?]*[.!?]/)||[t])[0].trim();if(first.length<=46)return first.replace(/[.]$/,"");const cut=first.slice(0,44);return cut.slice(0,Math.max(20,cut.lastIndexOf(" ")))+"…";}
 const FIXED_CHOICE={ai:{A:"분석을 받아들임",B:"정정을 요청함",C:"원자료를 더 받아 봄"},ret:{A:"막힌 곳을 듣고 다시 맡김",B:"내가 가져와 끝냄",C:"기한만 다시 주고 돌려보냄"},appeal:{A:"기록과 합의서 항목을 짚어 설명함",B:"동료와 견주어 설명함",C:"내년에 먼저 챙기겠다고 함",D:"서면 답변으로 처리함"}};
@@ -639,7 +642,13 @@ function holdLabel(st){const pn=(st.pend||[]).length,h=Math.max(0,st.holds-pn);r
 window.holdLabel=holdLabel;
 function dispK(id,k){try{const o=(G.ord||{})[id];if(!o||!/^[A-D]$/.test(String(k)))return k;const i=o.indexOf(k);return i>=0?"ABCD"[i]:k;}catch(e){return k;}}
 window.dispK=dispK;
-function choiceText(id,ch){{const fx=/^AI\d/.test(id)?FIXED_CHOICE.ai:/^RET\d+M/.test(id)?FIXED_CHOICE.ret:/^12-4[a-z]/.test(id)?FIXED_CHOICE.appeal:null;if(fx&&fx[ch])return fx[ch];}
+/* 7단계 #23: 긴 선택지 문장은 단어 경계에서 자르고 말줄임표를 붙인다 */
+function cutW(t,n){t=String(t??"");if(t.length<=n)return t;const c=t.slice(0,n),sp=c.lastIndexOf(" ");return (sp>n*.55?c.slice(0,sp):c).replace(/[,·\s]+$/,"")+"…";}
+window.cutW=cutW;
+function choiceText(id,ch){/* 7단계 #20: 배분은 고른 결과로, 토큰 배분은 방식으로 적는다 */
+ if(/^[{]/.test(String(ch))){try{const o=JSON.parse(ch);const ks=["RUN","AI","GROW","SEC"].filter(k=>o[k]!=null);if(ks.length)return ks.map(k=>k+" "+o[k]).join(" · ");}catch(e){}}
+ if(id==="4-2b"){const t={A:((G.roundTok||{})[1]||0)>0?"1분기에 쓴 양대로 토큰을 나눠 줌":"리더들이 요청한 양대로 토큰을 나눠 줌",B:"토큰당 기대 효과가 큰 모듈부터 배정함",C:"다섯 모듈에 똑같이 나눔"}[ch];if(t)return t;}
+ {const fx=/^AI\d/.test(id)?FIXED_CHOICE.ai:/^RET\d+M/.test(id)?FIXED_CHOICE.ret:/^12-4[a-z]/.test(id)?FIXED_CHOICE.appeal:null;if(fx&&fx[ch])return fx[ch];}
  const map={"직접":"직접 처리","코칭":"방향만 주고 맡김","답장":"답장","위임":"위임","보류":"보류","안 알림":"알리지 않음","설명":"이유까지 설명","기준 먼저 공유":"기준 먼저 공유"};if(map[ch])return map[ch];if(/^[a-z]+:/.test(ch)){const [k,how]=ch.split(":");const n=name(k),ob=jo(n,"을","를");return n+({"몰래":ob+" 리더 모르게 만남","sneak":ob+" 리더 모르게 만남","skip":ob+" 리더에게 알리고 만남","1on1":jo(n,"과","와")+" 1:1 면담"}[how]||" 면담");}
  {const mm=String(id).match(/^(.*)-1$/);const bs=mm&&sceneOf(mm[1]);if(bs&&bs.type==="med"){const m=(bs.n||2)>2;const t={A:(m?"양쪽을":"두 사람을")+" 따로 만나 사정을 들음",B:(m?"네 사람을":"둘을")+" 한자리에 불러 정리",C:"메일로 결론만 통보"}[ch];if(t)return t;}}
  let s=sceneOf(id);if(s&&s.type==="branch"&&Array.isArray(s.cases))s=s.cases[(G.cases||{})[s.id]||0]||s;
@@ -648,6 +657,9 @@ function choiceText(id,ch){{const fx=/^AI\d/.test(id)?FIXED_CHOICE.ai:/^RET\d+M/
  const o=Array.isArray(os)&&os.find(x=>x.k===ch);if(o){let d="";try{d=val(o.done);}catch(e){}return shortSentence(typeof d==="string"&&d?d:val(o.t));}
  return /^[A-D]$/.test(ch)?"고른 안 "+dispK(id,ch):ch;}
 function label(id,ch){return nm(id)+" — "+choiceText(id,ch);}
+/* 7단계 #6: 장면이 실제로 나오는 달. v3가 정한 장면 월(사례는 상위 장면의 월) → 메일의 달 → 번호 앞자리 순서로 읽는다 */
+function sceneMonthOf(id){id=String(id||"");try{const ml=typeof mailOf==="function"?mailOf(id.split("~")[0]):null;if(ml&&ml.month)return ml.month;const par=CONTENT.find(x=>Array.isArray(x.cases)&&x.cases.some(c=>c&&c.id===id));if(par&&par.month)return par.month;const s=sceneOf(id);if(s&&s.month)return s.month;}catch(e){}const m=id.match(/^(\d+)-/);return m?+m[1]:null;}
+window.sceneMonthOf=sceneMonthOf;
 function stripId(t){return String(t).replace(/^(M\d+(~M\d+)?|R-\d|\d+-\d+[a-z]?(_\d)?)\s+/,"");}
 function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`구성원 점수 때문에 다음 분기 서비스 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`헬씨푸드 기대 ${c.기대} 대비 서비스 안정 ${c.안정} → 헬씨푸드 만족 ${sg(c.안정_헬씨푸드)}`);else if(c.안정_헬씨푸드)p.push(`서비스 안정 점수 때문에 헬씨푸드 만족이 ${sg(c.안정_헬씨푸드)}`);if(c.헬씨푸드_재무)p.push(`헬씨푸드 만족 때문에 재무가 ${sg(c.헬씨푸드_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
 
@@ -733,7 +745,7 @@ const KNOW={know_rd_load:"R&D 실험의 절반은 차 선임 한 사람이 돌�
 
 /* 헬씨푸드 기대: 약속을 키우면 오르고, 숫자를 바로잡거나 범위를 줄이면 내려간다. 분기 말 헬씨푸드 만족 = (안정 − 기대) 차이 */
 const FEXP={prop_full:[8,"7월 제안을 요청 범위 그대로 받음"],prop_ai:[3,"7월 제안을 AI 분석으로 3주 안에 약속"],r2_more:[5,"4월 신규 과제를 더 받음"],ct_more:[6,"6월 계약에 신규 과제 2건을 넣음"],small_win:[3,"5월 소규모 수주를 받음"],f_140:[5,"\"주 140시간 절감\"이 헬씨푸드에 그대로 감"],scope_full:[8,"10월 본계약을 전 품목·1월 착수로 받음"],ai9_accepted:[2,"헬씨푸드 AI 재산정 수치를 받아들임"],
- f_corrected:[-6,"140시간을 38시간(실측 중)으로 바로잡음"],prop_narrow:[-4,"7월 제안 범위를 한 품목으로 줄임"],scope_stage:[-4,"10월 본계약을 단계적으로 넓히기로 함"],ai9_fixed:[-3,"헬씨푸드 재산정의 계획 정비 포함을 짚음"]};
+ f_corrected:[-6,"140시간을 38시간(실측 중)으로 바로잡음"],r2_measure:[-3,"4월 140시간을 실측으로 확인하기로 함"],ct_measure:[-3,"6월 실측으로 확인된 절감만 반영하기로 함"], /* 밸런스 재검토: 근거로 협상한 선택은 고객 기대를 현실에 맞춘다 */prop_narrow:[-4,"7월 제안 범위를 한 품목으로 줄임"],scope_stage:[-4,"10월 본계약을 단계적으로 넓히기로 함"],ai9_fixed:[-3,"헬씨푸드 재산정의 계획 정비 포함을 짚음"]};
 
 /* 확률의 호의 장부: 위험한 선택 뒤에 나쁜 결과가 굴러오지 않은 경우 */
 function twBad(t){if(t.mult&&t.mult>1.4)return true;let f="";try{f=String(val(t.fx)||"");}catch(e){}let sev=0;f.replace(/(성과|재무|사람|안정|헬씨푸드만족|안전)[−-](\d+)/g,(_,k,n)=>{sev+=+n;});f.replace(/(rd|src|mfg|prc|mkt)[−-](\d+)/g,(_,k,n)=>{sev+=(+n)/2;});if(/소문|초과부하/.test(f))sev+=2;if(/`(sec_found|inc_found|sec_data_found|cha_end_gone|tae_end_left|token_drain|prop_gap|night_clash|run_thin|kim_fragile)`/.test(f))sev+=3;return sev>=3;}
@@ -742,13 +754,13 @@ function luckLog(s,o,hit,hits2){if(!o)return;const P=t=>{try{return +val(typeof 
  const add=t=>{const p=P(t);if(p<25||!twBad(t))return;(G.luck=G.luck||[]).push({m:G.month,scene:s.id,title:cleanTitle(s.title)||"",choice:String(val(o.t)||"").slice(0,40),t:String(val(t.t)||""),p,cat:luckCat(s,t)});};
  (o.tw||[]).forEach(t=>{if(t!==hit)add(t);});(o.tw2||[]).forEach(t=>{if(!hits2.includes(t))add(t);});}
 function luckBill(b,p){if(p<30||(G.luck||[]).some(x=>x.scene==="bill"&&x.b===b))return;(G.luck=G.luck||[]).push({b,m:G.month,scene:"bill",title:"청구서",choice:"",t:`청구서 "${BILL[b].t}"`,p,cat:BILL[b].ax===1||/장애|안정|가공/.test(BILL[b].t)?"장애":"청구서"});}
-function luckHtml(){const L=G.luck||[];if(!L.length)return `<p>올해는 위험한 선택 뒤에 운 좋게 피해 간 나쁜 결과가 없었습니다. 결과가 결정을 그대로 보여 준 해였습니다.</p>`;
+function luckHtml(){/* 7단계 #3: 9월 추첨에서 비켜 갔어도 12월에 실제로 도착한 청구서는 '일어나지 않은 일'에서 뺀다 */const got=new Set(G.bills||[]),L0=G.luck||[],late=L0.filter(x=>x.scene==="bill"&&got.has(x.b)),L=L0.filter(x=>!(x.scene==="bill"&&got.has(x.b)));const lateP=late.length?`<p class="note">한 번 비켜 갔다가 결국 도착한 청구서 ${late.length}장은 여기서 뺐습니다: ${late.map(x=>`${x.m}월에 피한 "${(BILL[x.b]||{}).t||x.b}"`).join(", ")}.</p>`:"";if(!L.length)return `${lateP}<p>올해는 위험한 선택 뒤에 운 좋게 피해 간 나쁜 결과가 없었습니다. 결과가 결정을 그대로 보여 준 해였습니다.</p>`;
  const cats={};L.forEach(x=>cats[x.cat]=(cats[x.cat]||0)+1);const inc=cats.장애||0;const top=[...L].sort((a,b)=>b.p-a.p);
  return `<p><b>피해 간 나쁜 결과 ${L.length}건${inc?`, 그중 장애 관련 ${inc}건`:""}.</b> 무사했던 달을 실력이라고 할 수 있습니까?</p>
  <p class="note">${Object.entries(cats).map(([k,v])=>`${k} ${v}건`).join(" · ")}</p>
- <div class="table">${top.slice(0,8).map(x=>`<div class="task"><b>${x.m}월 ${x.title} · 확률 ${x.p}%</b>${x.choice?`<span class="note">고른 안: ${x.choice}${x.choice.length>=40?"…":""}</span>`:""}<span class="note">일어나지 않은 일: ${x.t}</span></div>`).join("")}</div>
+ <div class="table">${top.slice(0,8).map(x=>`<div class="task"><b>${x.m}월 ${x.title} · 확률 ${x.p}%</b>${x.choice?`<span class="note">고른 안: ${x.choice.length>=40?cutW(x.choice,39):x.choice}</span>`:""}<span class="note">일어나지 않은 일: ${x.t}</span></div>`).join("")}</div>
  ${top.length>8?`<details class="ref"><summary>나머지 ${top.length-8}건</summary><p class="note" style="margin-top:6px">${top.slice(8).map(x=>`${x.m}월 ${x.title} · ${x.p}% · ${x.t}`).join("<br>")}</p></details>`:""}
- <p class="note">결과가 좋았던 것과 결정이 좋았던 것은 다릅니다. 같은 선택을 다시 하면 이 일들은 일어날 수 있습니다.</p>`;}
+ ${lateP}<p class="note">결과가 좋았던 것과 결정이 좋았던 것은 다릅니다. 같은 선택을 다시 하면 이 일들은 일어날 수 있습니다.</p>`;}
 
 /* 숨은 값의 월별 기록. 실제 아차 사례(숨은 값) 가운데 보고되는 몫은 심리적 안전에 달려 있다 */
 function recordMonth(m){(G.monRec=G.monRec||{})[m]=1;const c=G.cells||{};

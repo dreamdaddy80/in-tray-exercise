@@ -340,7 +340,7 @@
   "11-4":{sit:"11월, 1년 동안 부딪쳐 온 강태식과의 관계가 갈림길에 섭니다.",pt:"선배가 내민 손을 어떻게 잡을 것인가, 떠나려는 선배를 어떻게 대할 것인가.",ld:"좋은 리더라면 선배가 내민 제안을 받아 권한과 책임을 함께 맡기거나 공식 목표로 올려 기여가 기록되게 합니다. 선배가 떠나려 한다면 붙잡을 방법보다 무엇이 틀어졌는지를 먼저 듣고, 동시에 모듈이 흔들리지 않게 대비합니다. 본인을 건너뛰고 핵심 인력부터 따로 만나면 남은 사람들에게 '떠나는 사람은 이렇게 대한다'는 신호를 줍니다.",best:[],bestCase:{"0":["A","B"],"1":["A","B"]}},
   "6-4a":{sit:"인사팀이 하반기 평가부터 'AI 활용 효과'를 등급 기준에 20% 이상 반영하라는 지침을 보냈습니다. 3월에 합의한 기준과 다릅니다.",pt:"위에서 바뀐 기준을 연초의 약속과 어떻게 맞출 것인가.",ld:"좋은 리더라면 지침은 지키되, 팀의 기준이 지키려던 기여(예방 등)가 사라지지 않도록 점검을 돕는 자동화도 AI 효과로 치자고 인사팀과 협의합니다. 다른 항목에서 고르게 덜어 내면 예방하던 사람들의 몫이 깎이고, 적용을 내년으로 미루면 회사 지침과 부딪칩니다.",best:["B"]},
   "6-4b":{sit:"바뀐 지침을 팀에 언제, 어떻게 알릴지 정합니다.",pt:"기준이 바뀌었다는 사실을 평가 전에 아느냐, 평가에서 처음 아느냐.",ld:"좋은 리더라면 바뀌는 항목과 이유, 적용 시점을 평가 전에 전원에게 다시 알리고 합의서를 고칩니다. 모듈 리더에게 전달을 맡기면 사정에 맞게 설명할 수 있지만 모듈마다 말이 달라질 수 있습니다. 평가 공지 때 한 번에 알리면 평가에서 처음 듣는 사람이 생깁니다.",best:["A"]},
-  "12-3a":{sit:"평가 대상 30명 가운데 23명은 모듈 리더들이 낸 의견서를 바탕으로 정합니다.",pt:"속도와 근거, 리더 존중과 공정성 사이.",ld:"좋은 리더라면 리더들의 의견서를 존중하되 관찰 사실을 확인한 뒤 등급을 확정합니다. 그대로 받으면 빠르지만 '친한 사람이 잘 받는다'는 말이 남고, KPI 달성률 순서로 정하면 숫자에 없는 기여가 사라집니다.",best:["A"]},
+  "12-3a":{get sit(){const n=typeof teamN==="function"?teamN():30;return `평가 대상 ${n}명 가운데 ${n-7}명은 모듈 리더들이 낸 의견서를 바탕으로 정합니다.`;}, /* 7단계 #17: 8월 차출 뒤 인원으로 */pt:"속도와 근거, 리더 존중과 공정성 사이.",ld:"좋은 리더라면 리더들의 의견서를 존중하되 관찰 사실을 확인한 뒤 등급을 확정합니다. 그대로 받으면 빠르지만 '친한 사람이 잘 받는다'는 말이 남고, KPI 달성률 순서로 정하면 숫자에 없는 기여가 사라집니다.",best:["A"]},
   "12-3":{sit:"모듈 리더 5명과 구성원 2명을 직접 평가했습니다.",pt:"인상이 아니라 근거로 등급을 정했는가.",ld:"좋은 리더라면 연초에 공개한 기준별로 관찰한 사실을 근거로 등급을 정하고, 최근 일이나 가까운 관계에 끌리지 않았는지 점검합니다.",best:[]},
   "12-4":{sit:"평가 결과에 이의제기가 들어왔습니다.",pt:"이의제기를 공격으로 받을 것인가, 절차로 받을 것인가.",ld:"좋은 리더라면 이의제기를 절차의 일부로 받아 기준과 근거를 다시 보여 주고, 잘못이 있으면 고칩니다.",best:[]},
   "12-6":{sit:"평가 결과를 팀 전체에 알리는 글을 썼습니다.",pt:"결과만 알릴 것인가, 기준과 다음 절차까지 알릴 것인가.",ld:"좋은 리더라면 결과만 알리지 않고 어떤 기준으로 정했는지, 내년에 무엇이 바뀌는지, 이의가 있으면 어떻게 하면 되는지를 함께 씁니다.",best:[]}
@@ -489,16 +489,16 @@
    const best=(co.bestCase&&co.bestCase[ci])||co.best||[];
    let match=best.length&&!(opts.length&&opts.every(o=>best.includes(o.k)))?best.includes(d.choice):null;
    /* 피드백 6단계 #38: 이론이 권하는 선택이 모두 토큰 부족으로 잠겨 있었으면 판정하지 않는다 */
-   const tkLocked=match===false&&Array.isArray(d.tkLock)&&best.every(k=>d.tkLock.includes(k));if(tkLocked)match=null;
+   const tkLocked=match===false&&Array.isArray(d.tkLock)&&best.length>0&&best.every(k=>d.tkLock.includes(k)); /* 2026-11-27 A안: 판정은 그대로, 쟁점만 함께 보여 준다 */
    cards.push({id,sc,opts,mine:d.choice,best,match,co,tkLocked});});
   const judged=cards.filter(c=>c.match!=null),mN=judged.filter(c=>c.match).length;
   const title=c=>{const t=strip(val(c.sc.title)||"");return t||({"R3-0":"여력 재배분","11-4":"강태식과의 갈림길","12-3":"7명 직접 평가","12-4":"이의제기","12-6":"평가 결과 공지"}[c.id])||c.id;};
-  const card=c=>`<details class="dcard"${c.match===false?" open":""}><summary><span class="dt">${esc(title(c))}</span><span class="note">${esc(strip(val(c.sc.when)||""))}</span>${c.match==null?(c.tkLocked?`<span class="pill">판정하지 않음 · 토큰 부족</span>`:""):c.match?`<span class="pill good">이론과 같은 방향</span>`:`<span class="pill bad">이론과 다른 방향</span>`}</summary>
-   <div class="dbody">${c.co.sit?`<p><span class="seclab">상황</span><br>${esc(c.co.sit)}</p>`:""}${c.co.pt?`<p><span class="seclab">쟁점</span><br>${esc(c.co.pt)}</p>`:""}${c.tkLocked?`<p class="note">이론이 권하는 선택은 이 결정을 할 때 토큰이 모자라 잠겨 있었습니다. 고를 수 없었던 선택이라 판정에서 뺐습니다.</p>`:""}${theoryBox(c,esc(c.co.ld||""))}</div></details>`;
+  const card=c=>`<details class="dcard"${c.match===false?" open":""}><summary><span class="dt">${esc(title(c))}</span><span class="note">${esc(strip(val(c.sc.when)||""))}</span>${c.tkLocked?`<span class="pill">토큰 잠김</span> `:""}${c.match==null?"":c.match?`<span class="pill good">이론과 같은 방향</span>`:`<span class="pill bad">이론과 다른 방향</span>`}</summary>
+   <div class="dbody">${c.co.sit?`<p><span class="seclab">상황</span><br>${esc(c.co.sit)}</p>`:""}${c.co.pt?`<p><span class="seclab">쟁점</span><br>${esc(c.co.pt)}</p>`:""}${c.tkLocked?`<p class="note">이론이 권하는 선택은 이 결정을 할 때 토큰이 모자라 잠겨 있었습니다. 긴급 증액(+40 · 재무 −2)으로 열 수 있었습니다. 열 가치가 있었는지가 이 결정의 쟁점입니다.</p>`:""}${theoryBox(c,esc(c.co.ld||""))}</div></details>`;
   return `<div class="eyebrow">결산 · Round 3 결정과 이론</div><h2>4분기의 결정을 이론으로 돌아봅니다</h2>
    <div class="prose"><p>위기, 고객 압박, 바뀐 평가 지침, 연말 평가. 결정마다 근거가 되는 이론과 그 이론이 권하는 행동을 내 선택과 나란히 놓았습니다. 다르게 간 결정은 처음부터 펼쳐 두었습니다.</p></div>
    ${judged.length?`<div class="happen"><span class="label">한눈에</span>판정한 결정 ${judged.length}개 중 <b>${mN}개</b>가 이론이 권하는 방향과 같았습니다.</div>`:""}
-   <div class="dlist">${cards.map(card).join("")}</div>${theorySummary(cards)}
+   <div class="dlist">${cards.map(card).join("")}</div>${theorySummary(cards)}${window.tokLedgerHtml?tokLedgerHtml(3):""}
    <p class="note">이론 이름을 누르면 리더십 사전이 열립니다. 결산이 끝난 뒤에도 사전은 메뉴바에서 계속 볼 수 있습니다.</p>`;
  };
 
