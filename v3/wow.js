@@ -105,6 +105,7 @@
     <div class="wx-vs" aria-hidden="true">VS</div>
     <div class="wx-path alt"><span class="wx-lab">가지 않은 길 · 추정${c.altNote?" · "+esc(c.altNote):""}</span><b>${esc(pathName(c.altN))}</b>${R2?strip10(ac)+cellLegend(ac):""}</div></div>
    <div class="wx-tally"><span>내 길이 나았던 지표 <b class="num">${c.mw}</b></span><span class="wx-split" role="img" aria-label="내 길 ${c.mw}, 다른 길 ${c.aw}"><i class="me" style="flex:${c.mw||0.001}"></i><i class="alt" style="flex:${c.aw||0.001}"></i></span><span>다른 길이 나았던 지표 <b class="num">${c.aw}</b></span></div>
+   ${c.verdict?`<p class="wx-verdict${c.viol?" viol":""}">${esc(c.verdict)}</p>`:""}
    <div class="wx-crows"><div class="wx-crow h"><span class="k">${R2?"배분 한 분기 뒤 기대 효과":c.note?"선택지의 직접 효과":"결정 직후 변화"}</span><span class="wx-dvh"><i class="me"></i>내 길 <i class="alt"></i>다른 길</span><span class="v">내 길</span><span class="v">다른 길</span></div>${rows}</div>
    ${say?`<div class="wx-says"><span class="wx-lab">다른 길이었다면 들었을 말</span>${say}</div>`:""}
    <p class="note0">${esc(c.note||"결정 직전 상태에서 다른 선택지의 즉시 효과와 확률 결과의 기대값만 다시 계산한 추정입니다. 어느 쪽이 정답인지 판정하지 않습니다.")}</p>
@@ -166,12 +167,12 @@
   stay:()=>`퇴직 면담: "열심히 해도 이 팀이 어디로 가는지 모르겠어요. 1년 더 있을 이유를 못 찾았어요."`,
   b4:()=>`가공 모듈 전보 신청 사유: "사고가 없으면 할 일이 없는 사람으로 보이더라고요."`,
   stress:k=>`${LD[k].m} 모듈 병가 신청서: "몸이 먼저 신호를 보냈습니다."`,b7:()=>`병가 신청서: "몸이 먼저 신호를 보냈습니다."`};
- window.exodusHtml=function(x,o={}){if(!x)return "";const LK=Object.keys(LD);const stay=30-x.n-x.sick;
+ window.exodusHtml=function(x,o={}){if(!x)return "";const LK=Object.keys(LD);const N0=typeof teamN==="function"?teamN():30;const stay=N0-x.n-x.sick; /* 피드백 5단계: 차출 뒤 인원에서 센다 */
   const grid=LK.map(k=>{const m=x.mods[k]||{out:0,sick:0};const ps=Array.from({length:6},(_,i)=>i<m.out?"out":i<m.out+m.sick?"sick":"stay");
    return `<div class="wx-ex-m${m.out||m.sick?" hit":""}"><b>${LD[k].m}</b><span class="wx-ex-p" role="img" aria-label="${LD[k].m} 6명 중 떠남 ${m.out}명, 병가 ${m.sick}명">${ps.map(c=>`<i class="pp ${c}"></i>`).join("")}</span><small>${LD[k].n} 신뢰 ${(x.trust||G.trust)[k]}</small></div>`;}).join("");
   const rows=(x.rows||[]).map(r=>`<div class="wx-ex-r ${r.kind}"><span class="n">${r.kind==="cap"?"상한 "+EXODUS_RULE.maxOut:(r.kind==="stress"||r.kind==="b7"?"병가":"떠남")+" "+r.n}</span><p>${esc(r.t)} <em>${esc(r.lim)}</em></p></div>`).join("");
   const qs=[];(x.rows||[]).forEach(r=>{const f=EXQ[r.kind];if(f&&qs.length<3)qs.push(f(r.k));});if(G.safe<35&&qs.length<3)qs.push(`퇴직 면담: "말해도 바뀌지 않을 것 같아서, 말 대신 신청서를 냈어요."`);
-  return `<div class="wx-ex${o.compact?" compact":""}"><div class="wx-ex-top"><div class="wx-ex-n"><b class="num">30 <span>→</span> ${30-x.n}</b><small>내년 1월 운영팀 인원${x.sick?` · 그중 병가 ${x.sick}명`:""}</small></div>
+  return `<div class="wx-ex${o.compact?" compact":""}"><div class="wx-ex-top"><div class="wx-ex-n"><b class="num">${N0} <span>→</span> ${N0-x.n}</b><small>내년 1월 운영팀 인원${x.sick?` · 그중 병가 ${x.sick}명`:""}${N0<30?` · 지금 인원은 8월 본사 차출 ${30-N0}명을 뺀 수`:""}</small></div>
     <div class="wx-ex-k"><span><i class="pp out"></i>떠남 ${x.n}</span>${x.sick?`<span><i class="pp sick"></i>병가 ${x.sick}</span>`:""}<span><i class="pp stay"></i>남음 ${stay}</span></div></div>
    <div class="wx-ex-grid">${grid}</div>
    ${rows?`<div class="wx-ex-why"><span class="wx-lab">넘어선 기준선</span>${rows}</div>`:""}
@@ -272,15 +273,15 @@
    <p class="note0">간극은 실패의 증거가 아니라 성찰의 재료입니다.</p>${typeof forcedHtml==="function"?forcedHtml():""}`;};
  /* ⑧ 1년의 흔적 */
  window.wxTracePage=function(){const ps=Object.values(G.prom||{});const [kn,kt]=typeof knowPct==="function"?knowPct():[0,0];
-  const prom=ps.map(p=>{let t=window.PROM_TXT&&PROM_TXT[p.id]?(p.status==="파기"?PROM_TXT[p.id][1]:PROM_TXT[p.id][0]):"";try{if(typeof PROM_TXT!=="undefined"&&PROM_TXT[p.id])t=p.status==="파기"?PROM_TXT[p.id][1]:PROM_TXT[p.id][0];}catch(e){}if(p.status==="진행 중")t="";if(p.status==="형식 이행")t=p.note||"표는 바뀌었습니다. 쏠림은 다른 곳으로 옮겨 갔습니다.";
+  const prom=ps.map(p=>{let t=window.PROM_TXT&&PROM_TXT[p.id]?(p.status==="파기"?PROM_TXT[p.id][1]:PROM_TXT[p.id][0]):"";try{if(typeof PROM_TXT!=="undefined"&&PROM_TXT[p.id])t=p.status==="파기"?PROM_TXT[p.id][1]:PROM_TXT[p.id][0];}catch(e){}if(p.status==="진행 중")t="";if(p.memo)t="판정하지 않는 기록";if(p.status==="형식 이행")t=p.note||"표는 바뀌었습니다. 쏠림은 다른 곳으로 옮겨 갔습니다.";
    const cls=p.status==="이행"?"ok":p.status==="파기"?"bad":"mid";return `<div class="wx-pr ${cls}"><span class="st">${esc(p.status)}</span><div><b>${esc(p.text)}</b><small>상대: ${esc(p.to)}${t?" · "+esc(t):""}</small></div></div>`;}).join("");
   const bills=(G.bills||[]).map(b=>`<div class="wx-bl2"><b>📮 ${billMonth(b)}월 · ${esc(BILL[b]?BILL[b].t:b)}</b>${typeof causeHtml==="function"?causeHtml(b,billMonth(b)):""}</div>`).join("");
   let near="";if(!G.wowGot){const ax=[1,2,3,4].map(a=>({a,r:axScore(a)})).filter(x=>x.r.v!=null);if(ax.length&&ax.every(x=>x.r.v>=50)){const lo=ax.sort((p,q)=>p.r.v-q.r.v)[0];near=`<p class="note0">가장 아슬아슬했던 축: ${AXN[lo.a]} (리더 행동 ${lo.r.v}%)</p>`;}}
   const mem=["yoon","oh","han","kim","cha","bae"];
-  const ppl=`${G.ends&&G.ends.mfg?`<div class="say">${face("mfg",G.trust.mfg)}<div><b>강태식</b><span>${esc(G.ends.mfg)}</span></div></div>`:""}${mem.map(k=>`<div class="say">${face(k)}<div><b>${esc(name(k))}</b><span>${esc((G.ends||{})[k]||"올해도 자기 자리에서 일하고 있습니다.")}${G.grades&&G.grades[k]&&G.grades[k].등급==="C"?" 등급은 C였습니다.":""}</span></div></div>`).join("")}`;
+  const ppl=`${G.ends&&G.ends.mfg?`<div class="say">${face("mfg",G.trust.mfg)}<div><b>강태식</b><span>${esc(G.ends.mfg)}</span></div></div>`:""}${mem.map(k=>`<div class="say">${face(k)}<div><b>${esc(name(k))}</b><span>${esc(typeof endText==="function"?endText(k):((G.ends||{})[k]||"올해도 자기 자리에서 일하고 있습니다."))}${G.grades&&G.grades[k]&&G.grades[k].등급==="C"?" 등급은 C였습니다.":""}</span></div></div>`).join("")}`;
   return `${EB("약속 · 청구서 · 사람들")}<h2>1년의 흔적</h2>
    <div class="wx-trace"><div><h3 class="wx-h3">약속 장부</h3>${prom||'<p class="note0">맺은 약속이 없습니다.</p>'}
     <h3 class="wx-h3">도착한 청구서 ${(G.bills||[]).length}장</h3>${bills||'<p class="note0">청구서가 한 장도 오지 않았습니다.</p>'}${near}</div>
-    <div><h3 class="wx-h3">1년 뒤 · 운영팀 30명</h3>${G.exodus&&(G.exodus.n||G.exodus.sick)?exodusHtml(G.exodus,{compact:true}):`<p class="note0">내년 1월에도 30명 모두 남습니다. 12월에 '이 팀에서 계속 일하고 싶다'는 ${G.exodus?G.exodus.S:"-"}이었습니다.</p>`}
+    <div><h3 class="wx-h3">1년 뒤 · 운영팀 30명</h3>${G.exodus&&(G.exodus.n||G.exodus.sick)?exodusHtml(G.exodus,{compact:true}):`<p class="note0">내년 1월에도 ${typeof teamN==="function"?teamN():30}명 모두 남습니다. 12월에 '이 팀에서 계속 일하고 싶다'는 ${G.exodus?G.exodus.S:"-"}이었습니다.</p>`}
     <h3 class="wx-h3">리더를 아는 정도 ${kn}/${kt}칸</h3>${typeof relationMap==="function"?relationMap():""}<div class="table">${ppl}</div></div></div>`;};
 })();

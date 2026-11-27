@@ -457,3 +457,6 @@ html[data-ui="desk"] #dknote .tx>span:not(.hd){color:var(--lg-ink)}
 .sumrest{margin-top:14px}
 .sumrest>summary{cursor:pointer;font-weight:600;color:var(--muted)}
 .sumrest[open]>summary{margin-bottom:10px}
+/* 피드백 2단계: 숫자 비교와 판정을 잇는 한 줄 */
+.wx-verdict{margin:8px 0 10px;padding:8px 12px;border-radius:10px;font-size:13.5px;line-height:1.55;background:color-mix(in srgb,var(--line) 45%,transparent);border-left:3px solid var(--muted)}
+.wx-verdict.viol{border-left-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)}

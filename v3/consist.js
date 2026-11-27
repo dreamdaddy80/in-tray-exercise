@@ -9,8 +9,8 @@
  /* 연결 규칙. at: 결정이 기록되는 장면, by: 그 장면의 선택별 판정, flag: 그 장면 시점의 기존 플래그로 판정 */
  const RULES=[
   {id:"t3-pub",task:3,at:"3-1-2",by:{
-   A:["same","기준 이름과 비중, 사례까지 팀 전체에 돌렸습니다."],
-   B:["part","기준 항목은 팀에 보이게 했고, 비중과 적용은 면담에서만 설명합니다."],
+   A:["same","기준 이름과 뜻, 사례까지 팀 전체에 돌렸습니다."],
+   B:["part","기준 항목은 팀에 보이게 했고, 구체적인 적용은 면담에서만 설명합니다."],
    C:["diff","기준을 리더들과만 맞춰, 구성원에게는 여전히 보이지 않습니다."]}},
   {id:"t6-card",task:6,at:"3-1-2",card:true,flag:g=>g.f.pub_prevent?["same","등급 기준 카드에 '장애 예방 활동'을 넣었습니다."]:["diff","등급 기준 카드에 '장애 예방 활동'이 없습니다. 예방은 이번에도 기준 밖에 남았습니다."]},
   {id:"t4-card",task:4,at:"3-1-2",card:true,flag:g=>g.f.pub_night?["diff","등급 기준 카드에 '책임감 있는 근무(야간과 주말까지 책임진 시간)'를 넣었습니다. 대기가 몰린 사람의 긴 근무가 계속 보상받는 구조가 됩니다."]:null},
@@ -87,5 +87,13 @@
    if(borrowedNow>0)out.push(`다시 나오는 곳: 야근으로 빌린 ⏳${borrowedNow}${typeof jo==="function"?jo(borrowedNow,"은","는"):"은"} ${G.quarter>=3?"연말 야근 기록에 쌓입니다":"다음 라운드 시작 시간에서 빠집니다"}.${R1()?" 쌓인 야근은 3월 말 팀 설문의 '이 팀에서 계속 일하고 싶다' 문항도 낮춥니다.":""}`);
    return out.map(t=>`<p class="note backline">${t}</p>`).join("");
   }catch(e){return "";}};
+ /* 피드백 2단계: "다시 나오는 곳"은 결정 직후가 아니라 성적표 ③에 모아 보여 준다 */
+ window.backReport=function(decs,r){try{const out=[];const R1=r===1;
+  (decs||[]).forEach(d=>{const b=BACK[d.scene];const k=String(d.choice||"").charAt(0);if(b&&b[k])out.push(b[k].replace(/^다시 나오는 곳: /,"<b>KPI 재검토 조건</b> · "));});
+  const n={full:0,short:0,none:0};(decs||[]).forEach(d=>{if(d.tell&&n[d.tell]!=null)n[d.tell]++;});
+  const bl=(()=>{const m=[[9,"9월 3분기 말"],[12,"12월 평가 직전"]].filter(x=>x[0]>(r===1?3:r===2?6:9)).map(x=>x[1]);return m.length?m.join("과 ")+" 청구서 장면":"";})();
+  if(n.full||n.none)out.push(`<b>알리기 방식</b> · 이번 라운드에 이유까지 알린 결정 ${n.full}건, 결과만 알린 결정 ${n.short}건, 알리지 않은 결정 ${n.none}건. ${R1?"알린 결정은 3월 말 팀 설문의 '업무 배분과 평가 기준을 알고 있다' 문항을 올리고 알리지 않은 결정은 내렸습니다. ":""}${bl?`알리지 않은 결정이 쌓이면 ${bl}에서 '설명 없는 결정의 대가'가 올 가능성이 커지고, 알린 결정은 그 가능성을 줄입니다.`:""}`);
+  if(!out.length)return "";
+  return `<div class="label" style="margin-top:14px">이번 라운드 결정이 다시 나오는 곳</div><div class="happen">${out.join("<br>")}</div>`;}catch(e){return "";}};
  window.PROM_BACK={P1:"다시 나오는 곳: 3월 KPI 합의서에서 기준을 어디까지 알릴지 정할 때. 3월 말 분기 정산에서 지켰는지 판정합니다."};
 })();

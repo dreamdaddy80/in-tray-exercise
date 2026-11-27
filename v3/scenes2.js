@@ -2,8 +2,8 @@
 const BTN=(fn,t,cls)=>`<button class="btn ${cls||""}" ${A(fn)}>${t}</button>`;
 const AXN={1:"① 일 맡기기",2:"② 평가하기",3:"③ 자원 나누기",4:"④ 설명하기"};
 /* 시간이 모자라 강제된 선택(forced)의 신호는 습관 계산에서 뺀다 */
-function axScore(a,filter){const x=G.sig.filter((s,i)=>s.a===a&&!s.forced&&(!filter||filter(s,i)));const L=x.filter(s=>s.s==="L").reduce((p,s)=>p+s.w,0),P=x.filter(s=>s.s==="P").reduce((p,s)=>p+s.w,0);return{n:L+P,v:L+P?Math.round(L/(L+P)*100):null,L,P};}
-function evid(a,side){const seen=[];G.sig.filter(s=>s.a===a&&s.s===side&&!s.forced).forEach(s=>{const n=label(s.scene,s.choice);if(!seen.includes(n))seen.push(n);});return seen.slice(0,3);}
+function axScore(a,filter){const x=G.sig.filter((s,i)=>s.a===a&&habitSig(s)&&(!filter||filter(s,i)));const L=x.filter(s=>s.s==="L").reduce((p,s)=>p+s.w,0),P=x.filter(s=>s.s==="P").reduce((p,s)=>p+s.w,0);return{n:L+P,v:L+P?Math.round(L/(L+P)*100):null,L,P};}
+function evid(a,side){const seen=[];G.sig.filter(s=>s.a===a&&s.s===side&&habitSig(s)).forEach(s=>{const n=label(s.scene,s.choice);if(!seen.includes(n))seen.push(n);});return seen.slice(0,3);}
 
 /* 4-2 여력·토큰 배분과 공지문 (원고 03-4) */
 function SC_ALLOC(s){
@@ -132,7 +132,7 @@ function SC_WRITE(s){
  let why=null,draftUsed=false;const texts={};s.targets.forEach(t=>texts[t.k]="");
  const list=principleList().concat(gradeList());
  const d1=()=>{paint("");
-  shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>${val(s.title)}</h2><div class="prose">${para(s.intro||[])}</div><p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}<div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const f=fitSet(val(s.fit)||[]);const fit=f.any||f.grade.includes(why)||f.prin.includes(why);G.cons.push({scene:s.id,choice:"글",why,fit});}d2();})}>쓰기 시작</button></div></div>`);
+  shell(`<div class="pane"><div class="eyebrow">${(s.targets||[]).length===1?"평가 결과 공지":"세 개의 설명"}</div><h2>${val(s.title)}</h2><div class="prose">${para(s.intro||[])}</div><p><b>이 결정의 근거를 고르세요.</b></p>${list.length?`<div class="opts">${list.map((w,i)=>`<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${why===w}" ${A(()=>{why=w;d1();})}><span class="k">${i+1}</span><span>${w}</span></button>`).join("")}</div>`:'<div class="happen">공개한 기준이 없습니다. "팀장 판단"으로 기록됩니다.</div>'}<div class="foot"><span></span><button class="btn main" ${list.length&&!why?"disabled":""} ${A(()=>{if(why){const f=fitSet(val(s.fit)||[]);const fit=f.any||f.grade.includes(why)||f.prin.includes(why);G.cons.push({scene:s.id,choice:"글",why,fit});}d2();})}>쓰기 시작</button></div></div>`);
  };
  /* AI 초안은 받는 사람마다 다르고, 그럴듯하지만 고쳐야 할 곳이 하나씩 섞여 있다 */
  const dOf=t=>{const ds=val(s.drafts);return (ds&&ds[t.k]&&ds[t.k].t)||val(s.draft);};
@@ -141,7 +141,7 @@ function SC_WRITE(s){
  const d2=()=>{paint("");
   const cl=(s.conds||[]).filter(c=>c.c(G)).map(c=>`<span>${c.t}</span>`).join("");
   const can=(G.token||0)>=5&&!draftUsed;
-  shell(`<div class="pane"><div class="eyebrow">세 개의 설명</div><h2>세 사람에게 각각 3~5문장으로 쓰세요</h2><p class="note">⏳은 들지 않습니다. 보낸 뒤에는 고칠 수 없습니다.</p>${cl?`<div class="cond">${cl}</div>`:""}
+  shell(`<div class="pane"><div class="eyebrow">${(s.targets||[]).length===1?"평가 결과 공지":"세 개의 설명"}</div><h2>${(s.targets||[]).length===1?`${val(s.targets[0].n)}에게 3~5문장으로 쓰세요`:"세 사람에게 각각 3~5문장으로 쓰세요"}</h2><p class="note">⏳은 들지 않습니다. 보낸 뒤에는 고칠 수 없습니다.</p>${cl?`<div class="cond">${cl}</div>`:""}
   ${s.targets.map(t=>`<div class="task"><b>${val(t.n)}</b><span class="voice" style="font-size:15px">${val(t.q)}</span><label class="label" for="w${t.k}">${t.form}</label><textarea id="w${t.k}" style="min-height:110px">${texts[t.k]}</textarea></div>`).join("")}
   <div class="foot"><button class="btn" ${can?"":"disabled"} ${A(()=>{grab();draftUsed=true;G.token-=5;G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+5;G.f.ai_draft=true;s.targets.forEach(t=>texts[t.k]=dOf(t));d2();})}>승인 도구로 초안 받기 💳5</button><button class="btn main" ${A(send)}>세 편 보내기</button></div>${warn?`<div class="happen"><span class="label">보내기 전에</span>${warn}</div>`:""}</div>`);
  };
@@ -242,7 +242,21 @@ function forcedNote(b,at){const fs=billForced(b,at);return fs.length?`<p class="
 function causeHtml(b,at){const cs=billCauses(b).filter(c=>!c.m||c.m<=at);const why=(G.billWhy||{})[b];const fn=forcedNote(b,at);
  if(cs.length)return `<p><b>기록에 남은 관련 결정</b></p>${cs.map(c=>`<p class="note">${/^\d+월/.test(c.t)||!c.m?"":c.m+"월 "}${c.t}${c.m?` → ${at-c.m}개월 뒤 청구서`:""}</p>`).join("")}<p class="note">이 결정들이 확률을 올렸습니다. 청구서는 확률로 오므로, 하나가 곧바로 원인이라고 단정할 수는 없습니다.</p>${fn}`;
  if(why==="wow")return `<p><b>왜 왔나:</b> 특정한 결정 하나가 아니라, 올해 기록에서 가장 약하게 나온 습관(${AXN[BILL[b].ax]})에서 왔습니다.</p>${fn}`;
- return `<p><b>왜 왔나:</b> 기록에서 이 청구서와 이어지는 결정을 찾지 못했습니다. 팀 바깥의 사정이나 운으로 왔을 수 있습니다.</p>${fn}`;}
+ {const st=billStateWhy(b);if(st.length)return `<p><b>왜 왔나:</b> 특정 결정 하나와 이어지지는 않지만, 확률을 올린 팀의 상태가 있었습니다.</p>${st.map(t=>`<p class="note">${t}</p>`).join("")}<p class="note">청구서는 확률로 오므로, 이 상태가 곧바로 원인이라고 단정할 수는 없습니다.</p>${fn}`;}
+ return `<p><b>왜 왔나:</b> 기록에서 이 청구서와 이어지는 결정이나 상태를 찾지 못했습니다. 어떤 팀에도 있는 기본 확률(5%)로 왔습니다.</p>${fn}`;}
+/* 피드백 3단계 #39: billP가 쓰는 상태 값 가운데 확률을 올린 것을 문장으로. 확률 계산은 그대로 */
+function billStateWhy(b){const g=G,c=g.cells||{},o=[];
+ const dirR=()=>{const d=(g.decisions||[]).filter(x=>x.choice==="직접"&&/^M\d/.test(x.scene)).length,all=(g.decisions||[]).filter(x=>/^M\d/.test(x.scene)).length;return all&&d/all>=.5;};
+ if(b==="B1"){if(dirR())o.push("받은편지함 안건의 절반 이상을 직접 처리했습니다.");if((g.trust||{}).prc<=40)o.push(`이수진(가공)의 신뢰가 ${g.trust.prc}까지 내려가 있었습니다.`);}
+ if(b==="B2"&&g.cells&&(c.SEC||0)<=1)o.push(`예방·보안(SEC) 칸이 ${c.SEC||0}칸이었습니다.`);
+ if(b==="B3"&&!g.f.alloc_notice)o.push("4월 여력 배분 결과를 팀에 공지하지 않았습니다.");
+ if(b==="B4"&&!g.f.pub_prevent)o.push("등급 기준에 '장애 예방 활동'이 없었습니다.");
+ if(b==="B5"){if(g.cells&&(c.GROW||0)>=5)o.push(`추가 제안(GROW) 칸이 ${c.GROW}칸이었습니다.`);if(g.over>0)o.push(`초과 부하가 ${g.over}번 쌓였습니다.`);}
+ if(b==="B6"&&g.over>0)o.push(`초과 부하가 ${g.over}번 쌓였습니다.`);
+ if(b==="B7"){if(g.over>0)o.push(`초과 부하가 ${g.over}번 쌓였습니다.`);if(g.fatigue>0)o.push("한 분기에 큰 변화가 몰려 팀 피로가 쌓였습니다.");}
+ if(b==="B8"||b==="B10"){if((g.rumors||0)>0)o.push(`팀에 소문이 ${g.rumors}번 돌았습니다.`);if(b==="B10"&&(g.concl||0)>0)o.push(`결론만 통보한 중재가 ${g.concl}번 있었습니다.`);}
+ if(b==="B9"&&(g.rumors||0)>0)o.push(`팀에 소문이 ${g.rumors}번 돌았습니다.`);
+ return o;}
 function billP(id){const g0=G,ff=g0.forcedF||{},fl={};Object.keys(g0.f).forEach(k=>{if(!ff[k]||["alloc_notice","pub_prevent","f_corrected","planb_contract"].includes(k))fl[k]=g0.f[k];});
  /* 시간이 모자라 강제된 선택에서 생긴 플래그는 청구서 확률에 넣지 않는다 */
  const g=Object.assign(Object.create(g0),{f:fl});const b=(g.bill[id]||0),c=g.cells||{};let p=0;const dirR=()=>{const d=g.decisions.filter(x=>x.choice==="직접"&&/^M\d/.test(x.scene)).length,all=g.decisions.filter(x=>/^M\d/.test(x.scene)).length;return all&&d/all>=.5;};
@@ -302,7 +316,9 @@ function SC_EVAL(s){
  const recs=e=>e.r.filter(r=>!r[1]||(G.f[r[1]]&&(r[1]!=="talks_rd"||G.f[r[1]]>=2)))
   .filter(r=>!(r[1]==="win_any"&&G.f.win_norecord))
   .filter(r=>!(NOREC[e.k]&&NOREC[e.k].includes(r[1])&&G.f[e.k+"_norecord"]))
-  .map(r=>{const name0=val(r[0]),fits=val(r[2]),bad=typeof r[3]==="function"?r[3](G):r[3];if(INPUT.includes(name0)&&G.f.rule_kept&&G.pub.includes("책임감 있는 근무"))return[name0,r[1],["책임감 있는 근무"],0];return[name0,r[1],fits,bad];});
+  .map(r=>{const name0=val(r[0]),fits=val(r[2]),bad=typeof r[3]==="function"?r[3](G):r[3];if(INPUT.includes(name0)&&G.f.rule_kept&&G.pub.includes("책임감 있는 근무"))return[name0,r[1],["책임감 있는 근무"],0];return[name0,r[1],fits,bad,r[4]||""];});
+ /* 피드백 6단계 #33: 기준을 지키지 못한 기록(neg)은 그 기준에 이어지지만 S·A의 근거로는 세지 않는다. B·C의 이유로는 쓸 수 있다 */
+ const usable=(r,v,g)=>!!r&&!r[3]&&!!v&&r[2].includes(v)&&!(r[4]==="neg"&&/^[SA]$/.test(g||""));
  const cnt=g=>Object.values(st).filter(x=>x.g===g).length;
  const save=()=>{const e=people[i];recs(e).forEach((r,n)=>{const el=$("ln"+n);if(el&&st[e.k].picks[n]!==undefined)st[e.k].picks[n]=el.value;});};
  const KPIORD={"초과":0,"달성 (전 항목)":1,"달성":2,"미달":3};
@@ -313,8 +329,11 @@ function SC_EVAL(s){
   /* 기록 한 줄의 안내: 공개하지 않은 기준에만 맞는 기록, 연결이 맞지 않는 기록을 그 자리에서 알린다 */
   const q=w=>`'${w}'`;
   const recNote=(r,v)=>{const fits=r[3]?[]:(r[2]||[]),pubFit=fits.filter(x=>G.pub.includes(x));const lst=fits.map(x=>x+(G.pub.includes(x)?"":"(올해 공개하지 않음)")).join(", ");
-   if(v){if(has("pub_leaders"))return "기준을 구성원에게 공개한 적이 없어, 연결해도 근거로 인정되지 않습니다.";if(fits.includes(v))return "이어지는 연결입니다.";
-    return `이 기록은 ${q(v)}${jo(v,"과","와")} 이어지지 않습니다. ${fits.length?"맞는 기준: "+lst:"이 기록에 맞는 공개 기준은 없습니다."}`;}
+   if(v){if(has("pub_leaders"))return "기준을 구성원에게 공개한 적이 없어, 연결해도 근거로 인정되지 않습니다.";
+    if(r[4]==="neg"&&fits.includes(v))return /^[SA]$/.test(c.g||"")?`이 기록은 ${q(v)}${jo(v,"을","를")} 지키지 못한 일입니다. ${c.g}의 근거로는 쓸 수 없고, B나 C를 줄 때 이유로 쓸 수 있습니다.`:`이어지는 연결입니다. ${q(v)}${jo(v,"을","를")} 지키지 못한 일이라 낮은 등급의 이유가 됩니다.`;
+    if(fits.includes(v))return "이어지는 연결입니다.";
+    return `이 기록은 ${q(v)}${jo(v,"과","와")} 이어지지 않습니다. ${r[4]==="kpi"?"KPI 달성은 합의서를 채웠다는 기록이라, 공개한 기여 기준 가운데 이 기록 하나로 설명되는 기준은 없습니다. 기여를 보여 주는 다른 기록과 함께 쓰세요.":fits.length?"맞는 기준: "+lst:"이 기록에 맞는 공개 기준은 없습니다."}`;}
+   if(r[4]==="kpi"&&!pubFit.length)return "KPI 달성은 합의서를 채웠다는 기록이라, 이 기록만으로는 등급 차이를 설명하기 어렵습니다. 기여를 보여 주는 다른 기록과 함께 쓰세요.";
    if(fits.length&&!pubFit.length)return `맞는 기준 ${fits.map(q).join(", ")}${jo(fits[fits.length-1],"은","는")} 3월에 공개하지 않은 기준이라 쓸 수 없습니다.`;return "";};
   shell(`<div class="pane"><div class="eyebrow">연말 평가 · ${i+1}/${people.length}</div><h2>${name(e.k)}</h2>${i===0?`<div class="happen"><span class="label">배분 가이드</span>S ${quota.S} · A ${quota.A} · B ${quota.B} · C ${quota.C}명은 인사팀 요구입니다. 전원이 KPI를 달성해도 C가 ${quota.C}명 나와야 확정됩니다. C를 받을 사람에게는 다른 사람보다 더 분명한 근거가 필요합니다.</div>`:""}
   <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px"><b>Folger, Konovsky &amp; Cropanzano(1992), 정당한 평가 절차</b><br>평가가 정당하다고 받아들여지려면 세 가지가 필요합니다. 기준을 미리 알려 주었는가, 당사자의 이야기를 들을 기회가 있었는가, 실제 기록과 증거로 판단했는가.<br><b>생각해 볼 질문:</b> 이 등급의 근거는 당사자가 미리 알 수 있었던 것입니까?</p></details>
@@ -329,10 +348,10 @@ function SC_EVAL(s){
   <div class="foot"><span class="btns">${i>0?BTN(()=>{save();i--;draw();},"이전"):""}${i<people.length-1?BTN(()=>{save();i++;draw();},"다음 사람"):""}${BTN(()=>{save();used=true;const ord=[...people].sort((a,b)=>KPIORD[val(a.kpi)]-KPIORD[val(b.kpi)]);let idx=0;["S","A","B","C"].forEach(g=>{for(let k=0;k<quota[g];k++){if(ord[idx])st[ord[idx].k].g=g;idx++;}});draw();},"KPI 순서로 채우기")}</span><button class="btn main" ${ok?"":"disabled"} ${A(()=>{save();const miss=people.filter(e=>!evidOK(e));if(miss.length&&!warned){warned=true;draw();return;}finish();})}>${warned?"근거 없이 확정":"평가 확정"}</button></div>${!ok&&whyOff.length?`<p class="note">평가 확정을 누를 수 없는 이유: ${whyOff.join(" · ")}.</p>`:""}${warned?`<div class="happen"><span class="label">확정 전에</span>근거가 연결되지 않은 사람이 ${people.filter(e=>!evidOK(e)).length}명입니다: ${people.filter(e=>!evidOK(e)).map(e=>name(e.k)).join(", ")}. 이대로 확정하면 이 사람들은 등급의 이유를 물을 수 있고, 답할 기록이 없습니다.</div>`:""}</div>`);
   rs.forEach((r,n2)=>{$("rc"+n2).onchange=ev=>{save();if(ev.target.checked)c.picks[n2]="";else delete c.picks[n2];draw();};const ln=$("ln"+n2);if(ln)ln.onchange=()=>{const y=window.scrollY;save();draw();window.scrollTo(0,y);};});
  };
- function evidOK(e){const c=st[e.k],rs=recs(e);let n=0;Object.entries(c.picks).forEach(([k,v])=>{const r=rs[+k];if(r&&!r[3]&&v&&r[2].includes(v))n++;});return n>=2&&!has("pub_leaders");}
+ function evidOK(e){const c=st[e.k],rs=recs(e);let n=0;Object.entries(c.picks).forEach(([k,v])=>{const r=rs[+k];if(usable(r,v,c.g))n++;});return n>=2&&!has("pub_leaders");}
  const finish=()=>{const live={};let good=0;const bad=[];
   people.forEach(e=>{const c=st[e.k],rs=recs(e);let n=0,badHit=[];
-   Object.entries(c.picks).forEach(([k,v])=>{const r=rs[+k];if(!r)return;if(r[3]){badHit.push(r[0]);return;}if(v&&r[2].includes(v))n++;});
+   Object.entries(c.picks).forEach(([k,v])=>{const r=rs[+k];if(!r)return;if(r[3]){badHit.push(r[0]);return;}if(usable(r,v,c.g))n++;});
    const fit=n>=2&&!has("pub_leaders");c.fit=fit;if(fit)good++;
    badHit.forEach(t=>{bad.push(name(e.k)+": "+t);if(Math.random()<.25){applyFx("안전-3 "+(LD[e.k]?e.k:PP[e.k].lead)+"-2",{live});}});
    if(LD[e.k]){const d={S:6,A:3,B:0,C:-8}[c.g];const v=c.g==="C"&&fit?-4:d;if(v)applyFx(e.k+(v>0?"+":"")+v,{live});}else if(c.g==="C"&&!fit)applyFx("안전-2");
@@ -376,7 +395,7 @@ function SC_APPEAL(s){
  G.baeAppeal=!!(G.grades.bae&&!G.grades.bae.근거충족);/* v3: 이의제기 면담은 1명 (배 책임이 내면 배 책임) */cands=cands.slice(0,G.baeAppeal?0:1);G.appeals=cands.map(e=>e.k).concat(G.baeAppeal?["bae"]:[]);G.appealOK=true;G.appeal0=G.appeals.length?null:(silent.length||(G.evalGood||0)<(G.evalN||0)?"침묵":"근거");
  const finishBae=()=>{const g=G.grades.bae;
   if(!g){next();return;}
-  const opts=[{k:"A",t:"등급 카드를 펴고, 고른 기록과 합의서 항목을 하나씩 짚어 가면서 말해 준다.",dis:()=>g.근거충족?"":"제시할 기록이 부족합니다."},{k:"B",t:"같은 등급의 다른 동료와 견주어, 올해 상대적으로 어디쯤 있었는지 말해 준다."},{k:"C",t:"올해는 등급을 그대로 두되, 내년에 먼저 챙기겠다고 하고 사정을 들어 준다."}];
+  const opts=[{k:"A",t:"등급 카드를 펴고, 고른 기록과 합의서 항목을 하나씩 짚어 가면서 말해 준다.",dis:()=>g.근거충족?"":"제시할 기록이 부족합니다."},{k:"B",t:"같은 등급의 다른 동료와 견주어, 올해 상대적으로 어디쯤 있었는지 말해 준다."},{k:"C",t:"올해는 등급을 그대로 두되, 내년에 먼저 챙기겠다고 하고 사정을 들어 준다.",pr:{id:"N3",text:"내년에 배 책임을 먼저 챙기기",to:"배 책임",due:"내년",memo:true}}];
   SC_CHOICE({id:"12-4bae",tag:"배 책임",when:"12월",title:"작년에 들었던 말과 올해의 말",say:[["bae",(rank[g.등급]<=1?"등급은 봤습니다. 이유를 듣고 싶어서요. ":"")+"KPI 다 채웠습니다. 작년처럼 물어볼 일이 또 있는지 듣고 싶습니다."]],conds:[{c:x=>x.f["c_3-7_C"],t:"3월에 이 사람의 질문 대신 가공 이동 이야기를 먼저 했다. 그날 표정은 풀렸다."},{c:x=>x.f.bae_criteria,t:"3월에 이 사람과 합의서를 놓고 이야기했다."},{c:x=>x.f.bae_past,t:"작년 B의 이유를 찾아보겠다고 했다."},{c:x=>promIs(x,"P4","파기"),t:"9월의 답을 주지 못했다."},{c:x=>x.f.bae_move,t:"다음 달부터 가공 모듈이다."}],options:opts.map(o=>({...o,fx:o.k==="A"?"안전+2":o.k==="B"?"안전-3 mfg-2":"안전-1 사람+1",sig:o.k==="A"?"②L":o.k==="B"?"②P":"④P",done:o.k==="A"?"합의서를 펴고 기록과 항목을 하나씩 짚었습니다.":o.k==="B"?"동료들과 견주어 설명했습니다.":"내년에 먼저 챙기겠다고 했습니다.",onDone:()=>{G.ends.bae=!g.근거충족?"배 책임은 2년 연속 이의를 냈습니다. \"올해도 이유는 없었습니다.\"":o.k==="A"?"배 책임은 올해 이의를 내지 않았습니다. 처음으로 이유를 들었다고 적었습니다.":"배 책임은 설명을 들었습니다. 합의서는 펴지지 않았습니다.";if(o.k!=="A")G.appealOK=false;}}))},{done:()=>next()});
  };
  const step=i=>{

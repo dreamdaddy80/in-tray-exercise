@@ -98,13 +98,15 @@ function applySig(s,w,scene,choice,forced){
  const n=/×2/.test(s)?2:1;
  (s.match(/[①②③④][LP]/g)||[]).forEach(x=>{for(let i=0;i<n;i++){const g={a:AX[x[0]],s:x[1],w,scene,choice};if(forced&&x[1]==="P")g.forced=true;G.sig.push(g);}});
 }
-function addPromise(p){G.prom[p.id]={...p,status:"진행 중"};
+function addPromise(p){G.prom[p.id]={...p,status:p.memo?"기록":"진행 중"}; /* 피드백 4단계 #26: memo 약속은 장부에만 남고 판정·점수에 쓰지 않는다 */
  /* 2026-11-27: 어느 처리에서 생긴 약속인지 알림에 붙인다 (다른 결과 화면과 겹쳐 보여도 헷갈리지 않게) */
  let src="";try{const s=CONTENT[G.idx]||{},st=s._st;if(s.type==="inbox"&&st&&st.sel){const m=(s.mail||[]).find(x=>x.id===st.sel);if(m)src=`${String(m.from||"").replace(/^[^가-힣A-Za-z]+/,"")} ${m.t==="CALL"?"전화":m.t==="DM"?"메시지":"메일"} 답장`;}else src=(window.SC_NICK&&SC_NICK[s.id])||s.title||"";}catch(e){}
- toast(`${src?src+" · ":""}약속 장부에 기록했습니다: ${p.text}${window.PROM_BACK&&PROM_BACK[p.id]?". "+PROM_BACK[p.id]:""}`);}
+ toast(`${src?src+" · ":""}약속 장부에 기록했습니다: ${p.text}`);}
 function ach(n){if(G.ach.includes(n))return;G.ach.push(n);toast("업적: "+n);beep(880,.08);}
 function record(scene,choice,extra){G.decisions.push(Object.assign({scene,choice,month:G.month},extra||{}));}
-const realSig=()=>G.sig.filter(x=>!x.forced);
+/* 피드백 6단계 #31: 습관 집계에 넣는 신호. 시간 부족으로 강제된 실무자 쪽 신호와, 만나지 않은 리더가 문서로 써 온 안(choice 끝 "(문서)")은 내 선택이 아니므로 뺀다. 이전 저장도 choice 표기로 같이 걸러진다 */
+function habitSig(x){return !!x&&!x.forced&&!/\(문서\)$/.test(String(x.choice||""));}
+const realSig=()=>G.sig.filter(habitSig);
 /* v3 리더십 스타일 다이얼 (02-3 E). push 추진형 · care 배려형 · bal 균형형 */
 const STYLE={push:{n:"추진형",perf:1.25,trustNeg:1.3},care:{n:"배려형",perf:.8,trustNeg:.7},bal:{n:"균형형",perf:1,trustNeg:1}};
 function styleF(){return STYLE[G&&G.style]||STYLE.bal;}
@@ -163,7 +165,7 @@ function openLedger(){
  const m=$("modal");const ps=Object.values(G.prom);
  const close=()=>{m.hidden=true;};
  const k1="led_close";H[k1]=close;
- m.innerHTML=`<div class="sheet"><h2 style="font-size:19px">약속 장부</h2><div class="ledger">${ps.length?ps.map(p=>`<div>${p.text}<small>상대: ${p.to} · 기한: ${p.due} · ${p.status}</small></div>`).join(""):'<p class="note">아직 약속한 것이 없습니다.</p>'}</div>
+ m.innerHTML=`<div class="sheet"><h2 style="font-size:19px">약속 장부</h2><div class="ledger">${ps.length?ps.map(p=>`<div>${p.text}<small>상대: ${p.to} · 기한: ${p.due} · ${p.memo?"기록 · 판정하지 않음":p.status}</small></div>`).join(""):'<p class="note">아직 약속한 것이 없습니다.</p>'}</div>
  <h2 style="font-size:19px">규정 요약</h2><div class="prose" style="font-size:14.5px">${RULES.map(r=>`<p>${r}</p>`).join("")}</div>
  <div class="btns"><button class="btn" data-a="${k1}">닫기</button></div></div>`;
  m.hidden=false;
@@ -176,6 +178,7 @@ function next(){
  save();render();window.scrollTo(0,0);
 }
 function render(){
+ {const md=$("modal");if(md&&!md.hidden&&md.querySelector("#cbt"))md.hidden=true;} /* 피드백 1단계: 확인창이 장면을 넘어 남지 않게 */
  const s=CONTENT[G.idx];
  if(!s){G.idx=CONTENT.length-1;return;}
  if(s.month)G.month=s.month;
@@ -300,6 +303,7 @@ function SC_INBOX(s){
   draw(live);
  };
  const draw=live=>{
+  if(st.over||st.settled){const md=$("modal");if(md&&!md.hidden&&md.querySelector("#cbt"))md.hidden=true;}
   {const ol=document.querySelector("#view .list");if(ol&&ol.offsetParent)st.lt0=ol.scrollTop;}
   paint("");
   const m=s.mail.find(x=>x.id===st.sel),nd=Object.keys(st.done).length,all=nd===s.mail.length;
@@ -309,14 +313,14 @@ function SC_INBOX(s){
   let r;
   if(st.ringing&&callM&&!st.done[callM.id]&&!st.over){r=ringHtml();}
   else if(!m){
-   if(st.over||all){const bill=inboxSettle(st);r=`<div class="rhead"><h2>${st.over?"10시입니다. 팀 아침 회의가 시작됐습니다.":s.quiet&&s.quiet(G)?"10시 전에 받은편지함이 비었습니다.":"10시 전에 모두 처리했습니다."}</h2><p>${st.over?"처리하지 못한 메시지는 보류로 남았습니다.":""}</p>${bill}</div><div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>10시 팀 아침 회의로</button></div>`;}
+   if(st.over||all){const bill=inboxSettle(st);r=`<div class="rhead"><h2>${st.over?(s.overTitle||"10시입니다. 팀 아침 회의가 시작됐습니다."):s.quiet&&s.quiet(G)?(s.quietTitle||"10시 전에 받은편지함이 비었습니다."):(s.doneTitle||"10시 전에 모두 처리했습니다.")}</h2><p>${st.over?"처리하지 못한 메시지는 보류로 남았습니다.":""}</p>${bill}</div><div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>${s.nextLabel||"다음으로"}</button></div>`;}
    else r=`<div class="rhead"><h2>${s.title}</h2><p>${s.lead}</p></div>`;
   }else{
    const d=st.done[m.id],person=m.t==="DM";
    r=`<button class="back" ${A(()=>{st.sel=null;if(inboxNarrow()&&st.wy!=null)st.scrollTo=st.wy;draw();})}>← 목록</button><div class="rhead"><h2>${m.sub}</h2><p>${m.from} · <span class="num">${m.at}</span></p></div><div class="body"><p class="${person?"voice":""}">${m.body}</p>${m.attach?`<p class="attach">${m.attach}</p>`:""}</div>`;
    const lb=!d&&!st.over&&typeof lineBadge==="function"?lineBadge(m,"mail"):""; /* 선 사전 경고 (2026-11-26) */
    if(d){r+=`<div class="happen"><span class="label">일어난 일</span>${d}</div>${typeof lineResult==="function"?lineResult(null,m.id):""}`;
-    if(st.over||all)r+=`${inboxSettle(st)}<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>10시 팀 아침 회의로</button></div>`;}
+    if(st.over||all)r+=`${inboxSettle(st)}<div class="btns"><button class="btn main" ${A(()=>{if(!st.direct)ach("손을 떼는 법");next();})}>${s.nextLabel||"다음으로"}</button></div>`;}
    else if(!st.over&&typeof AIREP!=="undefined"&&AIREP[m.id]&&!(st.vdone||{})[m.id]){r+=lb+aiInbox(m,st,()=>draw());}
    else if(!st.over){
     r+=`<div class="ask">`+lb; /* 데스크 화면에서 답장 영역이 아래에 붙어 있어도 배지가 선택지 바로 위에 보이도록 영역 안에 둔다 */
@@ -325,7 +329,7 @@ function SC_INBOX(s){
      <label class="chk"><input type="checkbox" id="four" ${st.four?"checked":""}><span>기대 결과·기한·권한·이유를 함께 전달한다<small>처음에는 꺼져 있습니다. 켜면 메시지를 쓰는 데 ${IBT.four}초가 더 들고, 아래 맡기기 버튼의 시간이 바로 바뀝니다.</small></span></label>
      <div class="btns"><button class="btn main" ${st.to&&st.left>IBT.del+(st.four?IBT.four:0)?"":"disabled"} ${A(()=>{spend(st,IBT.del+(st.four?IBT.four:0));finish(m,(m.to&&m.to[st.to])||m.other,"위임",st.to,{lab:`${name(st.to)}에게 맡김${st.four?" · 기대 결과·기한·권한·이유를 함께 전달":""}`});})}>맡기기 · ${IBT.del+(st.four?IBT.four:0)}초</button><button class="btn" ${A(()=>{st.mode=null;st.to=null;draw();})}>취소</button></div>`;
     }else if(st.mode==="reply"){const reps=replyOpts(m,st).filter(x=>!(m.t==="CALL"&&x.d===false));
-     r+=`<div class="label">어떻게 답할까요? <span class="note">${m.t==="CALL"?"통화 중입니다":"답장 하나에 "+IBT.reply+"초"}</span></div><div class="opts">${reps.map((x,i)=>`<button class="opt" ${A(()=>{const go=()=>{spend(st,m.t==="CALL"?0:IBT.reply);const row=x.self?m.self:x.r;const rr=typeof row==="function"?row(st.opened):row;finish(m,[rr[0],rr[1],rr[2],{...(rr[3]||{}),nod:x.d===false,rk:x.rk}],"직접",undefined,{lab:x.t,self:!!x.self});};const w=typeof replyGuard==="function"?replyGuard(m,x,st):null;if(w)confirmBox(w[0],w[1],w[2],go);else go();})}><span class="k">${"ABCD"[i]}</span><span>${x.t}</span></button>`).join("")}</div><div class="btns"><button class="btn" ${A(()=>{st.mode=null;draw();})}>취소</button></div>`;}
+     r+=`<div class="label">어떻게 답할까요? <span class="note">${m.t==="CALL"?"통화 중입니다":"답장 하나에 "+IBT.reply+"초"}</span></div><div class="opts">${reps.map((x,i)=>`<button class="opt" ${A(()=>{const go=()=>{if(st.over)return;spend(st,m.t==="CALL"?0:IBT.reply);const row=x.self?m.self:x.r;const rr=typeof row==="function"?row(st.opened):row;finish(m,[rr[0],rr[1],rr[2],{...(rr[3]||{}),nod:x.d===false,rk:x.rk}],"직접",undefined,{lab:x.t,self:!!x.self});};const w=typeof replyGuard==="function"?replyGuard(m,x,st):null;if(w)confirmBox(w[0],w[1],w[2],go);else go();})}><span class="k">${"ABCD"[i]}</span><span>${x.t}</span></button>`).join("")}</div><div class="btns"><button class="btn" ${A(()=>{st.mode=null;draw();})}>취소</button></div>`;}
     else{const low=k=>G.timeMode!=="free"&&st.left<=IBT[k];
      r+=`<div class="btns"><button class="btn" ${low("reply")?"disabled":""} ${A(()=>{if(REPLIES[m.id]){st.mode="reply";draw();}else{spend(st,IBT.reply);finish(m,m.self,"직접",undefined,{lab:"직접 답장"});}})}>직접 답장 · ${IBT.reply}초</button>${m.noDel?"":`<button class="btn" ${low("del")?"disabled":""} ${A(()=>{st.mode="del";draw();})}>위임 · ${IBT.del}초~</button>`}<button class="btn" ${A(()=>{spend(st,IBT.hold||0);finish(m,m.hold,"보류",undefined,{lab:"보류"});})}>보류${IBT.hold?" · "+IBT.hold+"초":""}</button></div><p class="note">보류한 메시지는 오늘 아무도 처리하지 않습니다. 보류가 3건을 넘으면 넘은 건수만큼 서비스 안정이 내려갑니다. 받은편지함은 ⏳ 팀장 시간을 깎지 않습니다.${low("reply")?" 남은 시간이 직접 답장에 모자랍니다.":""}</p>`;}
     r+=`</div>`;
@@ -394,6 +398,8 @@ function SC_CHOICE(s,opt={}){
   /* 결정하는 순간, 팀장 시간이 모자라 잠겨 있던 선택지와 알리기 방식을 적어 둔다 (야근으로 빌리지 않은 경우도 포함) */
   const lockedO=KEY?[]:shown.filter(x=>{const c=val(x.cost)||0;return x.k!==o.k&&c>G.time&&!(x.dis&&x.dis(G));}).map(x=>x.k);
   const lockedT=KEY||!tell?[]:TELL.filter(t=>t.c>0&&t.c>tellLeft()).map(t=>"알리기:"+t.id);
+  /* 피드백 6단계 #38: 토큰이 모자라 잠겨 있던 선택지. 판정(좋은 리더와 같음/다름)에서만 쓰고, 습관 기록과 강제된 선택 목록에는 넣지 않는다 */
+  const lockedK=shown.filter(x=>{const t=val(x.tok)||0;return x.k!==o.k&&t>0&&(G.token||0)<t&&!(x.dis&&x.dis(G));}).map(x=>x.k);
   const forcedO=lockedO.length>0,forcedT=tell==="none"&&lockedT.includes("알리기:short");
   const f0=forcedO?Object.assign({},G.f):null;
   let oc=partial?Math.max(1,Math.min(val(o.cost)||0,G.time)):(val(o.cost)||0);if(oc){if(!KEY)G.time-=oc;else G.rsvUsed=(G.rsvUsed||0)+oc;G.tu.all+=oc;if(s.meet)G.tu.meet+=oc;}if(o.tok){G.token=Math.max(0,G.token-o.tok);G.tokSpent[G.quarter]=(G.tokSpent[G.quarter]||0)+o.tok;}
@@ -401,7 +407,7 @@ function SC_CHOICE(s,opt={}){
   const ex=s.ctxFn?s.ctxFn(G):{};
   let pos=partial?.5:1,neg=1;(s.boost||[]).forEach(b=>{if(b.o.includes(o.k)&&b.c(G))pos*=b.m;});(s.harm||[]).forEach(b=>{if(b.o.includes(o.k)&&b.c(G))neg*=b.m;});
   const live=applyFx(val(o.fx),{rel:s.rel,mult,...ex,pos:pos!==1?pos:undefined});applySig(val(o.sig),1,s.id,o.k,forcedO);
-  record(s.id,o.k,Object.assign(forcedO||forcedT?{forced:true,locked:lockedO.concat(forcedT?lockedT:[]),lockedOpt:forcedO,lockedTell:forcedT}:{},tell?{tell,tellTo:tell==="none"?null:(tellTo||"team")}:{}));
+  record(s.id,o.k,Object.assign(forcedO||forcedT?{forced:true,locked:lockedO.concat(forcedT?lockedT:[]),lockedOpt:forcedO,lockedTell:forcedT}:{},lockedK.length?{tkLock:lockedK}:{},tell?{tell,tellTo:tell==="none"?null:(tellTo||"team")}:{}));
   const base=s.id.replace(/_\d$/,"").replace(/[abc]$/,"");G.f["c_"+base+"_"+o.k]=true;G.f["c_"+s.id+"_"+o.k]=true;
   (s.xfx||[]).forEach(x=>{const inO=x.o.includes(o.k);if(x.c(G)&&(x.neg?!inO:inO))applyFx(val(x.fx),{live,rel:s.rel,mult});});
   if(o.pr)addPromise(o.pr);
@@ -430,7 +436,7 @@ function SC_CHOICE(s,opt={}){
   const after=val(o.after);let afterDone=false;const go=()=>{(opt.done||next)(o,hit);};
   const says=(val(o.says)||[]);
   const drawR=()=>{paint("");
-   shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>${noNum(val(s.title))}</h2><div class="prose"><p>${partial?`범위를 줄여 계획의 일부만 했습니다. 계획: "${val(o.t)}"`:(val(o.done)||val(o.t))}${o.recover?` (복구 ${val(o.recover)})`:""}</p>${typeof lineResult==="function"?lineResult(s):""}${hit&&!hit.who?`<p>${val(hit.t)} <span class="note">· 확률로 일어난 일</span></p>`:""}${hits2.map(t=>`<p>${val(t.t)} <span class="note">· 확률로 일어난 일</span></p>`).join("")}${spared&&!hits2.length?`<p>이번에는 걱정하던 일이 따라오지 않았습니다. <span class="note">· 확률로 일어난 일</span></p>`:""}${badP>0?`<p class="note">이 선택에 나쁜 일이 따라올 확률은 약 ${badP}%였습니다.</p>`:""}</div>${says.map(x=>sayHtml(x[0],x[1])).join("")}${hit&&hit.who?sayHtml(hit.who,stripWho(hit.who,val(hit.t))):""}${tail?sayHtml(tail.who,tail.t):""}${tellLine?`<div class="happen">${tellLine}</div>`:""}${consNote?`<p class="note">${consNote}</p>`:""}${typeof consistLine==="function"?consistLine(s.id,o.k):""}${typeof backLine==="function"?backLine(s.id,o.k,tell,(G.borrowed||0)-bor0):""}
+   shell(`<div class="pane"><div class="eyebrow">일어난 일</div><h2>${noNum(val(s.title))}</h2><div class="prose"><p>${partial?`범위를 줄여 계획의 일부만 했습니다. 계획: "${val(o.t)}"`:(val(o.done)||val(o.t))}${o.recover?` (복구 ${val(o.recover)})`:""}</p>${typeof lineResult==="function"?lineResult(s):""}${hit&&!hit.who?`<p>${val(hit.t)} <span class="note">· 확률로 일어난 일</span></p>`:""}${hits2.map(t=>`<p>${val(t.t)} <span class="note">· 확률로 일어난 일</span></p>`).join("")}${spared&&!hits2.length?`<p>이번에는 걱정하던 일이 따라오지 않았습니다. <span class="note">· 확률로 일어난 일</span></p>`:""}${badP>0?`<p class="note">이 선택에 나쁜 일이 따라올 확률은 약 ${badP}%였습니다.</p>`:""}</div>${says.map(x=>sayHtml(x[0],x[1])).join("")}${hit&&hit.who?sayHtml(hit.who,stripWho(hit.who,val(hit.t))):""}${tail?sayHtml(tail.who,tail.t):""}${tellLine?`<div class="happen">${tellLine}</div>`:""}${consNote?`<p class="note">${consNote}</p>`:""}${typeof consistLine==="function"?consistLine(s.id,o.k):""}
    ${after&&!afterDone?`<div class="ask"><p class="voice">${after.t}</p><div class="btns">${after.opts.map(x=>`<button class="btn" ${A(()=>{afterDone=true;if(x.pr)addPromise(x.pr);if(x.fx)applyFx(val(x.fx),{live:{},rel:s.rel});record(s.id+"+",x.t);drawSide();drawR();})}>${x.t}</button>`).join("")}</div></div>`:`<div class="foot"><span></span><button class="btn main" ${A(go)}>다음</button></div>`}</div>`,live);
   };
   beep(560,.06);drawR();
@@ -445,7 +451,7 @@ function SC_MED(s){
  const s1={id:s.id+"-1",meet:true,title:s.title,tag:s.tag,when:s.when,intro:s.intro,say:s.say,conds:s.conds,enter:s.enter,rel,ask:"어떻게 풀까요?",options:[
   {k:"A",gl:(s.gl1||{}).A,t:s.a1||"각자 30분씩 따로 만나 사정을 듣고, 그다음에 정리한다.",cost:s.aCost?s.aCost(G):2,done:who[1]+"을 따로 만났습니다.",fx:s.storyFx||"",sig:"④L",mult:.5,says:s.story,tw:[{p:s.noA&&s.noA(G)?0:30,t:vary("medLate",LINES.medLate),fx:lateFx}]},
   {k:"B",gl:(s.gl1||{}).B,t:s.b1||"오늘 오후 둘을 한자리에 불러 쟁점을 놓고 바로 정리한다.",cost:1,done:who[0]+"을 한자리에 불렀습니다.",mult:1,tw:[{p:35,t:vary("medFight",LINES.medFight),mult:1.5},{p:25,t:vary("medGood",LINES.medGood),post:postFx}]},
-  {k:"C",gl:(s.gl1||{}).C,t:s.c1||"양쪽 메일을 다 읽었으니, 오늘 안에 내 결론을 메일로 보낸다.",done:"결론을 메일로 보냈습니다.",sig:"④P",mult:1.5,rumor:true,tw:[{p:25,t:(t=>/^"/.test(t)?who[2]+t:t)(vary("medOk",LINES.medOk)),mult:1,rumor:false}]},
+  {k:"C",gl:(s.gl1||{}).C,t:s.c1||"양쪽 메일을 다 읽었으니, 오늘 안에 내 결론을 메일로 보낸다.",done:"만나지 않고 메일로 결론을 내기로 했습니다. 어떤 결론을 보낼지 이어서 정합니다.",sig:"④P",mult:1.5,rumor:true,tw:[{p:25,t:(t=>/^"/.test(t)?who[2]+t:t)(vary("medOk",LINES.medOk)),mult:1,rumor:false}]},
  ]};
  SC_CHOICE(s1,{done:(o,hit)=>{
   const mult=hit&&hit.mult!=null?hit.mult:o.mult,rumor=hit&&hit.rumor===false?false:o.rumor,post=hit&&hit.post;
@@ -520,11 +526,11 @@ function SC_PULSE(s){
  const shown=cm.slice(0,keep);shown.forEach(t=>G.pulseSeen.push(t));
  const L=["업무 배분과 평가 기준을 알고 있다","업무 배분이 공정하다","이 팀에서 계속 일하고 싶다"];
  const avg=(q[0]+q[1]+q[2])/3;G.pulseAvg=avg;G.pulse[G.quarter]=q;
- const sc={...s,top:()=>`<div class="prose"><p>펄스 서베이는 분기마다 팀원 30명에게 익명으로 묻는 짧은 설문입니다. 아래 세 문장에 얼마나 \"그렇다\"고 느끼는지 답하고, 팀 평균을 100점 만점으로 냅니다. <b>점수가 낮을수록 팀원들이 문제라고 느끼는 곳</b>입니다.</p><p>${noNum(s.tag)} 결과가 나왔습니다. 팀장이 이 결과를 어떻게 다루느냐에 따라, 다음 설문에서 팀원들이 얼마나 솔직하게 답할지가 달라집니다.</p></div><div class="label">이번 결과 · 100점 만점</div><div class="table">${L.map((l,i)=>`<div class="card" style="display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center"><span style="font-size:14px;color:var(--ink)">${i+1}. ${l}</span><b>${q[i]}</b><span style="grid-column:1/-1;height:6px;border-radius:999px;background:var(--tile);overflow:hidden"><i style="display:block;height:100%;width:${q[i]}%;background:${q[i]<50?"var(--bad)":q[i]<65?"var(--time)":"var(--good)"}"></i></span></div>`).join("")}</div>${G.quarter>=3?`<p class="note num">1번 문항 · 3월 ${(G.pulse[0]||[])[0]??"-"} → 6월 ${(G.pulse[1]||[])[0]??"-"} → 9월 ${(G.pulse[2]||[])[0]??"-"} → 12월 ${q[0]}</p>`:""}${pf!=null?`<p class="note">지난 분기에 고치겠다고 알린 문항: ${pf+1}. ${L[pf]} (이번 결과에 +4)</p>`:""}${shown.length?`<div class="cond">${shown.map(x=>`<span class="voice" style="font-size:15px">${x}</span>`).join("")}</div>`:'<p class="note">자유 응답은 없었습니다.</p>'}`};
+ const sc={...s,top:()=>`<div class="prose"><p>펄스 서베이는 분기 말(3월, 9월)에 팀원 ${teamN()}명에게 익명으로 묻는 짧은 설문입니다. 아래 세 문장에 얼마나 \"그렇다\"고 느끼는지 답하고, 팀 평균을 100점 만점으로 냅니다. <b>점수가 낮을수록 팀원들이 문제라고 느끼는 곳</b>입니다.</p><p>${noNum(s.tag)} 결과가 나왔습니다. 팀장이 이 결과를 어떻게 다루느냐에 따라, 다음 설문에서 팀원들이 얼마나 솔직하게 답할지가 달라집니다.</p></div><div class="label">이번 결과 · 100점 만점</div><div class="table">${L.map((l,i)=>`<div class="card" style="display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center"><span style="font-size:14px;color:var(--ink)">${i+1}. ${l}</span><b>${q[i]}</b><span style="grid-column:1/-1;height:6px;border-radius:999px;background:var(--tile);overflow:hidden"><i style="display:block;height:100%;width:${q[i]}%;background:${q[i]<50?"var(--bad)":q[i]<65?"var(--time)":"var(--good)"}"></i></span></div>`).join("")}</div>${G.quarter>=3?`<p class="note num">1번 문항 · 3월 ${(G.pulse[0]||[])[0]??"-"} → 6월 ${(G.pulse[1]||[])[0]??"-"} → 9월 ${(G.pulse[2]||[])[0]??"-"} → 12월 ${q[0]}</p>`:""}${pf!=null?`<p class="note">지난 분기에 고치겠다고 알린 문항: ${pf+1}. ${L[pf]} (이번 결과에 +4)</p>`:""}${shown.length?`<div class="cond">${shown.map(x=>`<span class="voice" style="font-size:15px">${x}</span>`).join("")}</div>`:'<p class="note">자유 응답은 없었습니다.</p>'}`};
  SC_CHOICE(sc,{done:(o)=>{if(!/고칠 한 가지/.test(String(val(o.t)))){next();return;}
   const low=q.indexOf(Math.min(...q));paint("");
   const MEAN=["낮으면: 내가 무엇으로 평가받는지, 일이 왜 나에게 왔는지 모르겠다는 뜻입니다.","낮으면: 일이 특정 사람이나 모듈에 몰린다고 느낀다는 뜻입니다.","낮으면: 지쳤거나 팀을 떠날 생각을 하는 사람이 있다는 뜻입니다."];
-  shell(`<div class="pane"><div class="eyebrow">${noNum(s.tag)} · 결과 공유</div><h2>팀에 무엇을 고치겠다고 약속할까요?</h2><div class="prose"><p>설문 결과를 팀 전체에 그대로 공개하기로 했습니다. 그런데 숫자만 돌리면 \"그래서 뭐가 달라지는데요?\"라는 반응이 나오기 쉽습니다.</p><p>그래서 결과와 함께, <b>다음 분기에 팀장이 직접 고칠 문항 한 가지</b>를 골라 알립니다. 세 가지를 다 고치겠다고 하면 아무것도 바뀌지 않습니다.</p></div><div class="happen"><span class="label">고르면 이렇게 됩니다</span>· 고른 문항은 다음 분기 설문에서 <b>4점</b> 오릅니다.<br>· 가장 낮은 문항(지금은 ${low+1}번, ${q[low]}점)을 고르면, 팀원들이 \"제일 아픈 곳을 봤다\"고 느껴 말하기가 조금 편해집니다.<br>· 고르지 않은 문항에 낮게 답한 사람들은 자기 목소리가 빠졌다고 느낄 수 있습니다.</div><div class="label">고칠 문항 고르기</div><div class="ask"><div class="btns" style="display:grid;gap:8px">${L.map((l,i)=>`<button class="btn" style="display:block;width:100%;text-align:left;white-space:normal;line-height:1.5" ${A(()=>{(G.pulseFix=G.pulseFix||{})[G.quarter]=i;record(s.id+"+","고칠 문항: "+l);if(i===low)applyFx("안전+1");next();})}><b>${i+1}. ${l}</b> · ${q[i]}점${i===low?" (가장 낮음)":""}<br><span style="font-weight:400;font-size:13.5px;color:var(--muted)">${MEAN[i]}</span></button>`).join("")}</div></div></div>`);}});
+  shell(`<div class="pane"><div class="eyebrow">${noNum(s.tag)} · 결과 공유</div><h2>팀에 무엇을 고치겠다고 약속할까요?</h2><div class="prose"><p>설문 결과를 팀 전체에 그대로 공개하기로 했습니다. 그런데 숫자만 돌리면 \"그래서 뭐가 달라지는데요?\"라는 반응이 나오기 쉽습니다.</p><p>그래서 결과와 함께, <b>다음 분기에 팀장이 직접 고칠 문항 한 가지</b>를 골라 알립니다. 세 가지를 다 고치겠다고 하면 아무것도 바뀌지 않습니다.</p></div><div class="happen"><span class="label">고르기 전에</span>· 어느 문항이 지금 팀에 가장 급한지, 그리고 다음 분기까지 팀장이 실제로 고칠 수 있는 문항인지 함께 생각해 보세요.</div><div class="label">고칠 문항 고르기</div><div class="ask"><div class="btns" style="display:grid;gap:8px">${L.map((l,i)=>`<button class="btn" style="display:block;width:100%;text-align:left;white-space:normal;line-height:1.5" ${A(()=>{(G.pulseFix=G.pulseFix||{})[G.quarter]=i;record(s.id+"+","고칠 문항: "+l);if(i===low)applyFx("안전+1");toast("고른 문항을 팀에 알렸습니다. 다음 설문에서 이 문항이 4점 오릅니다.");next();})}><b>${i+1}. ${l}</b> · ${q[i]}점${i===low?" (가장 낮음)":""}<br><span style="font-weight:400;font-size:13.5px;color:var(--muted)">${MEAN[i]}</span></button>`).join("")}</div></div></div>`);}});
 }
 function settle(id,ok,member){
  const p=G.prom[id];if(!p)return;
@@ -618,6 +624,21 @@ function nm(id){id=String(id);{const mm=id.match(/^(.*)-1$/);const bs=mm&&sceneO
 /* 선택지 요약: 결과 문장이 있으면 그 첫 문장, 없으면 선택지 문장을 문장 단위로 줄인다 */
 function shortSentence(t){t=String(t||"").replace(/\s*⏳[\d.]*/g,"").trim();const first=(t.match(/^[^.!?]*[.!?]/)||[t])[0].trim();if(first.length<=46)return first.replace(/[.]$/,"");const cut=first.slice(0,44);return cut.slice(0,Math.max(20,cut.lastIndexOf(" ")))+"…";}
 const FIXED_CHOICE={ai:{A:"분석을 받아들임",B:"정정을 요청함",C:"원자료를 더 받아 봄"},ret:{A:"막힌 곳을 듣고 다시 맡김",B:"내가 가져와 끝냄",C:"기한만 다시 주고 돌려보냄"},appeal:{A:"기록과 합의서 항목을 짚어 설명함",B:"동료와 견주어 설명함",C:"내년에 먼저 챙기겠다고 함",D:"서면 답변으로 처리함"}};
+/* 피드백 1단계 (2026-11-27): 화면은 선택지 순서를 섞어 A·B·C를 다시 붙인다(G.ord). 기록은 원래 글자라서, 화면에 보일 때는 보였던 글자로 바꾼다 */
+/* 피드백 1단계: 정산 문장의 보류 수를 요약 줄(보류·미결 따로)과 맞춘다. 정산 계산은 그대로 둘을 합쳐서 한다 */
+/* 피드백 5단계 #8: 8월 본사 차출 뒤의 팀 인원. 차출 결과 플래그만 읽는다 */
+function teamN(g){const f=((g||G)||{}).f||{};return f.hq_one?29:(f.hq_two||f.hq_loan)?28:30;}
+window.teamN=teamN;
+/* 피드백 5단계 #10: 이름 있는 인물 카드의 기본 문장을 결산 기록(병가·떠남)과 맞춘다 */
+function endText(k){const E=G.ends||{};if(E[k])return E[k];const f=G.f||{};
+ if(k==="kim"){const b7=(G.bills||[]).includes("B7")&&(f.kim_fragile||f.night_wait||f.kim_no_leave||f.kim_waited);if(f.kim_sick||b7){const m=b7?((G.billAt||{}).B7||9):7;return `${m}월에 과로로 병가를 냈습니다. 지금은 대기표에서 빠져 복귀를 준비하고 있습니다.`;}}
+ const x=G.exodus;if(x&&(x.n||0)>0)return "올해는 자기 자리를 지켰습니다. 내년 거취는 아직 말하지 않았습니다.";
+ return "올해도 자기 자리에서 일하고 있습니다.";}
+window.endText=endText;
+function holdLabel(st){const pn=(st.pend||[]).length,h=Math.max(0,st.holds-pn);return pn?(h?`보류 ${h}건과 미결 ${pn}건(합계 ${st.holds}건)`:`미결 ${pn}건`):`보류 ${st.holds}건`;}
+window.holdLabel=holdLabel;
+function dispK(id,k){try{const o=(G.ord||{})[id];if(!o||!/^[A-D]$/.test(String(k)))return k;const i=o.indexOf(k);return i>=0?"ABCD"[i]:k;}catch(e){return k;}}
+window.dispK=dispK;
 function choiceText(id,ch){{const fx=/^AI\d/.test(id)?FIXED_CHOICE.ai:/^RET\d+M/.test(id)?FIXED_CHOICE.ret:/^12-4[a-z]/.test(id)?FIXED_CHOICE.appeal:null;if(fx&&fx[ch])return fx[ch];}
  const map={"직접":"직접 처리","코칭":"방향만 주고 맡김","답장":"답장","위임":"위임","보류":"보류","안 알림":"알리지 않음","설명":"이유까지 설명","기준 먼저 공유":"기준 먼저 공유"};if(map[ch])return map[ch];if(/^[a-z]+:/.test(ch)){const [k,how]=ch.split(":");const n=name(k),ob=jo(n,"을","를");return n+({"몰래":ob+" 리더 모르게 만남","sneak":ob+" 리더 모르게 만남","skip":ob+" 리더에게 알리고 만남","1on1":jo(n,"과","와")+" 1:1 면담"}[how]||" 면담");}
  {const mm=String(id).match(/^(.*)-1$/);const bs=mm&&sceneOf(mm[1]);if(bs&&bs.type==="med"){const m=(bs.n||2)>2;const t={A:(m?"양쪽을":"두 사람을")+" 따로 만나 사정을 들음",B:(m?"네 사람을":"둘을")+" 한자리에 불러 정리",C:"메일로 결론만 통보"}[ch];if(t)return t;}}
@@ -625,7 +646,7 @@ function choiceText(id,ch){{const fx=/^AI\d/.test(id)?FIXED_CHOICE.ai:/^RET\d+M/
  let os=null;try{os=s&&(typeof s.options==="function"?s.options(G):s.options);}catch(e){}
  if(s&&s.type==="kpi")os=/-3$/.test(id)?s.planb:/-2$/.test(id)?s.levels:null;
  const o=Array.isArray(os)&&os.find(x=>x.k===ch);if(o){let d="";try{d=val(o.done);}catch(e){}return shortSentence(typeof d==="string"&&d?d:val(o.t));}
- return /^[A-D]$/.test(ch)?"고른 안 "+ch:ch;}
+ return /^[A-D]$/.test(ch)?"고른 안 "+dispK(id,ch):ch;}
 function label(id,ch){return nm(id)+" — "+choiceText(id,ch);}
 function stripId(t){return String(t).replace(/^(M\d+(~M\d+)?|R-\d|\d+-\d+[a-z]?(_\d)?)\s+/,"");}
 function chainLine(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`구성원 점수 때문에 다음 분기 서비스 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`헬씨푸드 기대 ${c.기대} 대비 서비스 안정 ${c.안정} → 헬씨푸드 만족 ${sg(c.안정_헬씨푸드)}`);else if(c.안정_헬씨푸드)p.push(`서비스 안정 점수 때문에 헬씨푸드 만족이 ${sg(c.안정_헬씨푸드)}`);if(c.헬씨푸드_재무)p.push(`헬씨푸드 만족 때문에 재무가 ${sg(c.헬씨푸드_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";}
@@ -638,7 +659,7 @@ function inboxSettle(st){
  if(!st.settled){st.settled=true;st.lt=Math.floor(st.replies/3);st.ht=st.holds>3?Math.ceil((st.holds-3)/2):0;st.hs=Math.max(0,st.holds-3);
   const take=n=>{const t=Math.max(0,Math.min(n,G.time));G.time-=t;G.tu.all+=t;return t;};st.lt=take(st.lt);st.ht=take(st.ht);if(st.hs)applyFx("안정-"+st.hs);if(st.holds>=6)applyFx("소문1");}
  const l=[];if(st.lt)l.push(`직접 답장 ${st.replies}건의 후속 처리에 팀장 시간 ⏳${st.lt}${jo(st.lt,"을","를")} 썼습니다.`);
- if(st.holds)l.push(`보류 ${st.holds}건${st.ht?`: 밀린 일을 처리하느라 팀장 시간 ⏳${st.ht}${jo(st.ht,"을","를")} 더 썼고, 안정이 ${st.hs} 내려갔습니다`:": 아직은 감당할 만합니다"}.${st.holds>=6?" 처리되지 않은 일 이야기가 팀에 돌기 시작했습니다.":""}`);
+ if(st.holds)l.push(`${holdLabel(st)}${st.ht?`: 밀린 일을 처리하느라 팀장 시간 ⏳${st.ht}${jo(st.ht,"을","를")} 더 썼고, 안정이 ${st.hs} 내려갔습니다`:": 아직은 감당할 만합니다"}.${st.holds>=6?" 처리되지 않은 일 이야기가 팀에 돌기 시작했습니다.":""}`);
  return l.length?`<div class="happen"><span class="label">오늘 받은편지함의 값</span>${l.join("<br>")}</div>`:"";}
 
 /* 서술 입력 검사: 자모만 치거나 같은 글자를 반복한 글은 받지 않는다 */

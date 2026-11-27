@@ -422,9 +422,13 @@
 
  /* ---------- 결정 장면: 결정 전에 점검해 보기 ---------- */
  const NOOPT=/^(tasks|kpipick|alloc|write3|realloc|evalc|appeal|write)$/;
+ const TH_MAIL={M01:["manageup","negot"],M03:["monkey","intent"],M06:["hro","justcult"],M08:["intent","situational"],M09:["voice","psysafe"],M11:["monkey","hro"],M13:["monkey","situational"],M14:["procjust","fairproc"],M16:["hro","intent"],
+  M21:["outcome","kerr"],M22:["negot","trust"],M24:["explore","equity"],M25:["explore","equity"],M26:["fairproc","equity"],M37b:["ocb","procjust"],M39:["jdr","voice"],M41:["justcult","hro"]};
  function addStrip(){
   const s=curScene();if(!s.id||/^(ROUND|V3END|FINALE)/.test(s.id))return;
-  const key=s.type==="inbox"?"inbox":s.id;const T=TH[key];if(!T)return;
+  const key=s.type==="inbox"?"inbox":s.id;let T=TH[key];if(!T)return;
+  /* 피드백 4단계 #36: 받은편지함은 지금 열어 둔 메일에 맞는 이론을 보여 준다 */
+  if(s.type==="inbox"){const mid=(s._st||{}).sel;if(mid&&TH_MAIL[mid])T=Object.assign({},T,{th:TH_MAIL[mid]});}
   const V=document.getElementById("view");if(!V||V.querySelector(".lxstrip"))return;
   let at=null,parent=null;
   if(s.type==="inbox"){const ask=V.querySelector(".reader .ask");if(ask){parent=ask;at=ask.firstChild;}}
@@ -483,12 +487,14 @@
    const caseIds=AR(sc.cases).map(c=>c&&c.id).filter(Boolean);const dd=ds.filter(x=>x.scene===id||caseIds.includes(x.scene));const d=dd[dd.length-1];if(!d)return;
    let opts=AR(sc.options);const ci=(G.cases||{})[id];if(!opts.length&&sc.cases){const cc=AR(sc.cases)[ci];opts=cc?AR(cc.options):[];}
    const best=(co.bestCase&&co.bestCase[ci])||co.best||[];
-   const match=best.length&&!(opts.length&&opts.every(o=>best.includes(o.k)))?best.includes(d.choice):null;
-   cards.push({id,sc,opts,mine:d.choice,best,match,co});});
+   let match=best.length&&!(opts.length&&opts.every(o=>best.includes(o.k)))?best.includes(d.choice):null;
+   /* 피드백 6단계 #38: 이론이 권하는 선택이 모두 토큰 부족으로 잠겨 있었으면 판정하지 않는다 */
+   const tkLocked=match===false&&Array.isArray(d.tkLock)&&best.every(k=>d.tkLock.includes(k));if(tkLocked)match=null;
+   cards.push({id,sc,opts,mine:d.choice,best,match,co,tkLocked});});
   const judged=cards.filter(c=>c.match!=null),mN=judged.filter(c=>c.match).length;
   const title=c=>{const t=strip(val(c.sc.title)||"");return t||({"R3-0":"여력 재배분","11-4":"강태식과의 갈림길","12-3":"7명 직접 평가","12-4":"이의제기","12-6":"평가 결과 공지"}[c.id])||c.id;};
-  const card=c=>`<details class="dcard"${c.match===false?" open":""}><summary><span class="dt">${esc(title(c))}</span><span class="note">${esc(strip(val(c.sc.when)||""))}</span>${c.match==null?"":c.match?`<span class="pill good">이론과 같은 방향</span>`:`<span class="pill bad">이론과 다른 방향</span>`}</summary>
-   <div class="dbody">${c.co.sit?`<p><span class="seclab">상황</span><br>${esc(c.co.sit)}</p>`:""}${c.co.pt?`<p><span class="seclab">쟁점</span><br>${esc(c.co.pt)}</p>`:""}${theoryBox(c,esc(c.co.ld||""))}</div></details>`;
+  const card=c=>`<details class="dcard"${c.match===false?" open":""}><summary><span class="dt">${esc(title(c))}</span><span class="note">${esc(strip(val(c.sc.when)||""))}</span>${c.match==null?(c.tkLocked?`<span class="pill">판정하지 않음 · 토큰 부족</span>`:""):c.match?`<span class="pill good">이론과 같은 방향</span>`:`<span class="pill bad">이론과 다른 방향</span>`}</summary>
+   <div class="dbody">${c.co.sit?`<p><span class="seclab">상황</span><br>${esc(c.co.sit)}</p>`:""}${c.co.pt?`<p><span class="seclab">쟁점</span><br>${esc(c.co.pt)}</p>`:""}${c.tkLocked?`<p class="note">이론이 권하는 선택은 이 결정을 할 때 토큰이 모자라 잠겨 있었습니다. 고를 수 없었던 선택이라 판정에서 뺐습니다.</p>`:""}${theoryBox(c,esc(c.co.ld||""))}</div></details>`;
   return `<div class="eyebrow">결산 · Round 3 결정과 이론</div><h2>4분기의 결정을 이론으로 돌아봅니다</h2>
    <div class="prose"><p>위기, 고객 압박, 바뀐 평가 지침, 연말 평가. 결정마다 근거가 되는 이론과 그 이론이 권하는 행동을 내 선택과 나란히 놓았습니다. 다르게 간 결정은 처음부터 펼쳐 두었습니다.</p></div>
    ${judged.length?`<div class="happen"><span class="label">한눈에</span>판정한 결정 ${judged.length}개 중 <b>${mN}개</b>가 이론이 권하는 방향과 같았습니다.</div>`:""}

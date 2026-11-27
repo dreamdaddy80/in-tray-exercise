@@ -17,7 +17,7 @@
 
  /* ---------- 장면 → 앱 ---------- */
  const APPS={onboard:"신임 리더 온보딩",call:"전화",mail:"메일",chat:"메신저",meet:"화상 회의",hr:"인사시스템",dash:"팀 대시보드",err:"생산 모니터링 시스템",sec:"보안 센터",news:"사내 속보",lounge:"익명 라운지",note:"업무 노트"};
- const BY_ID={"1-3":"note","1-5":"meet","1-4":"chat","3-1":"hr","R1-pick":"chat","3-4":"meet","3-5":"meet","3-6":"meet","3-8":"sec","3-9":"dash","9-7":"dash",
+ const BY_ID={"1-3":"note","1-5":"meet","1-4":"chat","3-1":"hr","R1-pick":"chat","3-2":"meet","3-3":"meet","3-4":"meet","3-5":"meet","3-6":"meet","3-8":"sec","3-9":"dash","9-7":"dash",
   "4-2":"hr","4-3":"meet","4-4":"lounge","4-5":"meet","5-4":"meet","6-1":"meet","6-1p":"hr","6-2":"mail","6-3":"chat","6-4a":"news",
   "8-1a":"news","8-1b":"meet","8-1c":"hr","R3-0":"hr","R3-1a":"err","R3-1b":"err","9-4":"call","11-4":"chat",
   "12-3a":"hr","12-3":"hr","12-4":"hr","12-6":"mail","S2":"lounge","S3":"hr"};
@@ -273,12 +273,14 @@
   const title=strip(val(s.title)||(pane.querySelector("h2")||{}).textContent||"리더 회의");
   const lead=typeof LD!=="undefined"?Object.keys(LD):[];
   const st0=t0("meet:"+s.id);
+  /* 피드백 4단계 #23: KPI 면담(3-2~3-6)은 1:1 화면. 다른 리더가 지켜보는 회의처럼 보이지 않게 */
+  const one=/^3-[2-6]$/.test(String(s.id));
   const plate=(k,talk)=>{const p=who(k);return `<span class="plate">${talk?ICO.mic+'<i class="lv"><b></b><b></b><b></b></i>':ICO.micoff}${esc(p.n)} <small>${esc(p.m)}</small></span>`;};
   const tile=(k,talk)=>`<div class="cam${talk?" talk":""}" style="${roomBg(k)}"><div class="cv">${camFace(k)}</div>${plate(k,talk)}</div>`;
   const me=`<div class="cam me" style="--r1:#24302b;--r2:#121815;--r3:#8fb8a5"><div class="cv"><span class="me-av">나</span></div><span class="plate"><span class="mi">${ICO.mic}</span>나 (팀장)</span><span class="react" aria-hidden="true"></span></div>`;
   const stage=document.createElement("section");stage.className="dkm-stage";
-  stage.innerHTML=`<div class="dkm-top"><span class="rec"><i></i>REC <b data-t0="${st0}">00:00</b></span><b class="ttl">${esc(title)}</b><span class="cnt">${ICO.users} 6</span><span class="lay">${ICO.grid} ${P?"발표자 보기":"갤러리 보기"}</span></div>`+
-   (P?`<div class="dkm-main">${tile(sp,1)}<div class="dkm-cap"><span class="cc">자막</span></div></div><div class="dkm-strip">${lead.filter(k=>k!==sp).map(k=>tile(k,0)).join("")}${me}</div>`
+  stage.innerHTML=`<div class="dkm-top"><span class="rec"><i></i>REC <b data-t0="${st0}">00:00</b></span><b class="ttl">${esc(title)}</b><span class="cnt">${ICO.users} ${one?2:6}</span><span class="lay">${ICO.grid} ${P?"발표자 보기":"갤러리 보기"}</span></div>`+
+   (P?`<div class="dkm-main">${tile(sp,1)}<div class="dkm-cap"><span class="cc">자막</span></div></div><div class="dkm-strip">${one?"":lead.filter(k=>k!==sp).map(k=>tile(k,0)).join("")}${me}</div>`
      :`<div class="dkm-gal">${lead.map(k=>tile(k,0)).join("")}${me}</div><div class="dkm-cap gal"><span class="cc">자막</span></div>`)+
    `<div class="dkm-ctl" role="toolbar" aria-label="회의 도구">
      <button type="button" class="c mic" aria-label="음소거" aria-pressed="false">${ICO.mic}<span>음소거</span></button>
@@ -301,12 +303,12 @@
   stage.querySelector(".ppl").addEventListener("click",()=>toggleTeam(true));
   stage.querySelector(".leave").addEventListener("click",()=>{try{toast("결정을 마치면 회의가 끝납니다. 오른쪽 '회의 안건'에서 답을 정하세요.");}catch(e){}});
   const side=document.createElement("aside");side.className="dkm-side";
-  side.innerHTML=`<div class="dkm-sh" role="presentation"><span class="tab on">회의 안건</span><span class="tab">참석자 6</span><span class="when">${esc(val(s.when)||(G.month?G.month+"월":""))}</span></div><div class="dkm-body"></div><div class="dkm-foot"></div>`;
+  side.innerHTML=`<div class="dkm-sh" role="presentation"><span class="tab on">${one?"면담 안건":"회의 안건"}</span><span class="tab">참석자 ${one?2:6}</span><span class="when">${esc(val(s.when)||(G.month?G.month+"월":""))}</span></div><div class="dkm-body"></div><div class="dkm-foot"></div>`;
   const body=side.querySelector(".dkm-body"),foot=side.querySelector(".dkm-foot");
   const opts=pane.querySelector(":scope > .opts"),ft=pane.querySelector(":scope > .foot");
   [...pane.childNodes].forEach(n=>{if(n!==opts&&n!==ft)body.appendChild(n);});
   if(opts){const hasQ=[...body.querySelectorAll("p > b")].some(b=>/\?$/.test(b.textContent.trim()));
-   if(!hasQ)body.insertAdjacentHTML("beforeend",`<p class="dkm-q">회의 자리에서 어떻게 답할까요?</p>`);body.appendChild(opts);}
+   if(!hasQ)body.insertAdjacentHTML("beforeend",`<p class="dkm-q">${/^3-[2-6]$/.test(String(s.id))?"면담 자리에서 어떻게 답할까요?":"회의 자리에서 어떻게 답할까요?"}</p>`);body.appendChild(opts);}
   if(ft)foot.appendChild(ft);else foot.remove();
   const wrap=document.createElement("div");wrap.className="dkm";wrap.append(stage,side);pane.appendChild(wrap);
  }
@@ -392,7 +394,7 @@
   const pane=document.querySelector("#view .pane");if(pane&&pane.dataset.dk==="dash")return true;const tabs=pane&&pane.querySelector(":scope > .sctabs");if(!tabs)return false;pane.dataset.dk="dash";
   const eb=(pane.querySelector(":scope > .eyebrow")||{}).textContent||"";
   const bi=document.createElement("div");bi.className="bi";
-  bi.innerHTML=`<aside class="bi-nav"><div class="bi-brand">${ICO.chart}<b>팀 인사이트</b></div><p class="bi-sub">${esc(eb)}</p><div class="bi-tabs"></div><p class="bi-foot">헬씨푸드 운영팀 · 30명</p></aside><main class="bi-main"></main>`;
+  bi.innerHTML=`<aside class="bi-nav"><div class="bi-brand">${ICO.chart}<b>팀 인사이트</b></div><p class="bi-sub">${esc(eb)}</p><div class="bi-tabs"></div><p class="bi-foot">헬씨푸드 운영팀 · ${typeof teamN==="function"?teamN():30}명</p></aside><main class="bi-main"></main>`;
   const main=bi.querySelector(".bi-main");[...pane.childNodes].forEach(n=>{if(n!==tabs)main.appendChild(n);});
   bi.querySelector(".bi-tabs").appendChild(tabs);pane.appendChild(bi);
   return true;

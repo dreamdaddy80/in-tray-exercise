@@ -83,13 +83,13 @@ IBT.reply=25;IBT.del=10;IBT.four=8;IBT.hold=3;
    st.settled=true;st.hs=Math.max(0,st.holds-3);
    const ib0=window.ibSnap?ibSnap():null;
    if(st.hs)applyFx("안정-"+st.hs);if(st.holds>=6)applyFx("소문1");
-   if(window.ibSettleLog)ibSettleLog(ib0,`보류 ${st.holds}건 정산: 3건을 넘은 ${st.hs}건만큼 서비스 안정이 내려갔습니다.${st.holds>=6?" 처리되지 않은 일 이야기가 팀에 돌기 시작했습니다.":""}`);
+   if(window.ibSettleLog)ibSettleLog(ib0,`${holdLabel(st)} 정산: 3건을 넘은 ${st.hs}건만큼 서비스 안정이 내려갔습니다.${st.holds>=6?" 처리되지 않은 일 이야기가 팀에 돌기 시작했습니다.":""}`);
   }
   const l=[];
   {const L=(Array.isArray(G.inboxLog)?G.inboxLog:[]).filter(e=>e.i===G.idx&&e.id!=="_settle");
    if(L.length&&window.ibCountText)l.push(`오늘 처리: ${ibCountText(ibCount(L))}. (받은편지함은 ⏳ 팀장 시간을 깎지 않습니다)`);
    else if(st.replies)l.push(`메일에 직접 응답 ${st.replies}건을 제한 시간 안에 처리했습니다. (받은편지함은 ⏳ 팀장 시간을 깎지 않습니다)`);}
-  if(st.holds)l.push(`보류 ${st.holds}건${st.hs?`: 미처리 안건이 쌓여 서비스 안정이 ${st.hs} 내려갔습니다`:": 아직은 감당할 만합니다"}.${st.holds>=6?" 처리되지 않은 일 이야기가 팀에 돌기 시작했습니다.":""}`);
+  if(st.holds)l.push(`${holdLabel(st)}${st.hs?`: 미처리 안건이 쌓여 서비스 안정이 ${st.hs} 내려갔습니다`:": 아직은 감당할 만합니다"}.${st.holds>=6?" 처리되지 않은 일 이야기가 팀에 돌기 시작했습니다.":""}`);
   if(st.pend&&st.pend.length)l.push(`<b>미결 안건 ${st.pend.length}건</b>: ${st.pend.map(m=>`${m.from} · ${m.sub}`).join(", ")}. 시간 안에 정하지 못해 승인도 거절도 아닌 채 남았습니다. 보류와 같은 점수 영향이 있고, 성적표 요약에 다시 나옵니다.`);
   return l.length?`<div class="happen"><span class="label">오늘 받은편지함의 값</span>${l.join("<br>")}</div>`:"";
  };}
@@ -129,7 +129,7 @@ SCENES.monthEnd=function(s){
 };
 
 /* v3 패치 7: BSC 4관점 명칭(고객·재무·구성원·서비스 안정) 전 구간 UI 통일 */
-chainLine=function(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`구성원 점수 때문에 다음 분기 서비스 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`헬씨푸드 기대 ${c.기대} 대비 서비스 안정 ${c.안정} → 헬씨푸드 만족 ${sg(c.안정_헬씨푸드)}`);else if(c.안정_헬씨푸드)p.push(`서비스 안정 점수 때문에 헬씨푸드 만족이 ${sg(c.안정_헬씨푸드)}`);if(c.헬씨푸드_재무)p.push(`헬씨푸드 만족 때문에 재무가 ${sg(c.헬씨푸드_재무)}`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";};
+chainLine=function(c){const sg=v=>(v>0?"+":"")+v;const p=[];if(c.사람_안정)p.push(`구성원 점수 때문에 다음 분기 서비스 안정이 ${sg(c.사람_안정)}`);if(c.기대!=null)p.push(`헬씨푸드 기대 ${c.기대} 대비 서비스 안정 ${c.안정} → 헬씨푸드 만족 ${sg(c.안정_헬씨푸드)}`);else if(c.안정_헬씨푸드)p.push(`서비스 안정 점수 때문에 헬씨푸드 만족이 ${sg(c.안정_헬씨푸드)}`);if(c.헬씨푸드_재무)p.push(`헬씨푸드 만족 수준 때문에 재무가 ${sg(c.헬씨푸드_재무)}(만족이 50보다 높으면 오르고 낮으면 내려갑니다. 이번 분기의 오르내림이 아니라 수준으로 정합니다)`);return p.length?`${c.q}분기 연쇄: `+p.join(" · "):"";};
 morningMirror=function(){const c={},h={};Object.keys(MAIL_AREA).forEach(id=>{const a=MAIL_AREA[id];if(G.f["d_"+id]||G.f["del_"+id]){c[a]=(c[a]||0)+(G.f["d_"+id]?1:.5);}if(G.f["h_"+id])h[a]=(h[a]||0)+1;});
  const top=SCORES.slice().sort((a,b)=>(c[b]||0)-(c[a]||0)).filter(a=>c[a]).slice(0,2);
  return `<div class="cond"><span>선임 때 고른 우선순위: ${(G.prio||[]).map(k=>SL(k)).join(", ")}</span><span>오늘 아침 손을 가장 많이 쓴 곳: ${top.map(k=>SL(k)).join(", ")||"없음"} (직접 답장 1, 위임 0.5로 셈)</span>${Object.keys(h).length?`<span>보류한 메일이 가장 많았던 곳: ${SL(SCORES.filter(a=>h[a]).sort((a,b)=>h[b]-h[a])[0])}</span>`:""}</div>`;};
@@ -145,7 +145,8 @@ SCENES.pledge=function(s){
  draw();
 };
 /* R1-2 핵심 과제: 무엇을 하는 화면인지 3단계로 보여 주고, 성적표 네 장을 화면 안에서 설명한다 */
-const TASK_EX=["예: 이익의 62%가 추가 과제에서 나오는데, 운영이 흔들리면 그 매출부터 위험해진다.","예: 토큰이 팀 손익에 잡히는데 기준이 없으면 많이 쓰는 모듈이 계속 더 쓰게 된다.","예: 작년 이의제기처럼, 기준을 모르면 같은 등급도 불공정하게 느낀다.","예: 대기가 몇 사람에게 몰리면 지쳐서 경고를 놓치고 장애로 이어진다.","예: 고객 데이터가 승인 안 된 서비스에 들어가면 보안 사고와 계약 위반이 된다.","예: 불을 막는 사람이 인정받지 못하면 예방이 줄고 장애가 늘어난다.","예: 헬씨푸드 임원이 직접 보는 지표라, 늦으면 고객 신뢰가 깎인다.","예: 내일 임원 보고가 잘못되면 수주 기회와 고객 신뢰를 함께 잃는다."];
+/* 피드백 2단계: 입력칸 예시를 모범답안이 아니라 쓰는 형식으로. 과제마다 같은 안내를 쓴다 */
+const TASK_EX=Array(8).fill("예: (메모에서 본 숫자나 사실) 때문에 (누가, 무엇이) (어떻게) 흔들린다.");
 const SC_DEF={성과:"헬씨푸드가 만족하는가 · 약속한 서비스를 지켰는가",재무:"팀 손익 · 매출, 운영비, 토큰 비용",사람:"팀원 30명의 몰입과 목소리",안정:"시스템 가용성 · 장애 · 보안"};
 SC_TASKS=function(s){
  const pick=[],data={};
@@ -165,9 +166,8 @@ SC_TASKS=function(s){
    pick.forEach(i=>{G.f["task_"+(i+1)]=true;});
    if(pick.some(i=>i>=6))G.f.urgent_task=true;
    record(s.id,pick.map(i=>i+1).join(","));
-   /* C-2 (2026-11-25): 고른 과제가 이후 어느 장면에 쓰이는지 한 줄씩. 맞고 틀림은 말하지 않는다 */
-   const USE=["4월·6월 헬씨푸드 운영비 협상에서 '손익 구조 메모'로 협상 자료 맨 위에 놓입니다.","4월·6월 헬씨푸드 운영비 협상에서 '손익 구조 메모'로 협상 자료 맨 위에 놓입니다.","3월 KPI 합의서에서 등급 기여 기준을 정할 때 이어집니다.","8월 야간 대기 장면에서 김 사원이 이 메모를 기억합니다.","3월 외부 AI 사용 사고에 대응할 때 미리 짚어 둔 관리 체계로 이어집니다.","3월 등급 기여 기준에 예방 활동을 넣을 때 이어집니다.","이번 달 안에 끝나는 일입니다. 이후 장면에 따로 이어지지 않습니다.","이번 주 안에 끝나는 일입니다. 이후 장면에 따로 이어지지 않습니다."];
-   paint("");shell(`<div class="pane">${head(s)}<h2>메모를 닫았습니다</h2><p class="note">고른 과제가 올해 어디에서 다시 나오는지입니다. 맞고 틀림을 매기는 것이 아닙니다.</p><div class="happen">${pick.map(i=>`<b>${s.items[i]}</b><br>→ ${USE[i]}`).join("<br><br>")}</div><div class="foot"><span></span><button class="btn main" ${A(next)}>10시 팀 아침 회의로</button></div></div>`);
+   /* 피드백 2단계: 고른 과제가 어디에 다시 나오는지 미리 알려 주지 않는다. 이어짐은 성적표 ③ '일관성 점검'에서 돌아본다 */
+   paint("");shell(`<div class="pane">${head(s)}<h2>메모를 닫았습니다</h2><div class="happen"><span class="label">올해의 핵심 과제</span>${pick.map(i=>`<b>${s.items[i]}</b>`).join("<br>")}</div><p class="note">이 과제들이 올해의 결정과 어떻게 이어졌는지는 Round 1 성적표 ③ '일관성 점검'에서 돌아봅니다.</p><div class="foot"><span></span><button class="btn main" ${A(next)}>1월 둘째 주 주간 회의로</button></div></div>`);
   })}>메모 닫기</button></div></div>`);
   const up=()=>{$("tgo").disabled=!ok();};
   pick.forEach(i=>{$("t"+i).oninput=up;$("c"+i).onchange=up;});up();
@@ -188,10 +188,11 @@ get("3-1").ref="<b>사람은 '말'이 아니라 '점수'를 따라 움직입니�
 /* R1-4 KPI 합의서: 두 달 뒤라는 시간 이동, KPI 합의서와 등급 기여 기준이 무엇인지, 이 결정이 연말에 어떻게 쓰이는지를 먼저 보여 준다 */
 /* C-3 (2026-11-25): 확정 전에 "이 조합으로 12월에 누구의 기여를 설명하기 어려운가". 정답 표시가 아니라 성찰용 */
 const KPI_GAP=[["장애 예방 활동",null,"가공(이수진)이 8개월 동안 장애를 막아 온 예방 점검"],["장애 복구 기여",null,"생산(강태식)이 새벽에 장애를 복구한 일"],["보안 준수",null,"조달(문지원)이 절차와 데이터 규정을 지킨 기록"],["동료 지원과 온보딩",null,"후배를 돕고 지식을 나눈 선배들의 시간"],["AI 활용 효과",null,"R&D(서하준)가 AI 도구로 줄인 작업"],[["추가 과제 매출 기여","고객 칭찬"],null,"마케팅(정다은)의 수주와 제안"]];
-function kpiGap(s,pick){const names=pick.map(i=>s.cards[i].n);const miss=KPI_GAP.filter(([n])=>!(Array.isArray(n)?n.some(x=>names.includes(x)):names.includes(n))).map(x=>x[2]);
+function kpiGap(s,pick,names0){const names=names0||pick.map(i=>s.cards[i].n);const miss=KPI_GAP.filter(([n])=>!(Array.isArray(n)?n.some(x=>names.includes(x)):names.includes(n))).map(x=>x[2]);
  const extra=[];if(names.includes("책임감 있는 근무"))extra.push("오래 남은 시간이 기준이 되면, 시간 안에 끝낸 사람의 기여는 덜 보입니다.");if(names.includes("리더 종합 판단"))extra.push("리더가 직접 보지 못한 구성원의 기여는 설명할 근거가 남지 않습니다.");
  if(!miss.length&&!extra.length)return "";
- return `<div class="happen"><span class="label">확정 전에 한 번 더</span>${miss.length?`이 조합으로는 12월에 <b>${miss.slice(0,3).join(", ")}</b>${miss.length>3?` 등 ${miss.length}가지를`:"을"} 등급의 근거로 설명하기 어렵습니다.`:""}${extra.length?(miss.length?"<br>":"")+extra.join(" "):""}<br><small>맞고 틀림이 아니라, 이 기준으로 누가 보이고 누가 덜 보이는지입니다.</small></div>`;}
+ return `<div class="happen"><span class="label">이 기준으로 12월에 설명하기 어려운 기여</span>${miss.length?`이 조합으로는 12월에 <b>${miss.slice(0,3).join(", ")}</b>${miss.length>3?` 등 ${miss.length}가지를`:"을"} 등급의 근거로 설명하기 어렵습니다.`:""}${extra.length?(miss.length?"<br>":"")+extra.join(" "):""}<br><small>맞고 틀림이 아니라, 이 기준으로 누가 보이고 누가 덜 보이는지입니다.</small></div>`;}
+window.kpiGapHtml=names=>{try{return names&&names.length?kpiGap(null,null,names):"";}catch(e){return "";}};
 SC_KPI=function(s){
  const order=s.cards.map((_,i)=>i).sort(()=>Math.random()-.5),pick=[],link={};
  const keep=()=>pick.forEach(i=>{const b=$("l"+i);if(b)link[i]=b.value;});
@@ -207,7 +208,7 @@ SC_KPI=function(s){
   <p class="note">어떤 기준이 좋은지는 화면에 나오지 않습니다. 이 기준으로 평가하면 팀원들이 내일부터 무엇을 더 하고, 무엇을 덜 할지 떠올려 보세요.</p>
   <details class="ref"><summary>참고 카드</summary><p style="margin-top:6px">${s.ref}</p></details>
   <div class="opts">${order.map(i=>{const c=s.cards[i],on=pick.includes(i);return `<button class="opt" style="grid-template-columns:24px minmax(0,1fr)" aria-pressed="${on}" ${A(()=>{keep();const j=pick.indexOf(i);if(j>=0)pick.splice(j,1);else if(pick.length<5)pick.push(i);draw();})}><span class="k">${on?"✓":""}</span><span><b style="font-weight:600">${c.n}</b><span class="note" style="display:block">${c.d}</span></span></button>${on?linkBox(i):""}`}).join("")}</div>
-  ${pick.length>=3?kpiGap(s,pick):""}
+
   <div class="foot"><span class="note num">${pick.length}/3~5</span><button class="btn main" id="kgo" disabled ${A(finish)}>기준 확정</button></div></div>`);
   const up=()=>{$("kgo").disabled=!ok();};pick.forEach(i=>$("l"+i).onchange=up);up();
  };
@@ -256,7 +257,7 @@ const THEORY={
  1:{title:"Lecture 1 · 전문가에서 관리자로",q:"지금까지 당신을 성공하게 한 일 가운데, 오늘부터 하지 말아야 할 일은 무엇입니까?",c:[["관리자 전환 (Hill)","관리자의 일은 직접 하는 것이 아니라 일이 되게 하는 것","받은편지함"],["목표 설정 (Locke & Latham)","구체적이고 합의된 목표가 성과를 이끈다","핵심 과제, 기준 설계"],["정보 공정성 (Colquitt)","근거를 설명받았는지가 공정하다는 느낌을 가른다","기준 공개, 면담"]]},
  2:{title:"Lecture 2 · 나누고 맡기고 말하게 하기",q:"이번 분기에 무엇을 하지 않기로 할 것입니까?",c:[["상황 리더십 (Hersey & Blanchard)","맡기는 방식은 상대의 준비도에 맞춘다","받은편지함, 차출 대응"],["리더십의 양면 (Bass)","추진력과 배려는 둘 다 대가가 있다","스타일 다이얼, 중재"],["조직 침묵 (Morrison & Milliken)","말해도 소용없다고 느끼면 나쁜 소식부터 사라진다","받은편지함, 설명 쓰기"],["직무 요구-자원 (Bakker & Demerouti)","요구가 자원을 넘으면 소진이 쌓인다","여력 배분"]]},
  3:{title:"Lecture 3 · 위기와 평가, 그리고 현업으로",q:"이 등급의 근거는 당사자가 미리 알 수 있었던 것입니까?",c:[["심리적 안전 (Edmondson)","나쁜 소식이 빨리 올라와야 위기가 작아진다","새벽 위기"],["절차 공정성 (Leventhal)","일관성 · 정확성 · 이의 기회가 공정을 만든다","지침 변경, 이의제기"],["관찰 기반 평가","등급은 기억이 아니라 기록에서 나온다","연말 평가"]]}};
-const STYLE_OPTS=[{k:"push",t:"추진형 · 빠르게 정하고 강하게 밀어붙인다",gl:["결정의 성과가 크게 나타남","관계가 더 빨리 닳고 팀이 말을 아낄 수 있음"]},{k:"care",t:"배려형 · 사람의 사정을 먼저 듣고 맞춘다",gl:["신뢰와 팀의 목소리가 지켜짐","성과가 늦게 나타나고 마감 앞에서 흔들릴 수 있음"]},{k:"bal",t:"균형형 · 상황마다 저울질한다",gl:["크게 흔들리지 않음","조율에 시간이 더 듦 (라운드마다 ⏳−1)"]}];
+const STYLE_OPTS=[{k:"push",t:"추진형 · 빠르게 정하고 강하게 밀어붙인다",gl:["결정의 성과가 크게 나타남","관계가 더 빨리 닳고 팀이 말을 아낄 수 있음 (라운드마다 심리적 안전 −3)"]},{k:"care",t:"배려형 · 사람의 사정을 먼저 듣고 맞춘다",gl:["신뢰와 팀의 목소리가 지켜짐 (라운드마다 심리적 안전 +3)","성과가 늦게 나타나고 마감 앞에서 흔들릴 수 있음"]},{k:"bal",t:"균형형 · 상황마다 저울질한다",gl:["크게 흔들리지 않음","조율에 시간이 더 듦 (라운드마다 ⏳−1)"]}];
 const STYLE_SAY={push:[["mkt","좋아요, 이제 속도 좀 나겠네요."]],care:[["mfg","갑자기 왜 이러세요?"]],bal:[["src","그럼 기준은 누가 정하는 겁니까?"]]};
 const DOC_LINE={rd:"KPI는 메일로 받았어요. 실험 건수, 그대로 들어갔던데요?",src:"합의서는 문서로 잘 받았습니다. 의견 드릴 자리는 없었지만요.",mfg:"내가 쓴 초안 그대로 갔더라. 고맙다고 해야 하나.",prc:"측정 방법은 제가 정하라고 하셨죠. 다른 리더들은 그걸 다르게 보더라고요.",mkt:"수주액 하나, 좋아요. 대신 목표는 제가 정한 숫자예요."};
 const styleBtns=(cur,pick)=>`<div class="opts">${STYLE_OPTS.map((o,i)=>`<button class="opt" aria-pressed="${cur===o.k}" ${A(()=>pick(o.k))}><span class="k">${"ABC"[i]}</span><span>${o.t}${glHtml(o)}</span><span class="cost"></span></button>`).join("")}</div>`;
@@ -324,6 +325,9 @@ SCENES.kpipick=function(s){
 Object.keys(KPI_SCENE).forEach(k=>{const sc=get(KPI_SCENE[k]);sc.skip=g=>!(g.kpiMeet||[]).includes(k);});
 
 /* ---------- 받은편지함 (03-2 R1-1, 03-3 R2-1) ---------- */
+/* 피드백 4단계 #26: 말로 한 약속을 장부에 '기록'으로 남긴다(판정·점수 없음) */
+{const s=get("1-1"),m=s&&(s.mail||[]).find(x=>x.id==="M09");if(m&&Array.isArray(m.self))m.self[3]=Object.assign({},m.self[3]||{},{pr:{id:"N1",text:"오늘 김 사원과 잠깐 이야기하기",to:"김 사원",due:"1월",memo:true}});}
+{const s=get("5-4"),o=s&&(s.options||[]).find(x=>/7월까지 정한다/.test(String(x.t||"")));if(o&&!o.pr)o.pr={id:"N2",text:"장애 공로를 어떻게 볼지 7월까지 리더들과 정하기",to:"강태식 · 이수진",due:"7월",memo:true};}
 {const s=get("1-1");const keep=["M01","M03","M06","M08","M09","M11","M13","M14","M16"];
  s.mail=keep.map(id=>s.mail.find(m=>m.id===id));s.seconds=240;s.lead="받은편지함에 읽지 않은 메시지가 8통, 그리고 곧 전화가 한 통 옵니다. 메시지를 열면 시간이 흐르기 시작합니다. 10시 팀 아침 회의까지입니다.";
  const m8=s.mail.find(m=>m.id==="M08");Object.assign(m8,{t:"CALL",from:"📞 강태식 (생산)",at:"08:55",sub:"전화가 옵니다",noDel:true,
@@ -333,10 +337,14 @@ Object.keys(KPI_SCENE).forEach(k=>{const sc=get(KPI_SCENE[k]);sc.skip=g=>!(g.kpi
  REPLIES.M08=[{t:"받는다: \"선배가 맡아 주세요. 수요일 새벽 다른 작업과 겹치는지만 봐 주세요.\"",self:true},
   {t:"받는다: \"로그 저한테도 보내 주세요. 같이 볼게요.\"",r:R3("처음 보는 구조의 로그가 왔습니다.","안정-1 mfg-3 `unfam_direct`","①P")},
   {t:"거절하고 메시지: \"회의 중, 10시 이후 연락드릴게요.\"",r:R3("메시지를 남겼습니다. 강태식: \"그래.\"","","④L"),d:false}];
+ /* 피드백 6단계 #29: 위임은 받는 사람과 상관없이 '맡긴 행동'(①L)으로 기록하고, 받는 사람이 맞는지는 성적표 판정(IB_FIT)에서 본다. 다른 메일과 달리 M11만 ①P였던 것을 맞춘다 */
+ const m11=s.mail.find(m=>m.id==="M11");if(m11&&Array.isArray(m11.other)){m11.other=m11.other.slice();m11.other[2]="①L";}
  const m3=s.mail.find(m=>m.id==="M03");
  if(m3){m3.attach=`📎 제안서_v7.pptx · <button class="link" onclick="G.f.know_han=true;G.known=G.known||{};G.known.mkt=Object.assign(G.known.mkt||{},{아래:1});toast('문서 속성 확인: 초안 작성자와 마지막 수정자가 모두 [한 선임]으로 기록되어 있습니다.');this.textContent='✓ 마지막 수정: 한 선임 (확인됨)';">마지막 수정: 한 선임 (눌러서 문서 속성 확인)</button>`;}
 }
-{const s=get("4-1"),s7=get("7-1");s.seconds=180;s.lead="AI 전환이 시작된 지 한 달. 배분 회의까지입니다. 메시지를 열면 시간이 흐르기 시작합니다.";
+/* 피드백 4단계 #2: 받은편지함 끝 제목과 버튼을 다음 장면에 맞춘다 */
+{const a=get("1-1");if(a){a.nextLabel="핵심 과제 메모로";}}
+{const s=get("4-1"),s7=get("7-1");s.seconds=180;s.overTitle="배분 회의 시간입니다.";s.doneTitle="배분 회의 전에 모두 처리했습니다.";s.quietTitle="배분 회의 전에 받은편지함이 비었습니다.";s.nextLabel="여력 배분 회의로";s.lead="AI 전환이 시작된 지 한 달. 배분 회의까지입니다. 메시지를 열면 시간이 흐르기 시작합니다.";
  const pick=id=>s.mail.find(m=>m.id===id);
  const m22=pick("M22");Object.assign(m22,{t:"CALL",from:"📞 헬씨푸드 담당 임원",sub:"전화가 옵니다",noDel:true,
   body:"\"제안서 부록에 주 140시간 절감이라고 돼 있더군요. 그 효율이면 운영비 이야기를 해야겠습니다. 다음 주 미팅 때 숫자 들고 오세요.\"",
@@ -366,7 +374,7 @@ get("6-3").skip=g=>!kimCase(g);get("4-4").skip=g=>kimCase(g);
 const R31a={id:"R3-1a",type:"choice",month:10,when:"10월 · 새벽 3시",tag:"강태식",title:"새벽 3시",rel:"mfg",enter:"안정-2 헬씨푸드만족-1",
  ref:"장애 · 안전 절차: 1등급 장애는 지휘자 1인을 지정한다. 운영 변경은 긴급 승인자의 확인을 거친다. 고객 통지는 인지 후 30분 안에 한다. 설비 안전장치(인터록)의 해제·우회는 현장 안전 책임자와 고객사의 승인 없이 할 수 없다.",
  conds:[{c:g=>g.trust.mfg>=50,t:"📞 03:04 강태식: \"해외 공장 3번 라인 인터록 센서 값이 시스템 기록이랑 안 맞아. 현장은 센서 오작동 같다고 우회하고 돌리자는데, 납기가 내일 아침이야. 네가 판단해 줘.\""},
-  {c:g=>g.trust.mfg<50,t:"03:41 모니터링 알림이 먼저 울린다. 03:52 📞 문지원: \"강태식 선배가 현장이랑 인터록 우회 얘기를 하고 있어요. 팀장님께 연락했다는 얘기는 못 들었는데요.\""},
+  {c:g=>g.trust.mfg<50,t:"03:02 모니터링 알림이 먼저 울린다. 03:08 📞 문지원: \"강태식 선배가 현장이랑 인터록 우회 얘기를 하고 있어요. 팀장님께 연락했다는 얘기는 못 들었는데요.\""},
   {c:g=>g.f.kim_manual,t:"김 사원의 야간 경고 규칙 덕에 이상 구간이 3번 라인 한 곳으로 좁혀졌다."},
   {c:g=>g.f.night_seen,t:"이 경고는 지난주에도 두 번 떴다. 근태 밖에서 본 사람이 있었다."},
   {c:g=>g.f.oh_script,t:"오 사원: \"우회 스크립트는 제가 제일 잘 알아요. 5분이면 돼요.\""},
@@ -435,14 +443,14 @@ SCENES.exodus=function(s){
 
 /* ---------- 연말 평가 7명 · 평가 결과는 팀 공지 하나 (03-4) ---------- */
 {const V3_EVAL_R={
- rd:[["AI 시범 결과 분기 보고",null,["AI 활용 효과"]],["3월 승인 안 된 외부 AI 사용",null,["보안 준수"]],["운영 인수인계 지표 수용","c_3-2_A",["AI 활용 효과","동료 지원과 온보딩"]],["보안 건 사실 확인 및 재발 방지 협조","v3_rd_sec",["보안 준수","장애 예방 활동"]],["AI 전환 과업 완수","v3_rd_ai",["AI 활용 효과","추가 과제 매출 기여"]],["작년 과제 취소 사정",null,[],1]],
+ rd:[["AI 시범 결과 분기 보고",null,["AI 활용 효과"]],["3월 승인 안 된 외부 AI 사용",null,["보안 준수"],0,"neg"],["운영 인수인계 지표 수용","c_3-2_A",["AI 활용 효과","동료 지원과 온보딩"]],["보안 건 사실 확인 및 재발 방지 협조","v3_rd_sec",["보안 준수","장애 예방 활동"]],["AI 전환 과업 완수","v3_rd_ai",["AI 활용 효과","추가 과제 매출 기여"]],["작년 과제 취소 사정",null,[],1]],
  src:[["3월 승인 안 된 도구 정황 제보",null,["보안 준수"]],["감사 대응 및 계약 검토",null,["보안 준수"]],["조달 전환 교육·단계적 자동화 합의","v3_src_auto",["AI 활용 효과","동료 지원과 온보딩"]],["새벽 라인 우회 위험 사전 제보","v3_src_alert",["장애 예방 활동","보안 준수"]],["본부 차출 시 핵심 인력 보호 협조","v3_src_hq",["동료 지원과 온보딩"]]],
  mfg:[["상반기 장애 복구 3시간 40분",null,["장애 복구 기여"]],["10월 새벽 3시 현장 지휘","v3_mfg_cmd",["장애 복구 기여","보안 준수"]],["생산 구조 인수 및 야간 대기 재설계","v3_mfg_ally",["동료 지원과 온보딩","장애 예방 활동"]],["가공 모듈과 예방·복구 기록 공유","c_5-4_B",["장애 예방 활동","동료 지원과 온보딩"]],["야간에 가장 오래 있었음",null,[],1],["팀장 후보였음",null,[],1],["이력서 소문","mfg_exit",[],1]],
  prc:[["재발 없는 8개월 예방 점검",null,["장애 예방 활동"]],["정기 점검 및 인터록 이력 관리",null,["장애 예방 활동"]],["예방의 질 평가 기준 정립","v3_prc_kpi",["장애 예방 활동","동료 지원과 온보딩"]],["장애 공로에서 예방 기여 공동 인정","c_5-4_B",["장애 예방 활동"]],["3번 라인 아차 사고 원인 규명","v3_prc_near",["장애 예방 활동","보안 준수"]],["예전 동료였음",null,[],1]],
  mkt:[["헬씨푸드 제안 및 계약 대응",null,["추가 과제 매출 기여"]],["헬씨푸드 임원 커뮤니케이션",null,["고객 칭찬"]],["하반기 우선 협상권·신규 과제 확보","v3_mkt_win",["추가 과제 매출 기여","고객 칭찬"]],["제안서 실무 작성자 기여 명기","v3_mkt_credit",["동료 지원과 온보딩"]],["한 선임에게 발표 기회 부여","v3_mkt_han",["동료 지원과 온보딩"]],["임원이 좋아함",null,g=>g.f.pub_praise?["고객 칭찬"]:[],g=>!g.f.pub_praise],["표지 관행",null,[],1]],
  kim:[["상반기 야간 복구 참여",null,["장애 복구 기여"]],["야간 경고 3종 처리 규칙 초안 작성","v3_kim_rule",["장애 예방 활동","AI 활용 효과"]],["야간 경고 AI 필터링 전환 기여","c_6-3_2_A",["AI 활용 효과","동료 지원과 온보딩"]],["야간 대기 11회",null,[],1],["근태 밖 야간 접속","night_seen",[],1]],
  han:[["제안서 본문 및 실측 부록 작성",null,["추가 과제 매출 기여"]],["제안서 편집 이력 41건 확인","v3_han_know",["추가 과제 매출 기여","동료 지원과 온보딩"]],["하반기 제안 발표 및 모듈 기여 정리","v3_han_stage",["추가 과제 매출 기여","고객 칭찬"]],["41시간 야근",null,[],1],["익명 게시판 글",null,[],1]],
- bae:[["KPI 전 항목 달성",null,["리더 종합 판단","장애 복구 기여"]],["작년 이의제기 사유 및 평가 기준 대조 확인","v3_bae_check",["장애 복구 기여","보안 준수"]],["모듈 간 인수인계 및 후배 지원","v3_bae_mentor",["동료 지원과 온보딩"]],["작년 등급 B",null,[],1],["타 부서 이동 희망",null,[],1]]
+ bae:[["KPI 전 항목 달성",null,["리더 종합 판단"],0,"kpi"],["작년 이의제기 사유 및 평가 기준 대조 확인","v3_bae_check",["장애 복구 기여","보안 준수"]],["모듈 간 인수인계 및 후배 지원","v3_bae_mentor",["동료 지원과 온보딩"]],["작년 등급 B",null,[],1],["타 부서 이동 희망",null,[],1]]
 };
 EVAL_ALL.forEach(e=>{if(V3_EVAL_R[e.k])e.r=V3_EVAL_R[e.k];});
 const orig=SCENES.evalc;SCENES.evalc=function(s){
@@ -452,9 +460,9 @@ const orig=SCENES.evalc;SCENES.evalc=function(s){
  F.v3_src_auto=!!(F["c_3-3_A"]||F["c_3-3_C"]);
  F.v3_src_alert=!!(G.trust.mfg<50||F["c_R3-1b_A"]);
  F.v3_src_hq=!!(F["c_8-1a_B"]||F["c_8-1a_C"]||F["c_8-1b_A"]);
- F.v3_mfg_cmd=!!(F.inc_proc||F["c_R3-1a_A"]||F.line_stop);
+ F.v3_mfg_cmd=!!(F.inc_proc||F["c_R3-1a_A"])&&!F.inc_direct; /* 피드백 3단계: 강태식이 실제로 지휘했을 때만. 라인을 세운 것만으로는 쓰지 않는다 */
  F.v3_mfg_ally=!!(F.mfg_ally||F.tae_end_ally||F["c_1-4_B"]||F["c_3-4_A"]);
- F.v3_prc_kpi=!!(F["c_3-5_A"]||F["c_3-5_B"]||F["c_3-5_C"]);
+ F.v3_prc_kpi=!!(F["c_3-5_A"]||F["c_3-5_C"]); /* 피드백 3단계: 건수로 합의한 경우(B)는 '예방의 질' 기준이 아니다 */
  F.v3_prc_near=!!(F.near_miss||F.near_miss_saved||F["c_R3-1b_A"]);
  F.v3_mkt_win=!!(F.ct_cut||F.ct_more||F["c_6-1_B"]||F["c_6-1_C"]||F["c_4-5_C"]);
  F.v3_mkt_credit=!!(F["c_3-6_A"]||F["c_4-4_B"]||F.know_han);
@@ -471,13 +479,13 @@ const orig=SCENES.evalc;SCENES.evalc=function(s){
 
 /* ---------- 라운드 성적표 (02-4 B 기본형) ---------- */
 const AXN3={1:"① 일 맡기기",2:"② 평가하기",3:"③ 자원 나누기",4:"④ 설명하기"};
-function axRange(from){const a={1:{L:0,P:0},2:{L:0,P:0},3:{L:0,P:0},4:{L:0,P:0}};G.sig.slice(from).filter(x=>!x.forced).forEach(x=>{a[x.a][x.s]+=x.w;});const o={};for(const k in a){const t=a[k].L+a[k].P;o[k]=t?Math.round(a[k].L/t*100):null;}return o;}
+function axRange(from){const a={1:{L:0,P:0},2:{L:0,P:0},3:{L:0,P:0},4:{L:0,P:0}};G.sig.slice(from).filter(habitSig).forEach(x=>{a[x.a][x.s]+=x.w;});const o={};for(const k in a){const t=a[k].L+a[k].P;o[k]=t?Math.round(a[k].L/t*100):null;}return o;}
 function lastChoice(id){const d=(G.decisions||[]).filter(x=>x.scene===id);return d.length?d[d.length-1].choice:null;}
 function resultCode(r){
  const ch={};["M08","1-5","3-1","R1-pick","3-8","4-5","6-1","5-4","8-1a","R3-1a","R3-1b","9-4","6-4b","12-3a"].forEach(id=>{const c=lastChoice(id);if(c!=null)ch[id]=String(c).slice(0,12);});
  if(G.f.pub_full)ch.pub="A";else if(G.f.pub_items)ch.pub="B";else if(G.f.pub_leaders)ch.pub="C";
  if(G.cells)ch.cells=["RUN","AI","GROW","SEC"].map(k=>G.cells[k]||0).join("");
- const o={v:3,r,nick:G.nick||"",style:G.style||"bal",ch,kpi:[G.score.성과,G.score.재무,G.score.사람,G.score.안정,G.fsat],ax:{self:G.diag||null,act:axRange(0)},g2:G.goal2,ib:(()=>{const st=(G.rs||{})[r]||{},nx=(G.rs||{})[r+1];const ms=(G.decisions||[]).slice(st.dec||0,nx?nx.dec:undefined).filter(x=>/^M\d+/.test(x.scene)).map(x=>String(x.choice).split(":")[0]);const n=k=>ms.filter(x=>x===k).length;const ds=(nx&&nx.ds0)||G.ds||{},d0=st.ds0||{};return [n("직접")+n("답장"),n("위임"),Math.max(0,(ds.f||0)-(d0.f||0)),n("코칭"),n("보류")+n("시간 초과(보류)")+n("시간 초과(미결)")];})(),m39:r>=2?(G.f.got_M39?1:0):undefined,rb:window.v3RubricN?v3RubricN(r):undefined,rv:2,tk:[(G.roundTok&&G.roundTok[r])||0,G.tokenCap||40],ud:(G.undo&&G.undo.n&&G.undo.n[r])||0,vb:(window.violationsOf?violationsOf(r).length:0),timeMode:(G.timeMode&&G.timeMode!=="std")?G.timeMode:undefined,k0:(()=>{const s0=((G.rs||{})[r]||{}).score;return s0?[s0.성과??50,s0.안정??50]:undefined;})(),t:Math.round((Date.now()-((G.rs||{})[r]||{}).t0)/1000)||0};
+ const o={v:3,r,nick:G.nick||"",style:G.style||"bal",ch,kpi:[G.score.성과,G.score.재무,G.score.사람,G.score.안정,G.fsat],ax:{self:G.diag||null,act:axRange(0)},g2:G.goal2,ib:(()=>{const st=(G.rs||{})[r]||{},nx=(G.rs||{})[r+1];const ms=(G.decisions||[]).slice(st.dec||0,nx?nx.dec:undefined).filter(x=>/^M\d+/.test(x.scene)).map(x=>String(x.choice).split(":")[0]);const n=k=>ms.filter(x=>x===k).length;const ds=(nx&&nx.ds0)||G.ds||{},d0=st.ds0||{};return [n("직접")+n("답장"),n("위임"),Math.max(0,(ds.f||0)-(d0.f||0)),n("코칭"),n("보류")+n("시간 초과(보류)")+n("시간 초과(미결)")];})(),m39:r>=2?(G.f.got_M39?1:0):undefined,rb:window.v3RubricN?v3RubricN(r):undefined,rv:3,tk:[(G.roundTok&&G.roundTok[r])||0,G.tokenCap||40],ud:(G.undo&&G.undo.n&&G.undo.n[r])||0,vb:(window.violationsOf?violationsOf(r).length:0),timeMode:(G.timeMode&&G.timeMode!=="std")?G.timeMode:undefined,k0:(()=>{const s0=((G.rs||{})[r]||{}).score;return s0?[s0.성과??50,s0.안정??50]:undefined;})(),t:Math.round((Date.now()-((G.rs||{})[r]||{}).t0)/1000)||0};
  const b=btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
  let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;return `IT3-R${r}-${b}-${(h%65536).toString(16).padStart(4,"0")}`;
 }
@@ -492,14 +500,16 @@ SCENES.roundEnd=function(s){
  const AR=x=>{let v=x;try{v=typeof x==="function"?x(G):x;}catch(e){v=null;}return Array.isArray(v)?v:[];};
  const strip=t=>{let v=t;try{v=typeof t==="function"?t(G):t;}catch(e){v="";}return String(v??"").replace(/<[^>]+>/g,"");};
  const ax=axRange(st.sig||0),axAll=axRange(0);
- const ev=(G.sig||[]).slice(st.sig||0).filter(x=>!x.forced);
+ const ev=(G.sig||[]).slice(st.sig||0).filter(habitSig);
  const nameOf=id=>{const sc=byId[id]||CONTENT.find(x=>x.id===id);if(sc)return (window.SC_NICK&&SC_NICK[id])||noNum(strip(sc.title)||sc.tag||id);const m=typeof mailOf==="function"?mailOf(id):null;return m&&m.m&&m.m.sub?"받은편지함 · "+(m.m.sub==="(제목 없음)"?(m.m.from||"")+" 메일 (제목 없음)":m.m.sub):((window.SC_NICK&&SC_NICK[id])||id);};
  const optsOf=sc=>{if(!sc)return [];return [...AR(sc.options),...AR(sc.levels),...AR(sc.planb),...AR(sc.cases).flatMap(c=>AR(c&&c.options))];};
- const chT=(id,c0)=>{const doc=/\(문서\)$/.test(String(c0)),c=String(c0).replace(/\(문서\)$/,"");const EX={"4-2b":{A:((G.roundTok||{})[1]||0)>0?"1분기에 쓴 양대로 토큰을 나눠 준다":"리더들이 요청한 양대로 토큰을 나눠 준다",B:"토큰당 기대 효과가 큰 모듈부터 배정한다",C:"다섯 모듈에 똑같이 나눈다"}};const o=optsOf(byId[id]||CONTENT.find(x=>x.id===id)).find(x=>x&&x.k===c);const t=EX[id]&&EX[id][c]?EX[id][c]:o?strip(o.t):String(c);return (t.length>46?t.slice(0,46)+"…":t)+(doc?" · 만나지 않은 결과(리더가 문서로 써 온 안, 습관 기록에는 포함)":"");};
+ const chT=(id,c0)=>{const doc=/\(문서\)$/.test(String(c0)),c=String(c0).replace(/\(문서\)$/,"");const EX={"4-2b":{A:((G.roundTok||{})[1]||0)>0?"1분기에 쓴 양대로 토큰을 나눠 준다":"리더들이 요청한 양대로 토큰을 나눠 준다",B:"토큰당 기대 효과가 큰 모듈부터 배정한다",C:"다섯 모듈에 똑같이 나눈다"}};const o=optsOf(byId[id]||CONTENT.find(x=>x.id===id)).find(x=>x&&x.k===c);const t=EX[id]&&EX[id][c]?EX[id][c]:o?strip(o.t):String(c);return (t.length>46?t.slice(0,46)+"…":t)+(doc?" · 만나지 않은 결과(리더가 문서로 써 온 안이라 습관 기록에서 뺌)":"");};
  /* 이번 라운드의 효과 기록 */
  const log=(G.fxLog||[]).slice(st.fx0||0);
  const sumLog=f=>{const o={d:{},tr:{},wl:{}};log.filter(f).forEach(e=>{for(const k in e.d||{})o.d[k]=(o.d[k]||0)+e.d[k];for(const k in e.tr||{})o.tr[k]=(o.tr[k]||0)+e.tr[k];for(const k in e.wl||{})o.wl[k]=(o.wl[k]||0)+e.wl[k];});return o;};
  const KL={성과:"고객",재무:"재무",사람:"구성원",안정:"서비스 안정",F:"헬씨푸드 만족"};
+ /* 피드백 2단계: 좋은 리더와 같은 선택이라도 계기판 값 하나가 5 이상 내려갔으면 '비용이 컸던 결정'으로 함께 적는다 */
+ const costOf=c=>{const d=(c&&c.act&&c.act.d)||{};const w=Object.keys(KL).map(k=>[k,d[k]||0]).sort((a,b)=>a[1]-b[1])[0];return w&&w[1]<=-5?`${KL[w[0]]} ${w[1]}`:"";};
  const chips=(o,opt)=>{opt=opt||{};const out=[];["성과","재무","사람","안정","F"].forEach(k=>{const v=(o.d||{})[k];if(v)out.push([KL[k],v,v>0]);});LKS.forEach(k=>{const v=(o.tr||{})[k];if(v)out.push([LD[k].n+" 신뢰",v,v>0]);});LKS.forEach(k=>{const v=(o.wl||{})[k];if(v)out.push([LD[k].m+" 업무량",v,v<0]);});
   if(!out.length)return `<span class="note">${opt.empty||"눈에 띄는 변화 없음"}</span>`;return out.map(x=>`<span class="chip" style="color:${x[2]?"var(--good)":"var(--bad)"};border-color:currentColor">${x[0]} ${sg(x[1])}</span>`).join("");};
  /* 선택지의 직접 효과(확률 사건 제외)를 효과 문자열에서 읽는다 */
@@ -527,12 +537,12 @@ SCENES.roundEnd=function(s){
     special:`<div class="pk-grid">${row("만난 리더",met.map(k=>LD[k].n).join(", ")||"없음")}${row("만나지 않은 리더",doc.map(k=>LD[k].n).join(", ")||"없음")}${row("쓴 시간",`⏳${cost}`)}${dec.bor!=null?row("야근으로 빌린 시간",dec.bor?`⏳${dec.bor}`:"없음"):""}${row("이견이 큰 세 사람(이수진·강태식·정다은) 중 만난 사람",`${hit.length}명${hit.length?` (${hit.map(k=>LD[k].n).join(", ")})`:""}`)}</div><p class="note">만나지 않은 리더 ${doc.length}명의 KPI는 아래 '만나지 않은 결과' 카드로 따로 보여 줍니다.</p>`,act:sumLog(e=>e.id==="R1-pick")});}return;}
   if(id==="1-3"){const dec=lastDec(x=>x.scene==="1-3");if(dec)cards.push({id,sc,opts:[],mine:null,special:`고른 과제: ${(((G.written||{}).tasks)||[]).map(x=>x.과제).join(" · ")||dec.choice}`,act:sumLog(e=>e.id==="1-3")});return;}
   if(id==="6-2"){const ds=(G.decisions||[]).slice(st.dec||0).filter(x=>x.scene==="6-2"||/^6-2/.test(x.scene));if(ds.length)cards.push({id,sc,opts:[],mine:null,special:"하반기 계약 결과를 세 사람(대상마다 다른 관심사)에게 설명하는 글을 고르고 썼습니다. 결과는 ③ 판단의 질 탭의 서술형 미리 보기에서 볼 수 있습니다.",act:sumLog(e=>e.id==="6-2")});return;}
-  if(id==="4-2"){if(G.cells)cards.push({id,sc:{...sc,title:"여력 배분"},opts:[],mine:null,special:`내 배분: ${["RUN","AI","GROW","SEC"].map(k=>k+" "+(G.cells[k]||0)+"칸").join(" · ")}`,act:sumLog(e=>e.id==="4-2")});return;}
+  if(id==="4-2"){const c4=((G.post||{}).R2||{}).cells;if(G.cells)cards.push({id,sc:{...sc,title:"여력 배분"},opts:[],mine:null,special:`내 배분(4월): ${["RUN","AI","GROW","SEC"].map(k=>k+" "+((c4||G.cells)[k]||0)+"칸").join(" · ")}${c4&&["RUN","AI","GROW","SEC"].some(k=>(c4[k]||0)!==(G.cells[k]||0))?` → 지금: ${["RUN","AI","GROW","SEC"].map(k=>k+" "+(G.cells[k]||0)+"칸").join(" · ")}${teamN()<30?" (8월 본사 차출 반영)":""}`:""}${c4&&G.f.f_pilot?" · GROW 1칸은 헬씨푸드 시범 과제가 쓰고 있습니다":""}`,act:sumLog(e=>e.id==="4-2")});return;}
   const caseIds=AR(sc.cases).map(c=>c&&c.id).filter(Boolean);
   const dec=lastDec(x=>x.scene===id||caseIds.includes(x.scene));if(!dec)return;
   let opts=AR(sc.options);if(!opts.length&&sc.cases){const ci=(G.cases||{})[id];const c=AR(sc.cases)[ci];opts=c?AR(c.options):[];}
   const docOnly=!!dec.doc;
-  cards.push({id,sc,opts,mine:dec.choice,doc:docOnly,act:docOnly?(()=>{const o=opts.find(x=>x.k===dec.choice);const p=o?parseFx(o.fx):{d:{},tr:{},wl:{}};p.tr={};return p;})():sumLog(e=>e.id===id)});
+  cards.push({id,sc,opts,mine:dec.choice,doc:docOnly,tk:Array.isArray(dec.tkLock)?dec.tkLock:null,act:docOnly?(()=>{const o=opts.find(x=>x.k===dec.choice);const p=o?parseFx(o.fx):{d:{},tr:{},wl:{}};p.tr={};return p;})():sumLog(e=>e.id===id)});
  });
  /* 받은편지함 요약 */
  const mails=(G.decisions||[]).slice(st.dec||0).filter(x=>/^M\d+/.test(x.scene));
@@ -540,11 +550,12 @@ SCENES.roundEnd=function(s){
  const inboxAct=sumLog(e=>e.t==="받은편지함 처리");
  /* 판정 */
  cards.forEach(c=>{const co=C[c.id]||{};c.best=(co.bestCase&&co.bestCase[(G.cases||{})[c.id]])||co.best||[];c.match=c.mine!=null&&c.best.length&&!(c.opts.length&&c.opts.every(o=>c.best.includes(o.k)))?c.best.includes(c.mine):null;
-  if(c.doc)c.match=null; /* 3단계: 만나지 않은 리더의 문서안은 내 결정이 아니므로 판정·집계에서 뺀다 */});
+  if(c.doc)c.match=null; /* 3단계: 만나지 않은 리더의 문서안은 내 결정이 아니므로 판정·집계에서 뺀다 */
+  if(c.match===false&&c.tk&&c.best.length&&c.best.every(k=>c.tk.includes(k))){c.match=null;c.tkLocked=true;} /* 피드백 6단계 #38: 좋은 리더의 선택이 모두 토큰 부족으로 잠겨 있었으면 판정·집계에서 뺀다 */});
  const docN=cards.filter(c=>c.doc).length;
  const judged=cards.filter(c=>c.match!=null),matchN=judged.filter(c=>c.match).length;
  /* 점수와 원인 */
- const K5=[["성과","고객","헬씨푸드가 만족하는가, 약속한 서비스를 지켰는가"],["재무","재무","팀 손익: 매출, 운영비, 토큰 비용"],["사람","구성원","팀원 30명의 몰입과 목소리"],["안정","서비스 안정","시스템 가용성, 장애, 보안"],["F","헬씨푸드 만족","헬씨푸드가 우리 팀을 얼마나 만족스러워하는가"]];
+ const K5=[["성과","고객","헬씨푸드가 만족하는가, 약속한 서비스를 지켰는가"],["재무","재무","팀 손익: 매출, 운영비, 토큰 비용"],["사람","구성원",`팀원 ${teamN()}명의 몰입과 목소리`],["안정","서비스 안정","시스템 가용성, 장애, 보안"],["F","헬씨푸드 만족","헬씨푸드가 우리 팀을 얼마나 만족스러워하는가"]];
  const now=k=>k==="F"?G.fsat:G.score[k],was=k=>k==="F"?(st.fsat??50):(st.score[k]??50);
  const causes=(k,total,field)=>{field=field||"d";const m={};log.forEach(e=>{const v=(e[field]||{})[k];if(v)m[e.t]=(m[e.t]||0)+v;});const rows=Object.entries(m).filter(x=>x[1]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));const rest=total-rows.reduce((a,x)=>a+x[1],0);if(rest)rows.push([field==="d"?"분기 말 연쇄 · 자동 정산":"동맹·갈등 관계로 번진 몫",rest]);return rows;};
  const ibJump=()=>A(()=>{tab=1;draw();setTimeout(()=>{const el=document.getElementById("ibsec");if(el){el.open=true;el.scrollIntoView({block:"start"});}},40);});
@@ -567,29 +578,29 @@ SCENES.roundEnd=function(s){
  const AXL={1:["기대 결과·기한·권한·이유를 밝혀 맡기고, 막히면 질문으로 돕는다","맡길 수 있는 일도 직접 처리하고, 되돌아온 일을 다시 가져간다","내가 직접 하는 게 가장 빠르고 정확하다"],2:["드러나지 않는 기여까지 기준에 넣어 공개하고, 관찰한 기록으로 평가한다","KPI 숫자 순서대로 정하고, 기준은 공개하지 않는다","KPI 숫자가 곧 공정한 평가다"],3:["효과·비용·위험을 기준으로 나누고, 나누기 전에 먼저 알린다","들어오는 일을 다 받고, 아낀 시간은 말없이 새 일로 채운다","AI로 아낀 시간은 더 많은 일로 채우면 된다"],4:["결정 뒤 영향을 받는 사람에게 기준과 근거를 직접 설명한다","결론만 통보하거나 설명하지 않는다","실력과 결과로 증명하면 사람들이 따라온다"]};
  const axVals=[1,2,3,4].filter(a=>ax[a]!=null);
  const avgL=axVals.length?Math.round(axVals.reduce((p,a)=>p+ax[a],0)/axVals.length):null;
- const axCnt=(()=>{const n={1:0,2:0,3:0,4:0};G.sig.slice(st.sig||0).filter(x=>!x.forced).forEach(x=>{n[x.a]++;});return n;})(); /* B-9③ 축별 표본 수 */
+ const axCnt=(()=>{const n={1:0,2:0,3:0,4:0};G.sig.slice(st.sig||0).filter(habitSig).forEach(x=>{n[x.a]++;});return n;})(); /* B-9③ 축별 표본 수 */
  const best=axVals.length?axVals.reduce((p,a)=>ax[a]>ax[p]?a:p):null,worst=axVals.length?axVals.reduce((p,a)=>ax[a]<ax[p]?a:p):null;
  const self=G.diag||{};const gaps=[1,2,3,4].filter(a=>axAll[a]!=null&&self[a]!=null&&self[a]-axAll[a]>=15);
  const kp=window.knowPct?knowPct():null;
  const RT={1:["1분기 (1~3월)","팀장이 된 첫 분기입니다. 받은편지함을 처리하고, 올해의 핵심 과제를 정하고, 리더들과 KPI 기준을 합의하고, 첫 돌발 상황에 대응했습니다."],2:["2·3분기 (4~9월)","한정된 여력과 토큰을 나누고, 헬씨푸드 협상과 리더 사이의 갈등, 본사 차출 같은 상충하는 요구를 다뤘습니다."],3:["4분기 (10~12월)","새벽 장애와 고객 항의를 수습하고, 바뀐 평가 지침 아래에서 연말 평가를 마쳤습니다."]}[r]||["",""];
  /* 부족했던 점 · 잘한 점 · 주안점 */
  const weak=[],good=[],focus=[];
- if(worst!=null&&ax[worst]<50){const ex=ev.find(x=>x.a===worst&&x.s==="P"&&!/\(문서\)$/.test(String(x.choice)))||ev.find(x=>x.a===worst&&x.s==="P"); /* 6단계: 예시는 내가 고른 결정을 먼저 든다 */weak.push(`<b>${AXN3[worst]}</b>에서 실무자 시절의 습관대로 고른 결정이 더 많았습니다(리더 행동 ${ax[worst]}%).${ex?` 예: "${nameOf(ex.scene)}"에서 「${chT(ex.scene,ex.choice)}」.`:""}`);}
- judged.filter(c=>!c.match).slice(0,2).forEach(c=>{const o=c.opts.find(x=>x.k===c.mine);weak.push(`<b>${nameOf(c.id)}</b>: 「${c.mine}. ${o?strip(o.t).slice(0,40):""}」를 골랐습니다. 좋은 리더라면 ${c.best.join(" 또는 ")} 쪽을 먼저 검토했을 것입니다.${o&&o.gl&&o.gl[1]?` 이 선택의 대가: ${o.gl[1]}.`:""}`);});
+ if(worst!=null&&ax[worst]<50){const sameIds=new Set(judged.filter(c=>c.match).map(c=>c.id));const notSame=x=>!sameIds.has(String(x.scene).replace(/^3-1-[23]$/,"3-1")); /* 피드백 2단계: '좋은 리더와 같음'으로 판정한 결정은 부족한 점의 예로 들지 않는다 */const ex=ev.find(x=>x.a===worst&&x.s==="P"&&notSame(x)&&!/\(문서\)$/.test(String(x.choice)))||ev.find(x=>x.a===worst&&x.s==="P"&&notSame(x)); /* 6단계: 예시는 내가 고른 결정을 먼저 든다 */weak.push(`<b>${AXN3[worst]}</b>에서 실무자 시절의 습관대로 고른 결정이 더 많았습니다(리더 행동 ${ax[worst]}%).${ex?` 예: "${nameOf(ex.scene)}"에서 「${chT(ex.scene,ex.choice)}」.`:""}`);}
+ judged.filter(c=>!c.match).slice(0,2).forEach(c=>{const o=c.opts.find(x=>x.k===c.mine);weak.push(`<b>${nameOf(c.id)}</b>: 「${dispK(c.id==="3-1"?"3-1-2":c.id,c.mine)}. ${o?strip(o.t).slice(0,40):""}」를 골랐습니다. 좋은 리더라면 ${c.best.map(k=>dispK(c.id==="3-1"?"3-1-2":c.id,k)).sort().join(" 또는 ")} 쪽을 먼저 검토했을 것입니다.${o&&o.gl&&o.gl[1]?` 이 선택의 대가: ${o.gl[1]}.`:""}`);});
  if(dn.dv<=-4){const c=causes(dn.k,dn.dv)[0];weak.push(`<b>${dn.l}</b>${jo(dn.l,"이","가")} ${sg(dn.dv)} 내려갔습니다.${c?` 가장 큰 원인은 「${c[0]}」입니다.`:""}`);}
  if(trDn.dv<=-5)weak.push(`<b>${LD[trDn.k].n}</b>(${LD[trDn.k].m})의 신뢰가 ${sg(trDn.dv)} 떨어졌습니다.${(()=>{const c=causes(trDn.k,trDn.dv,"tr")[0];return c?` 가장 큰 원인은 「${c[0]}」입니다.`:"";})()}`);
  if(hiS.length)weak.push(`<b>${hiS.map(k=>LD[k].m).join(", ")}</b> 모듈의 스트레스가 70을 넘었습니다(${hiS.map(k=>LD[k].m+" "+S(k)).join(", ")}). 80을 넘으면 리더 신뢰가 깎이고 소진 신호가 나옵니다.`);
  if(cons.length&&fitN<cons.length)weak.push(`근거를 고른 ${cons.length}건 중 ${cons.length-fitN}건이 합의한 기준과 맞지 않았습니다.`);
  if(v0!=null&&v1!=null&&v1<v0-5)weak.push(`팀 발언량이 ${v0}에서 ${v1}로 줄었습니다. 팀원들이 말을 아끼기 시작했다는 신호입니다.`);
  if(best!=null&&ax[best]>=60)good.push(`<b>${AXN3[best]}</b>에서 리더 행동이 ${ax[best]}%였습니다.`);
- judged.filter(c=>c.match).slice(0,2).forEach(c=>good.push(`<b>${nameOf(c.id)}</b>에서 좋은 리더의 선택과 같은 길을 골랐습니다.`));
- if(up.dv>=3){const c=causes(up.k,up.dv)[0];good.push(`<b>${up.l}</b>${jo(up.l,"을","를")} ${sg(up.dv)} 끌어올렸습니다.${c?` 원인: 「${c[0]}」.`:""}`);}
+ judged.filter(c=>c.match).slice(0,2).forEach(c=>{const cost=costOf(c);good.push(`<b>${nameOf(c.id)}</b>에서 좋은 리더의 선택과 같은 길을 골랐습니다.${cost?` 다만 비용이 컸습니다(${cost}). 같은 선택을 하면서 그 대가를 줄일 방법을 ① 결정 돌아보기에서 찾아보세요.`:""}`);});
+ if(up.dv>=3){const c=causes(up.k,up.dv).filter(x=>!/^분기 말 연쇄/.test(x[0])&&x[1]>0)[0]; /* 피드백 2단계: 자동 정산은 잘한 점의 원인으로 들지 않는다 */if(c)good.push(`<b>${up.l}</b>${jo(up.l,"을","를")} ${sg(up.dv)} 끌어올렸습니다.${c?` 원인: 「${c[0]}」.`:""}`);}
  if(trUp.dv>=5)good.push(`<b>${LD[trUp.k].n}</b>의 신뢰가 ${sg(trUp.dv)} 올랐습니다.`);
  const AF=window.AX_FOCUS||{};
  if(worst!=null&&ax[worst]<60&&AF[worst]&&AF[worst][r])focus.push(`<b>${AXN3[worst]}</b> · ${AF[worst][r]}`);
  const second=axVals.filter(a=>a!==worst).sort((a,b)=>ax[a]-ax[b])[0];
  if(second!=null&&ax[second]<50&&AF[second]&&AF[second][r])focus.push(`<b>${AXN3[second]}</b> · ${AF[second][r]}`);
- if(G.fexp!=null&&G.score.안정<G.fexp)focus.push(`<b>서비스 안정</b> · 지금 ${G.score.안정}로 헬씨푸드 기대 ${G.fexp}보다 낮습니다. 예방 칸과 절차 준수를 우선해 기대 이상으로 끌어올리세요. 그대로 두면 분기마다 헬씨푸드 만족과 재무가 깎입니다.`);
+ if(G.fexp!=null&&G.score.안정<G.fexp)focus.push(`<b>서비스 안정</b> · 지금 ${G.score.안정}로 헬씨푸드 기대 ${G.fexp}보다 낮습니다. 예방 칸과 절차 준수를 우선해 기대 이상으로 끌어올리세요. 그대로 두면 분기마다 헬씨푸드 만족이 깎이고, 만족이 50 아래로 내려가면 재무도 깎입니다.`);
  if(G.trust[lowT]<45)focus.push(`<b>${LD[lowT].n}(${LD[lowT].m})</b> · 신뢰가 ${G.trust[lowT]}로 가장 낮습니다. 다음 라운드에서 이 리더가 걸린 결정은 먼저 1:1로 듣고, 프로필 카드에서 걱정과 거슬려하는 것을 확인하세요.`);
  if(hiS.length)focus.push(`<b>${LD[hiS[0]].m} 모듈 부담</b> · 스트레스 ${S(hiS[0])}입니다. 다음 배분에서 이 모듈의 칸을 늘리거나 부하 완화 조치를 먼저 쓰세요.`);
  if(!focus.length)focus.push("이번 라운드의 균형을 유지하세요. 다음 라운드는 더 무거운 상충이 기다립니다. 결정 전에 '누가 영향을 받는가, 그 사람에게 무엇을 설명할 것인가'를 먼저 확인하세요.");
@@ -605,7 +616,10 @@ SCENES.roundEnd=function(s){
   ${(()=>{/* 6단계: 요약 상단 세 카드 (가장 큰 원인, 가장 큰 후회, 다음 행동). 점수·판정은 바꾸지 않고 기존 기록에서 고른다 */
    const AXK=["성과","재무","사람","안정"];const mag=c=>{const d=(c.act&&c.act.d)||{};return AXK.reduce((a,k)=>a+Math.abs(d[k]||0),0);};
    const nm=c=>c.pick?"KPI 합의 · 누구를 만나지 않기로 했는가":(nameOf(c.id)||strip(c.sc.title));
-   const cause=cards.filter(c=>c.act&&mag(c)>0).slice().sort((a,b)=>mag(b)-mag(a))[0]||null;
+   /* 피드백 1단계: 원인은 인생극장 후보와 같은 범위(만나지 않은 결과 제외, 선택지가 둘 이상인 내 결정)에서 같은 기록으로 고른다 */
+   const cause=cards.filter(c=>!c.doc&&c.mine!=null&&(c.opts||[]).length>=2&&c.act&&mag(c)>0).slice().sort((a,b)=>mag(b)-mag(a))[0]||null;
+   const cine=(()=>{try{return r===1&&window.cinema?cinema("R1"):null;}catch(e){return null;}})();const cid=cine&&cine.pick?(cine.pick.scene==="3-1-2"?"3-1":cine.pick.scene):null;
+   const ctag=c=>c&&c.id===cid?'<span class="pill">인생극장 갈림길</span>':"";
    const vk=(window.violationsOf?violationsOf(r):[]).map(v=>v.k);const ix=window.lineIndex?lineIndex().scene:{};
    const fxT=o=>{const f=o&&o.fx;return typeof f==="function"?String(f):String(f||"");};
    const vioC=cards.find(c=>!c.doc&&c.mine!=null&&(ix[c.id==="3-1"?"3-1-2":c.id]||[]).some(k=>vk.includes(k)&&fxT((c.opts||[]).find(o=>o.k===c.mine)).indexOf("`"+k+"`")>=0));
@@ -613,8 +627,8 @@ SCENES.roundEnd=function(s){
    const TH=window.LEX_TH||{};const imp=regret&&((TH[regret.id]||{}).imp||(C[regret.id]||{}).imp);
    const nextA=imp||focus[0]||"다음 라운드에 의식적으로 연습해 볼 습관 하나를 ⑤에서 정해 보세요.";
    return `<div class="sum3 sumtop">
-    <button class="sumc" ${go(2)}><span class="seclab">가장 큰 원인</span><b>${cause?nm(cause):"계기판을 움직인 결정 없음"}</b><small>${cause?`이번 라운드에 계기판을 가장 크게 움직인 결정${cause.doc?" (만나지 않은 결과)":""}`:"점수 변화가 기록된 결정이 없습니다"}</small>${cause?`<span class="chips">${chips(cause.act)}</span>`:""}<em>② 팀에 남은 것 →</em></button>
-    <button class="sumc" ${go(1)}><span class="seclab">가장 큰 후회</span><b>${regret?nm(regret):"다시 고를 결정 없음"}</b><small>${regret?(regret===vioC?"넘어서는 안 되는 선을 넘은 결정입니다":"좋은 리더와 다른 길을 고른 결정 가운데 계기판이 가장 크게 움직인 결정입니다")+(regret===cause?". 가장 큰 원인과 같은 결정입니다":""):"좋은 리더와 다른 길을 고른 결정이 없습니다"}</small><em>① 결정 돌아보기 →</em></button>
+    <button class="sumc" ${go(2)}><span class="seclab">가장 큰 원인 ${ctag(cause)}</span><b>${cause?nm(cause):"계기판을 움직인 결정 없음"}</b><small>${cause?"이번 라운드에 계기판을 가장 크게 움직인 내 결정":"점수 변화가 기록된 결정이 없습니다"}</small>${cause?`<span class="chips">${chips(cause.act)}</span>`:""}<em>② 팀에 남은 것 →</em></button>
+    <button class="sumc" ${go(1)}><span class="seclab">가장 큰 후회 ${ctag(regret)}</span><b>${regret?nm(regret):"다시 고를 결정 없음"}</b><small>${regret?(regret===vioC?"넘어서는 안 되는 선을 넘은 결정입니다":"좋은 리더와 다른 길을 고른 결정 가운데 계기판이 가장 크게 움직인 결정입니다")+(regret===cause?". 가장 큰 원인과 같은 결정입니다":""):"좋은 리더와 다른 길을 고른 결정이 없습니다"}</small><em>① 결정 돌아보기 →</em></button>
     <button class="sumc" ${go(5)}><span class="seclab">다음 행동</span><b class="sumact">${nextA}</b><small>${imp?"가장 큰 후회와 이어진 이론이 권하는 행동":"다음 라운드 첫 번째 주안점"}</small><em>⑤ 다음 라운드 준비 →</em></button>
    </div>`;})()}
   <div class="secbox"><div class="seclab">이번 라운드에서 가장 부족했던 점</div><p>${weak[0]||"눈에 띄게 부족한 점은 없었습니다."}</p><div class="seclab">다음 라운드 첫 번째 주안점</div><p>${focus[0]}</p><p><a href="javascript:void 0" class="link" ${go(5)}>⑤ 다음 라운드 준비에서 전체 보기 →</a></p></div>
@@ -642,16 +656,16 @@ SCENES.roundEnd=function(s){
     const who=Object.keys(KPI_SCENE).find(k=>KPI_SCENE[k]===c.id);
     return `<details class="dcard docres"><summary><span class="dt">${title}</span><span class="note">${strip(sc.when)||""}</span><span class="dm">만나지 않은 결과${mineO?` · ${SH(c.mine)}`:""}</span><span class="pill">만나지 않은 결과</span></summary>
     <div class="dbody">${co.sit?`<p><span class="seclab">상황</span><br>${co.sit}</p>`:""}
-    <p class="happen"><span class="label">만나지 않은 결과</span>${who?LD[who].n:"이 리더"}와는 직접 만나지 않아, 리더가 원하던 안 ${OQ(c.mine)}${jo(SH(c.mine),"이","가")} 문서로 정해졌습니다. 내가 고른 선택이 아니라, '누구를 만나지 않기로 했는가'에서 나온 결과입니다.</p>
+    <p class="happen"><span class="label">만나지 않은 결과</span>${who?LD[who].n:"이 리더"}와는 직접 만나지 않아, 리더가 원하던 안 ${OQ(c.mine)}${jo(SH(c.mine),"이","가")} 문서로 정해졌습니다. 내가 고른 선택이 아니라, '누구를 만나지 않기로 했는가'에서 나온 결과입니다. 그래서 판정과 습관 기록(4개 축)에는 넣지 않고, 점수 변화만 남깁니다.</p>
     <p><span class="seclab">만났다면 고를 수 있었던 선택지 (읽기 전용)</span></p>
     <div class="optcmp ro">${c.opts.map(o=>{const doc=o.k===c.mine,bl=c.best.includes(o.k);return `<div class="ocard${doc?" me":""}"><div class="ohead">${strip(o.t)}</div><div class="otags">${doc?`<span class="pill">문서로 정해진 안</span>`:""}${bl?`<span class="pill good">좋은 리더의 선택</span>`:""}</div>${o.gl&&o.gl.length?`<small class="note">▲ ${o.gl[0]||""}${o.gl[1]?` · ▼ ${o.gl[1]}`:""}</small>`:""}</div>`;}).join("")}</div>
     ${co.ld?`<div class="ldbox"><span class="seclab">만났다면, 좋은 리더라면</span><p>${LTX(co.ld)}</p></div>`:""}
     <p style="margin-top:10px"><span class="seclab">문서안으로 실제로 일어난 일 (신뢰 변화 없음)</span><br><span class="chips">${chips(c.act,{empty:"점수·업무량에 기록된 변화 없음"})}</span></p></div></details>`;}
-   const badge=c.match==null?"":c.match?`<span class="pill good">좋은 리더의 선택과 같음</span>`:`<span class="pill bad">좋은 리더라면 ${c.best.map(OQ).join(" 또는 ")} 쪽</span>`;
+   const cost=c.match?costOf(c):"";const badge=c.match==null?(c.tkLocked?`<span class="pill">판정하지 않음 · 토큰 부족</span>`:""):c.match?`<span class="pill good">좋은 리더의 선택과 같음</span>${cost?`<span class="pill warn">비용이 컸던 결정 · ${cost}</span>`:""}`:`<span class="pill bad">좋은 리더라면 ${c.best.map(OQ).join(" 또는 ")} 쪽</span>`;
    const optRows=c.opts.length?`<div class="optcmp">${c.opts.map(o=>{const me=o.k===c.mine,bl=c.best.includes(o.k),L=/[①②③④]L/.test(String(o.sig||"")),P=/[①②③④]P/.test(String(o.sig||""));const pf=parseFx(o.fx);
      return `<div class="ocard${me?" me":""}"><div class="ohead">${strip(o.t)}</div><div class="otags">${me?`<span class="pill mine">내 선택</span>`:""}${bl?`<span class="pill good">좋은 리더의 선택</span>`:""}${L?`<span class="pill">리더 행동</span>`:""}${P?`<span class="pill warn">실무자 습관</span>`:""}</div>${o.gl&&o.gl.length?`<small class="note">▲ ${o.gl[0]||""}${o.gl[1]?` · ▼ ${o.gl[1]}`:""}</small>`:""}<div class="chips">${chips(pf,{empty:"점수 변화 없음"})}</div></div>`;}).join("")}</div><p class="note" style="margin:2px 0 0">선택지 칩은 그 선택의 <b>직접 효과</b>입니다(확률로 일어나는 일과 동맹·갈등으로 번지는 몫 제외).</p>`:"";
    return `<details class="dcard" ${c.match===false||!judged.length?"open":""}><summary><span class="dt">${title}</span><span class="note">${strip(sc.when)||""}</span>${c.mine!=null?`<span class="dm">내 선택${mineO?` · ${strip(mineO.t).slice(0,26)}…`:""}</span>`:""}${badge}</summary>
-    <div class="dbody">${co.sit?`<p><span class="seclab">상황</span><br>${co.sit}</p>`:""}${co.pt?`<p><span class="seclab">쟁점</span><br>${co.pt}</p>`:""}${c.special?(c.pick?c.special:`<p>${c.special}</p>`):""}
+    <div class="dbody">${co.sit?`<p><span class="seclab">상황</span><br>${co.sit}</p>`:""}${co.pt?`<p><span class="seclab">쟁점</span><br>${co.pt}</p>`:""}${c.special?(c.pick?c.special:`<p>${c.special}</p>`):""}${c.tkLocked?`<p class="note">좋은 리더의 선택(${c.best.map(OQ).join(", ")})은 이 결정을 할 때 토큰이 모자라 잠겨 있었습니다. 고를 수 없었던 선택이라 판정과 집계에서 뺐습니다.</p>`:""}
     ${window.theoryBox?theoryBox(c,co.ld?LTX(co.ld):""):(co.ld?`<div class="ldbox"><span class="seclab">좋은 리더라면</span><p>${LTX(co.ld)}</p></div>`:"")}
     <details class="dmore"><summary>선택지 비교와 실제로 일어난 일</summary>${optRows}
     <p style="margin-top:10px"><span class="seclab">실제로 일어난 일 (내 선택 + 확률로 일어난 일)</span><br><span class="chips">${chips(c.act,{empty:"점수·신뢰·업무량에 기록된 변화 없음"})}</span></p></details></div></details>`;};
@@ -659,7 +673,7 @@ SCENES.roundEnd=function(s){
   const inbox=ibNew||mails.length?ibNew||`<details class="dcard"><summary><span class="dt">받은편지함</span><span class="dm">메일 ${mails.length}건 · ${Object.entries(mcount).map(([k,v])=>`${k} ${v}`).join(" · ")}</span></summary><div class="dbody"><p><span class="seclab">실제로 일어난 일</span><br><span class="chips">${chips(inboxAct)}</span></p><div class="ldbox"><span class="seclab">좋은 리더라면</span><p>${(C.inbox||{}).ld||""}</p></div></div></details>`:"";
   return sec({what:"이번 라운드에 내린 결정을 하나씩 다시 펼쳐, 각 선택지가 무엇을 얻고 잃는지, 내 선택이 실제로 리더 신뢰·계기판·업무량에 무엇을 남겼는지, 좋은 리더라면 어떻게 판단했을지 비교합니다.",
    how:["결정마다 <b>상황 → 쟁점 → 이론으로 점검하기(근거 이론 · 이론이 권하는 행동 · 내 행동 · 차이 · 다음에 해 볼 행동)</b> 순서입니다. 선택지 비교와 점수 변화는 맨 아래 '선택지 비교와 실제로 일어난 일'을 누르면 펼쳐집니다. 이론 이름을 누르면 리더십 사전이 열립니다. 제목을 누르면 펼치고 접습니다. 좋은 리더와 다른 길을 고른 결정은 처음부터 펼쳐 둡니다.","<b>좋은 리더의 선택</b>은 이 과정이 가르치는 리더 행동(맡기기·기준 공개·우선순위·설명)에 가장 가까운 선택지입니다. 정답이 하나라는 뜻은 아닙니다. 다른 길을 골랐다면 그 이유를 스스로 설명할 수 있는지가 중요합니다.","선택지에 붙은 <b>리더 행동 / 실무자 습관</b> 표시는 ④ 습관 탭의 기록 기준입니다. 리더 행동 표시가 둘 이상인 장면에서는, 이 상황에서 대가가 가장 적은 쪽을 좋은 리더의 선택으로 골랐습니다. 세 선택지가 모두 리더 행동인 장면은 맞고 틀림을 판정하지 않습니다.","칩의 초록은 좋아진 것, 빨강은 나빠진 것입니다. 업무량은 늘면 빨강입니다."],
-   body:`${judged.length?`<div class="happen"><span class="label">한눈에</span>핵심 결정 ${judged.length}개 중 <b>${matchN}개</b>가 좋은 리더의 선택과 같았습니다.${judged.length-matchN?` 다른 길을 고른 ${judged.length-matchN}개를 먼저 펼쳐 보세요.`:""}${docN?`<br><small>핵심 결정은 내가 직접 고른 결정 가운데 좋은 리더의 선택이 정해진 것만 셉니다. 만나지 않은 리더의 문서안 ${docN}건은 내 선택이 아니므로 '만나지 않은 결과'로 따로 표시합니다.</small>`:""}${(()=>{const S=window.ibStats?ibStats(r):null;return S&&S.n?`<br><small>받은편지함 ${S.n}건은 이 집계와 따로, 아래 '받은편지함' 참고 결정에 모았습니다(같음 ${S.L} · 다름 ${S.P} · 판정 없음 ${S.N}).</small>`:"";})()}</div>`:""}<div class="dlist">${cards.map(cardHtml).join("")}${inbox}</div>
+   body:`${judged.length?`<div class="happen"><span class="label">한눈에</span>핵심 결정 ${judged.length}개 중 <b>${matchN}개</b>가 좋은 리더의 선택과 같았습니다.${judged.length-matchN?` 다른 길을 고른 ${judged.length-matchN}개를 먼저 펼쳐 보세요.`:""}${docN?`<br><small>핵심 결정은 내가 직접 고른 결정 가운데 좋은 리더의 선택이 정해진 것만 셉니다. 만나지 않은 리더의 문서안 ${docN}건은 내 선택이 아니므로 '만나지 않은 결과'로 따로 표시하고, 습관 기록에도 넣지 않습니다.</small>`:""}${(()=>{const S=window.ibStats?ibStats(r):null;return S&&S.n?`<br><small>받은편지함 ${S.n}건은 이 집계와 따로, 아래 '받은편지함' 참고 결정에 모았습니다(같음 ${S.L} · 다름 ${S.P} · 판정 없음 ${S.N}).</small>`:"";})()}</div>`:""}<div class="dlist">${cards.map(cardHtml).join("")}${inbox}</div>
    ${window.cinemaHtml&&cinemaHtml("R"+r)?`<div class="label" style="margin-top:16px">인생극장 · 가장 큰 갈림길에서 고르지 않은 길</div>${window.wxCineHtml?wxCineHtml(cinema("R"+r),{compact:true,q:false}):cinemaHtml("R"+r)}`:""}`,
    interp:[],q:"좋은 리더와 다른 길을 고른 결정 하나를 골라 보세요. 그때 무엇을 지키려고 그 길을 골랐나요? 같은 것을 지키면서 리더 행동에 더 가까운 방법은 없었을까요?"});};
  /* ② 팀에 남은 것 */
@@ -668,14 +682,14 @@ SCENES.roundEnd=function(s){
   if(dn.dv<0){const c=causes(dn.k,dn.dv)[0];it.push(`가장 많이 내린 점수는 <b>${dn.l} ${sg(dn.dv)}</b>입니다.${c?` 가장 큰 원인은 「${c[0]}」(${sg(c[1])})입니다.`:""}`);}
   if(trDn.dv<0)it.push(`신뢰가 가장 많이 떨어진 리더는 <b>${LD[trDn.k].n}</b>(${sg(trDn.dv)})입니다. 신뢰가 40 아래로 내려가면 그 리더가 걸린 결정에서 반발이 커지고, 동맹 관계인 리더에게도 번집니다.`);
   if(G.score.사람<(st.score.사람??50))it.push("구성원 점수가 내려갔습니다. 서비스 수익 체인에 따라 다음 분기 서비스 안정이 함께 내려갈 수 있습니다.");
-  if(G.fexp!=null&&G.score.안정<G.fexp)it.push(`서비스 안정(${G.score.안정})이 헬씨푸드 기대(${G.fexp})보다 낮습니다. 이대로면 분기마다 헬씨푸드 만족이 깎이고 재무로 번집니다.`);
+  if(G.fexp!=null&&G.score.안정<G.fexp)it.push(`서비스 안정(${G.score.안정})이 헬씨푸드 기대(${G.fexp})보다 낮습니다. 이대로면 분기마다 헬씨푸드 만족이 깎이고, 만족이 50 아래로 내려가면 그때부터 재무도 깎입니다.`);
   if(hiS.length)it.push(`${hiS.map(k=>LD[k].m).join(", ")} 모듈의 스트레스가 70을 넘었습니다. 업무량이 70 이상이면 장면마다 스트레스가 5씩 쌓입니다.`);
   const chainBox=k=>`<div class="cbox"><small>${K5.find(x=>x[0]===k)[1]}</small><b>${now(k)}</b> ${dl(now(k),was(k))}</div>`;
   return sec({what:"결정들이 쌓여 팀에 남긴 결과를 세 층으로 봅니다. <b>계기판</b>(균형성과표 네 관점과 헬씨푸드 만족), <b>리더 다섯 명의 신뢰</b>, <b>모듈의 업무량과 스트레스</b>입니다.",
-   how:["모든 값은 0~100이고 게임을 시작할 때 계기판과 신뢰는 50이었습니다. 화살표 왼쪽이 라운드 시작, 오른쪽이 지금입니다.","카드 아래 '움직인 결정'은 그 값을 가장 크게 바꾼 장면입니다. '분기 말 연쇄'는 분기가 끝날 때 게임이 자동으로 정산한 몫, '동맹·갈등 관계로 번진 몫'은 다른 리더에게 한 결정이 관계를 타고 번진 몫입니다.","업무량은 모듈이 감당하는 일의 양, 스트레스는 그 일이 쌓여 생긴 부담입니다. 업무량이 70 이상이면 스트레스가 쌓이고, 스트레스가 80을 넘으면 그 리더의 신뢰가 깎입니다.","한쪽을 올리면 다른 쪽이 내려가기 쉽습니다. 모든 값이 오르는 정답은 없습니다."],
+   how:["모든 값은 0~100이고 게임을 시작할 때 계기판과 신뢰는 50이었습니다. 화살표 왼쪽이 라운드 시작, 오른쪽이 지금입니다.","카드 아래 '움직인 결정'은 그 값을 가장 크게 바꾼 장면입니다. '분기 말 연쇄'는 분기가 끝날 때 게임이 자동으로 정산한 몫입니다. 재무 연쇄는 헬씨푸드 만족의 수준으로 정해서, 만족이 내려간 분기라도 50보다 높으면 재무가 오릅니다. 내 결정의 성과로 치지 않습니다. '동맹·갈등 관계로 번진 몫'은 다른 리더에게 한 결정이 관계를 타고 번진 몫입니다.","업무량은 모듈이 감당하는 일의 양, 스트레스는 그 일이 쌓여 생긴 부담입니다. 업무량이 70 이상이면 스트레스가 쌓이고, 스트레스가 80을 넘으면 그 리더의 신뢰가 깎입니다.","한쪽을 올리면 다른 쪽이 내려가기 쉽습니다. 모든 값이 오르는 정답은 없습니다."],
    body:`<div class="label" style="margin-top:14px">계기판 · 네 관점이 이어지는 방식 (서비스 수익 체인)</div><div class="chain">${chainBox("사람")}<span>→</span>${chainBox("안정")}<span>→</span>${chainBox("F")}<span>→</span>${chainBox("재무")}</div><p class="note">구성원의 몰입이 한 분기 늦게 서비스 안정에, 서비스 안정이 헬씨푸드 만족에, 헬씨푸드 만족이 재무에 닿습니다. 고객 점수는 이 사슬과 별도로, 약속한 서비스를 지켰는지를 봅니다.</p>
    <div class="scgrid">${K5.map(([k,l,df])=>`<div class="sccard"><span>${l}</span><small class="def">${df}</small><div class="v">${d(now(k),was(k))}</div>${whyHtml(k,now(k)-was(k))}</div>`).join("")}<div class="sccard"><span>토큰 효율</span><small class="def">AI 토큰(💳)을 쓴 만큼 고객·서비스 안정 점수가 올랐는가. 이번 라운드에 오른 (고객+서비스 안정)÷2를 쓴 토큰÷10으로 나눈 값, 곧 토큰 10당 오른 점수입니다.</small><div class="v"><b>${eff??(used>0?"측정 안 함":"미사용")}</b> <span class="note">💳${used}/${cap}</span></div><small class="why">${eff!=null?"높을수록 토큰을 효율적으로 썼다는 뜻입니다.":used>0?effO.why+"이라 재지 않았습니다.":"이번 라운드에는 토큰을 쓰는 선택지를 고르지 않았습니다."}</small></div></div>
-   ${(G.chain||[]).length?`<div class="secbox"><div class="seclab">분기 말 자동 정산 내역</div><p>${G.chain.slice(r===2?-2:-1).map(c=>chainLine(c)).filter(Boolean).join("<br>")||"이번 분기에는 연쇄로 움직인 값이 없었습니다."}</p></div>`:""}
+   ${(G.chain||[]).length?`<div class="secbox"><div class="seclab">분기 말 자동 정산 내역</div><p>${G.chain.slice(r===2?-2:-1).map(c=>chainLine(c)).filter(Boolean).join("<br>")||"이번 분기에는 연쇄로 움직인 값이 없었습니다."}</p>${(()=>{/* 피드백 4단계 #14: 헬씨푸드 기대가 왜 움직였는지 */const rng={1:[1,3],2:[4,9],3:[10,12]}[r]||[1,12];const L=(G.fexpLog||[]).filter(e=>e.m>=rng[0]&&e.m<=rng[1]);return L.length?`<p class="note">헬씨푸드 기대를 움직인 결정: ${L.map(e=>`${e.m}월 ${e.t} (${e.d>0?"+":""}${e.d})`).join(", ")}. 기대가 오르면 같은 서비스 안정으로도 만족이 덜 오릅니다.</p>`:"";})()}</div>`:""}
    <div class="label" style="margin-top:16px">리더 다섯 명의 신뢰</div><div class="scgrid">${LKS.map(k=>`<div class="sccard"><span>${LD[k].n} <small class="note">${LD[k].m}</small></span><div class="v">${d(G.trust[k],st.trust[k]??50)}</div>${whyHtml(k,G.trust[k]-(st.trust[k]??50),"tr")}</div>`).join("")}</div>
    <div class="label" style="margin-top:16px">모듈의 업무량과 스트레스</div><div class="table">${LKS.map(k=>{const w=W(k),s1=S(k),w0=md0&&md0.w?md0.w[k]:null,s0=md0&&md0.s?md0.s[k]:null;return `<div class="card mrow2"><b class="hname">${LD[k].m} <small class="note">${LD[k].n}</small></b><span>업무량 ${w0!=null?`${w0} → `:""}<b style="color:${w>=70?"var(--bad)":"var(--ink)"}">${w??"—"}</b></span><span>스트레스 ${s0!=null?`${s0} → `:""}<b style="color:${s1>=80?"var(--bad)":s1>=70?"var(--time)":"var(--ink)"}">${s1??"—"}</b>${s1>=80?" · 소진 위험":s1>=70?" · 주의":""}</span></div>`;}).join("")}</div>
    ${v1!=null?`<p class="note" style="margin-top:8px">팀 발언량: ${v0!=null?`${v0} → `:""}<b>${v1}</b>. 회의와 게시판에서 팀원들이 의견을 내는 정도입니다. 줄어들면 문제가 말로 나오지 않고 숨는다는 신호입니다.</p>`:""}`,
@@ -685,7 +699,7 @@ SCENES.roundEnd=function(s){
   if(r===1&&kc){if(kc.right<kc.n)it.push(`KPI 기준 ${kc.n}개 중 ${kc.n-kc.right}개가 팀 목표와 맞게 연결되지 않았습니다. 팀원들은 팀 목표와 상관없는 일에 힘을 쓰게 됩니다.`);if(!kc.hidden)it.push("예방이나 주니어 지원 같은 드러나지 않는 기여가 기준에 없습니다. 기준에 없는 일은 점점 아무도 하지 않게 됩니다.");if(kpiOk===3)it.push("KPI 합의서의 세 조건을 모두 갖췄습니다.");}
   if(r===1&&G.f.pub_leaders)it.push("기준을 리더들에게만 알렸습니다. 팀원들은 자신이 무엇으로 평가받는지 아직 모릅니다. 팀 설문의 '업무 배분과 평가 기준을 알고 있다' 점수에도 영향을 줍니다.");
   if(cons.length){if(fitN<cons.length)it.push(`근거를 고른 ${cons.length}건 중 ${cons.length-fitN}건이 합의한 기준과 맞지 않았습니다. 결정마다 근거가 달라지면 팀원들은 "기준이 그때그때 바뀐다"고 느낍니다.`);else it.push(`근거를 고른 ${cons.length}건이 모두 합의한 기준과 맞았습니다.`);}
-  const pubTxt=G.f.pub_full?["전체 공개","기준과 비중, 사례까지 팀 전원에게 공개했습니다. 팀원들이 무엇으로 평가받는지 알지만, \"제 일은 몇 점이에요?\" 같은 문의가 늘 수 있습니다."]:G.f.pub_items?["항목만 공개","기준 항목은 알렸고, 비중은 면담에서 따로 설명합니다. 설명하는 사람마다 말이 달라질 수 있습니다."]:G.f.pub_leaders?["리더에게만","리더들과만 기준을 맞췄습니다. 리더가 자기 모듈에 전하지 않으면 팀원들은 기준을 모릅니다."]:["정하지 않음",""];
+  const pubTxt=G.f.pub_full?["전체 공개","기준과 뜻, 사례까지 팀 전원에게 공개했습니다. 팀원들이 무엇으로 평가받는지 알지만, \"제 일은 몇 점이에요?\" 같은 문의가 늘 수 있습니다."]:G.f.pub_items?["항목만 공개","기준 항목은 알렸고, 비중은 면담에서 따로 설명합니다. 설명하는 사람마다 말이 달라질 수 있습니다."]:G.f.pub_leaders?["리더에게만","리더들과만 기준을 맞췄습니다. 리더가 자기 모듈에 전하지 않으면 팀원들은 기준을 모릅니다."]:["정하지 않음",""];
   const KW=[["기여 기준을 3개 이상 골랐다",kc&&kc.n>=3,`${kc?kc.n:0}개`,"기준이 한두 개뿐이면 팀원들은 그 숫자만 좇습니다."],["드러나지 않는 기여를 넣었다",kc&&kc.hidden>0,kc&&kc.hidden?`${kc.hidden}개`:"없음","예방, 주니어 지원처럼 눈에 띄지 않는 일은 기준에 없으면 사라집니다."],["모든 기준을 팀 목표와 연결했다",kc&&kc.right===kc.n,kc?`${kc.right}/${kc.n}`:"—","팀 목표와 이어지지 않은 기준은 노력을 엉뚱한 곳으로 보냅니다."]];
   return sec({what:"결과와 별개로, 결정을 내린 <b>방식</b>이 스스로 세운 기준과 맞았는지 봅니다. 결과는 운과 다른 사람의 반응에도 좌우되지만, 판단의 질은 내가 다스릴 수 있는 부분입니다.",
    how:[r===1?"<b>KPI 합의서 점검</b>: 3월에 리더들과 합의한 기여 기준이 좋은 기준의 세 조건을 갖췄는지 봅니다.":null,"<b>일관성 점검</b>: 1월에 고른 핵심 과제 세 개와 이후 결정이 같은 방향이었는지 봅니다. 다른 방향이 틀렸다는 뜻은 아닙니다. 그렇게 고른 이유를 설명할 수 있는지를 봅니다.","<b>근거 일관성</b>: 몇몇 안건은 결정한 뒤 '이 결정의 근거'를 골랐습니다. 그 근거가 합의한 기준과 맞으면 일치(✓), 다르면 어긋남(✕)입니다.","<b>서술형 미리 보기</b>: 직접 쓴 글이 기준·원칙, 상대의 맥락, 다음 행동과 기한을 담았는지 자동으로 점검합니다. 최종 점수는 강사가 매깁니다."].filter(Boolean),
@@ -693,6 +707,8 @@ SCENES.roundEnd=function(s){
    <div class="label" style="margin-top:14px">근거 일관성 · ${cons.length?`이번 라운드 ${cons.length}건 중 ${fitN}건 일치`:"이번 라운드에 근거를 고른 안건 없음"}${consAll.length>cons.length?` <span class="note">(누적 ${consAll.length}건 중 ${consAll.filter(x=>x.fit).length}건)</span>`:""}</div>
    ${cons.length?`<div class="table">${cons.map(c=>`<div class="card" style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px">${ok(c.fit)}<span><b style="font-weight:600">${nameOf(c.scene)}</b><br><small class="note">내가 고른 근거: ${c.why||"—"} · ${c.fit?"합의한 기준과 맞음":"합의한 기준과 다름"}</small></span></div>`).join("")}</div>`:`<p class="note">근거를 고르는 안건을 만나지 않았거나, 근거를 고르지 않았습니다.</p>`}
    ${window.consistHtml?consistHtml((G.decisions||[]).slice(st.dec||0),nameOf):""}
+   ${window.backReport?backReport((G.decisions||[]).slice(st.dec||0),r):""}
+   ${r===1&&window.kpiGapHtml&&(G.pub||[]).length?`<div class="label" style="margin-top:14px">KPI 합의서로 연말에 보일 기여, 덜 보일 기여</div>${kpiGapHtml(G.pub)}`:""}
    <div style="margin-top:14px">${window.v3RubricHtml?window.v3RubricHtml(r):""}</div>`,
    interp:it,q:"기준과 어긋난 결정이 있었다면, 그때 바꿨어야 할 것은 결정이었나요, 기준이었나요? 기준을 바꿔야 했다면 누구에게 어떻게 알렸어야 했을까요?"});};
  /* ④ 습관 */
@@ -708,7 +724,7 @@ SCENES.roundEnd=function(s){
    body:`<div class="table" style="margin-top:14px">${[1,2,3,4].map(a=>`<div class="card habit"><div class="hrow"><b class="hname">${AXN3[a]}</b><span class="num"><b style="font-size:18px">${ax[a]??"—"}</b>${ax[a]!=null?"%":""} <span class="note">· 누적 ${axAll[a]??"—"}${axAll[a]!=null?"%":""}${self[a]!=null?` · 자가진단 ${self[a]}점`:""}</span></span></div>
     <div class="hbar"${ax[a]==null?' style="background:var(--line)"':""}><i style="width:${ax[a]??0}%"></i></div>
     <div class="hlr"><small><b style="color:var(--good)">리더 행동</b><br>${AXL[a][0]}</small><small><b style="color:var(--bad)">실무자 습관</b> · 통하던 공식 "${AXL[a][2]}"<br>${AXL[a][1]}</small></div>${gaps.includes(a)?`<small style="color:var(--bad)">맹점 후보 · 자가진단보다 ${self[a]-axAll[a]} 낮음</small>`:""}</div>`).join("")}</div>
-   ${Lx.length||Px.length?`<div class="label" style="margin-top:14px">이번 라운드의 실제 선택</div><div class="table">${Lx.map(x=>`<div class="card"><b style="color:var(--good)">리더 행동</b> · ${AXN3[x.a]}<br><small>"${nameOf(x.scene)}"에서 「${chT(x.scene,x.choice)}」</small></div>`).join("")}${Px.map(x=>`<div class="card"><b style="color:var(--bad)">실무자 습관</b> · ${AXN3[x.a]}<br><small>"${nameOf(x.scene)}"에서 「${chT(x.scene,x.choice)}」</small></div>`).join("")}</div>`:""}
+   ${Lx.length||Px.length?`<div class="label" style="margin-top:14px">이번 라운드의 실제 선택</div><div class="table">${Lx.map(x=>`<div class="card"><b style="color:var(--good)">리더 행동</b> · ${AXN3[x.a]}<br><small>"${nameOf(x.scene)}"에서 「${chT(x.scene,x.choice)}」</small></div>`).join("")}${Px.map(x=>`<div class="card"><b style="color:var(--bad)">실무자 습관</b> · ${AXN3[x.a]}<br><small>"${nameOf(x.scene)}"에서 「${chT(x.scene,x.choice)}」</small></div>`).join("")}</div>`:""}${docN?`<p class="note" style="margin-top:8px">만나지 않은 리더가 문서로 써 온 KPI안 ${docN}건은 내 선택이 아니므로 위 비율과 목록에 넣지 않았습니다.</p>`:""}
    ${kp?`<p class="note" style="margin-top:10px">리더를 아는 정도: 프로필 카드 ${kp[1]}칸 중 ${kp[0]}칸을 열었습니다. 리더가 중요하게 여기는 것, 거슬려하는 것, 걱정을 많이 알수록 맡기고 설명하기가 쉬워집니다.</p>`:""}${window.theoryCard?theoryCard(r):""}${G.selfStudy&&window.v3SelfStudyHtml?window.v3SelfStudyHtml(r):""}`,
    interp:it,q:worst!=null&&ax[worst]<80?`${AXN3[worst]}에서 실무자 시절의 습관대로 고른 순간을 떠올려 보세요. 시간이 모자라서였나요, 맡기거나 설명하기가 불안해서였나요, 그 방식이 맞다고 믿어서였나요?`:"다음 라운드에서 의식적으로 연습해 볼 습관 하나를 고른다면 무엇인가요?"});};
  /* ⑤ 다음 라운드 준비 */
@@ -813,7 +829,7 @@ if(typeof document!=="undefined"){
  const repCond=(id,re,txt)=>{const s=F(id);if(!s)return;(s.conds||[]).forEach(c=>{if(typeof c.t==="string"&&re.test(c.t))c.t=txt;});};
  const repIntro=(id,re,txt)=>{const s=F(id);if(!s||!Array.isArray(s.intro))return;s.intro=s.intro.map(x=>typeof x==="string"&&re.test(x)?txt:x);};
  /* 1. v3 순서에 맞는 시점 표시 (이전에는 8월 장면이 "4월", 11월 장면이 "6월"로 보였음) */
- const W={"RET2":"4월 시작","4-4":"8월","6-3_1":"8월","6-3_2":"8월","6-4a":"11월","6-4b":"11월"};
+ const W={"RET2":"4월 시작","5-4":"6월","4-4":"8월", /* 피드백 4단계 #3: 6월 협상 뒤에 오는 중재는 6월 */"6-3_1":"8월","6-3_2":"8월","6-4a":"11월","6-4b":"11월"};
  Object.keys(W).forEach(id=>{const s=F(id);if(s)s.when=W[id];});
  /* 2. 제목 */
  [["4-5","헬씨푸드 운영비 협상"],["6-1","헬씨푸드 하반기 계약 협상"]].forEach(([id,ti])=>{const s=F(id);if(s)s.title=ti;});
@@ -831,6 +847,7 @@ if(typeof document!=="undefined"){
  /* 5. 4월 받은편지함 */
  {const s=F("4-1");if(s&&Array.isArray(s.mail))s.mail.forEach(m=>{
    if(m.id==="M26")m.body="4월 배분 회의 전에 한마디만 할게요. RUN(운영) 칸을 줄이면 생산 야간 대기는 못 돌립니다. 지금도 대기표에 이름만 많지, 실제로 밤에 서는 몇 명이 돌아가며 버티고 있어요. 생산 일을 정하는 거라면, 회의 자리에서 처음 듣는 일은 없게 해 주세요.";
+   if(m.id==="M39"&&typeof REPLIES!=="undefined"&&REPLIES.M39){const o=REPLIES.M39.find(x=>/동기의 근태/.test(x.t||""));if(o){o.t="강태식 리더에게 야간 경고를 집에서 보는 사람이 있는지 확인하라고 한다.";if(Array.isArray(o.r))o.r=[String(o.r[0]).replace("동기가 \"누가 말했어요?\"라고 물었습니다.","김 사원이 \"제가 말했다고 하셨어요?\"라고 물었습니다."),o.r[1],o.r[2],o.r[3]].filter((x,i)=>i<2||x!==undefined);}} /* 피드백 3단계 #17 */
    if(m.id==="M39")m.body="대기표상으로는 제 차례가 아닌 날에도, 야간 경고가 오면 집에서 열어 봐요. 근태가 찍히지 않게요. 저만 그런 건 아닌 것 같아요. 다들 다음 날 장애가 나면 어차피 우리가 하니까 미리 보는 거래요. 제가 말했다고는 안 해 주셨으면 해요.";
    if(m.id==="M41")m.body="지난달 제안서 마감 때, 헬씨푸드가 보낸 요구 문서를 제 개인 계정 외부 AI에 넣어 요약해 봤어요. 한 번이요. 지금은 안 써요. 3월 보안 사고 얘기를 듣고 나서야 문제라는 걸 알았어요. 이거 어디에 말해야 하나요?";});}
  /* 6. 4월 · 강태식의 공개 반대: v3에는 6월 재배분이 없다 */
@@ -868,7 +885,7 @@ if(typeof document!=="undefined"){
  s.intro=["목요일 오후 4시 40분. KPI 합의를 마무리하던 중에 조달 리더 문지원이 노트북을 들고 팀장 자리로 급히 옵니다.",
   "R&D 리더 서하준은 AI 도입을 가장 앞장서 밀어 온 사람입니다. 퓨쳐테크가 업무에 써도 된다고 승인한 AI 도구는 몇 개뿐이고, 이번 서비스는 그 목록에 없습니다. 서하준은 수요 예측 분석을 빨리 해 보려고, 퓨쳐테크가 승인하지 않은 외부 AI 서비스에 헬씨푸드 주문 데이터를 올렸습니다. 고객 정보는 가리고(마스킹) 올렸다고 생각했습니다."];
  s.say=[["src","팀장님, 잠깐만요. R&D 공유 폴더에 올라온 분석 화면 캡처인데, 헬씨푸드 주문번호랑 배송지가 그대로 보여요. 퓨쳐테크가 승인하지 않은 외부 AI 서비스 화면이고요."],
-  ["rd","수요 예측을 돌려 보려고 제가 올렸습니다. 가린 줄 알았는데, 지금 확인해 보니 컬럼 몇 개가 빠져 있었어요. 올린 건 이틀 전입니다. …분석 결과는 정말 좋았는데요."]];
+  ["rd","수요 예측을 돌려 보려고 제가 올렸습니다. 가린 줄 알았는데, 지금 확인해 보니 컬럼 몇 개가 빠져 있었어요. 이번 파일을 올린 건 이틀 전입니다. …분석 결과는 정말 좋았는데요."]];
  const INTRO=s.intro,SAY=s.say;s.intro=[];s.say=[];
  s.top=()=>`<div class="prose">${para(INTRO)}</div>${SAY.map(x=>sayHtml(x[0],x[1])).join("")}<div class="happen alertbox"><span class="label">⏱ 왜 지금 정해야 하나</span>
 · 데이터가 나간 지 <b>이미 이틀(48시간)</b>이 지났습니다.<br>
@@ -876,7 +893,7 @@ if(typeof document!=="undefined"){
 · 개인정보가 새어 나간 것이면, 퓨쳐테크는 <b>72시간 안에</b> 당국에 신고해야 합니다. 남은 시간은 하루 남짓입니다.<br>
 · 지금 이 사실을 아는 사람은 팀장, 문지원, 서하준 셋뿐입니다. 퇴근 전에 정해야 합니다.</div><details class="ref" open><summary>규정집</summary><p style="margin-top:6px">고객 데이터가 외부로 나간 정황을 알게 되면, <b>그 즉시</b> 정보보안팀에 신고한다.</p></details>`;
  const C={"1월에 물어본 덕분에 어떤 로그인지 이미 알고 있다.":"1월에 서하준에게 외부 AI에 어떤 로그를 넣었는지 물어 두었고, 그 답이 메신저에 남아 있습니다.", /* 1단계: 어느 선택지 편도 들지 않게 사실만 (조건·효과는 그대로) */
-  "1월 연휴부터 쓰고 있었다.":"알고 보니 R&D는 1월 연휴 때부터 이 서비스를 써 왔습니다. 1월에 AI 사용을 따로 확인하지 않아서 아무도 몰랐습니다.",
+  "1월 연휴부터 쓰고 있었다.":"알고 보니 R&D는 1월 연휴 때부터 이 서비스를 써 왔습니다. 1월에 AI 사용을 따로 확인하지 않아서 아무도 몰랐습니다.", /* 피드백 3단계: 1월 처리 방식에 따라 condText에서 둘째 문장을 바꾼다 */
   "2월 시범 범위 밖에서 쓰고 있었다.":"알고 보니 2월에 정한 AI 시범 범위 밖에서 쓰고 있었습니다.",
   "서하준이 쓰던 규칙 초안대로 로그가 남아 있다.":"서하준이 1월에 쓰던 AI 사용 규칙 초안대로 사용 기록이 남아 있어, 무엇이 나갔는지 추적할 수 있습니다.",
   "정보보안팀: \"1월 점검표부터 늦으셨죠.\"":"정보보안팀이 이미 이 팀을 지켜보고 있습니다. \"1월 보안 점검표 제출도 늦으셨죠. 이번엔 늦으면 안 됩니다.\""};
@@ -1134,7 +1151,7 @@ if(!document.getElementById("sc3-css")){const st=document.createElement("style")
 window.VIOLATION_FLAGS=[
  {k:"ai_shared",m:1,line:"보안",rule:LINE_RULE.보안,src:"규정 요약 · 보안",t:"외부 AI에 사내 로그를 넣어 얻은 결과를 보안 승인 없이 팀 채널에 공유하도록 했습니다."},
  {k:"sec_breach",m:3,line:"보안",rule:LINE_RULE["3-8"],src:"규정집",t:"정보보안팀에 알리기 전에 우리가 먼저 범위를 파악하기로 했습니다.",found:"sec_breach_caught"},
- {k:"sec_hidden",m:7,line:"보안",rule:LINE_RULE.보안,src:"규정 요약 · 보안",t:"한 선임의 외부 AI 입력을 보고받고 조치하지 않았습니다.",found:"sec_found"},
+ {k:"sec_hidden",m:4,line:"보안",rule:LINE_RULE.보안,src:"규정 요약 · 보안",t:"한 선임의 외부 AI 입력을 보고받고 조치하지 않았습니다.",found:"sec_found"},
  {k:"sec_breach_data",m:8,line:"보안",rule:LINE_RULE.보안,src:"규정 요약 · 보안",t:"승인 없이 고객 데이터를 외부 서비스로 돌렸습니다.",found:"sec_data_found"},
  {k:"inc_breach",m:9,line:"장애 절차",rule:LINE_RULE.장애,src:"규정 요약 · 장애",t:"긴급 승인 없이 우회 패치를 올렸습니다.",found:"inc_found",more:g=>g.f.inc_breach_nowrite?" 세 개의 설명에 쓰지 않았습니다.":""},
  {k:"safety_breach",m:10,line:"현장 안전",rule:LINE_RULE.안전,src:"참고 카드 · 장애·안전 절차",t:"현장 안전 책임자와 고객사의 승인 없이 인터록 우회를 허락했습니다.",more:g=>g.f.near_miss?" 그 자리에서 아차 사고가 났습니다.":""}];
@@ -1207,8 +1224,29 @@ window.VIOLATION_FLAGS=[
   M06:{rep:[[/어떤 로그를 넣었는지/,"L",""],[/팀 채널에 공유/,"P","승인 전에 결과를 퍼뜨립니다."],[/쓰지 말자고만/,"P","막기만 하고, 이미 무엇이 나갔는지는 모른 채 남습니다."]],del:{src:["L","확인을 맡을 사람에게 넘깁니다."],"*":["P","무엇을 넣었는지 확인하지 않은 채 지나갑니다."]},hold:["P","무엇을 넣었는지 확인하지 않은 채 지나갑니다."]},
   M09:{rep:[[/오늘 잠깐 이야기해요/,"L",""],[/강태식 리더에게 말하면/,"P","3주째 대기가 몰린 사정을 들을 기회를 놓치고, 구성원 혼자 선배에게 말하게 둡니다."],[/승인하겠다고 바로/,"P","대기 공백이 그대로 남고 모듈 리더를 건너뜁니다."]],del:{"*":["P","사정을 듣지 않은 채 넘깁니다."]},hold:["P","사정을 듣지 않은 채 미룹니다."]},
   M16:{rep:[[/이틀 새벽으로 나눠/,"L",""],[/요청대로 승인/,"P","같은 새벽의 다른 작업과 겹치는지 확인하지 않습니다."],[/다음 주로 다시/,"P","기한이 있는 보안 패치를 미룹니다."]],del:{"*":["L",""]},hold:["P","기한이 있는 보안 패치를 미룹니다."]}};
- /* 판정: 습관 기록이 있으면 그것, 없으면 메일별 기준, 둘 다 없으면 판정 없음 */
- const judgeIB=(e,m,legacy)=>{const hs=cls(legacy?legacySig(e,m):e.sig);if(hs==="L"||hs==="P")return {v:hs,src:"habit",why:""};
+ /* 피드백 6단계 #29: 위임은 받는 사람이 이 일과 맞는지까지 본다. ok에 없는 사람에게 맡기면 '다름'. 화면 판정에만 쓰고 습관 기록·결과 코드는 그대로 둔다.
+    ok: 맡길 만한 리더 키(빈 배열이면 팀장이 직접 답할 일), why: {리더 키 | "*": 이유} */
+ const IB_FIT={
+  M03:{ok:["rd"],why:{prc:"작성자인 정다은 리더를 건너뛰고 다른 모듈 리더에게 검토를 넘깁니다. 정다은 리더는 답이 없습니다.","*":"제안서 수치와 관계없는 모듈에 검토를 넘깁니다."}},
+  M09:{ok:["mfg"],why:{"*":"김 사원의 모듈 리더가 아닌 사람에게 사정을 넘깁니다."}},
+  M11:{ok:["prc"],why:{"*":"늦어진 배치는 가공 실적 집계에 걸린 일입니다. 가공(이수진)이 아닌 리더에게 넘기면 담당이 비게 됩니다."}},
+  M13:{ok:["prc"],why:{"*":"오 사원의 모듈 리더가 아닌 사람에게 넘깁니다."}},
+  M16:{ok:["src","mfg"],why:{"*":"패치 일정과 관계없는 모듈에 넘깁니다. 같은 수요일 새벽에 작업이 겹칠 수 있는 생산과 맞춰야 합니다."}},
+  M21:{ok:["src"],why:{rd:"절감 추정을 낸 쪽에 요약을 맡겨, 확인되지 않은 주 140시간이 그대로 올라갑니다.","*":"숫자를 검증할 사람을 정하지 않고 넘깁니다."}},
+  M24:{ok:["src"],why:{rd:"요청한 서하준 리더에게 결정을 돌려줘, 같은 기간 조달의 감사 준비와 겹치는지 아무도 맞추지 않습니다.","*":"윤 책임을 함께 쓰려는 조달과 맞추지 않은 채 넘깁니다."}},
+  M25:{ok:["rd"],why:{src:"요청한 문지원 리더 뜻대로 정하게 해, 같은 기간 R&D 요청과 겹치는지 아무도 맞추지 않습니다.","*":"윤 책임을 함께 쓰려는 R&D와 맞추지 않은 채 넘깁니다."}},
+  M26:{ok:[],why:{"*":"회의 전에 직접 듣고 싶다는 강태식 리더의 말을 다른 사람을 거쳐 전합니다."}},
+  M37b:{ok:[],why:{"*":"자기가 예민한지 물어 온 이수진 리더의 말을 다른 사람에게 넘겨, 보낸 사람이 드러납니다."}},
+  M39:{ok:[],why:{"*":"보낸 사람을 드러내지 말아 달라고 한 메시지를 다른 사람에게 넘깁니다."}},
+  M41:{ok:["src"],why:{"*":"보안 절차를 밟을 조달(문지원)이 아닌 사람에게 넘겨, 일이 덮입니다."}}};
+ /* 습관 기록과 다르게 판정하는 답장 (화면 판정에만 쓴다) */
+ const IB_OV={M08:[[/^거절하고 메시지/,"P","긴급 작업을 알리는 전화를 미뤄, 같은 수요일 새벽의 보안 패치와 겹치는지 확인할 때를 놓칩니다."]]};
+ const fitOk=(id,to)=>{const F=IB_FIT[id];if(!F)return true;const k=LD[to]?to:keyByName(to);return !!k&&F.ok.includes(k);};
+ /* 판정: 받는 사람·답장 예외가 먼저, 그다음 습관 기록, 없으면 메일별 기준, 모두 없으면 판정 없음 */
+ const judgeIB=(e,m,legacy)=>{const hs=cls(legacy?legacySig(e,m):e.sig);
+  if(e.k==="위임"&&IB_FIT[e.id]&&!fitOk(e.id,e.to)){const F=IB_FIT[e.id],k=LD[e.to]?e.to:keyByName(e.to);return {v:"P",src:"fit",why:(k&&F.why[k])||F.why["*"]||"",hs};}
+  const ov=e.lab&&(IB_OV[e.id]||[]).find(r=>r[0].test(e.lab));if(ov)return {v:ov[1],src:"ov",why:ov[2],hs};
+  if(hs==="L"||hs==="P")return {v:hs,src:"habit",why:""};
   const J=MJ[e.id];if(!J||e.k==="시간 초과"||e.k==="미결")return {v:null,src:"",why:""};
   if(e.k==="위임"){const k=LD[e.to]?e.to:keyByName(e.to);const x=(k&&J.del[k])||J.del["*"];return x?{v:x[0],src:"table",why:x[1]}:{v:null};}
   if(e.k==="보류")return J.hold?{v:J.hold[0],src:"table",why:J.hold[1]}:{v:null};
@@ -1217,11 +1255,13 @@ window.VIOLATION_FLAGS=[
  /* 같은 메일에서 리더 행동으로 기록되는 처리 */
  const shortT=t=>{t=String(t||"").replace(/^"([^"]*)"/,"‘$1’").replace(/["“”]/g,"").replace(/[.。]\s*$/,"").trim();return t.length>26?t.slice(0,26).replace(/\s+\S*$/,"")+"…":t;};
  const leaderOpts=m=>{const out=[];const RP=(typeof REPLIES!=="undefined"?REPLIES:{})[m.id];
-  if(RP)RP.forEach(x=>{const s=x.self?rowSig(m.self):Array.isArray(x.r)?rowSig(x.r):null;if(cls(s)==="L")out.push(`답장 “${shortT(x.t)}”`);});
+  const ovP=t=>(IB_OV[m.id]||[]).some(r=>r[1]==="P"&&r[0].test(t));
+  if(RP)RP.forEach(x=>{const s=x.self?rowSig(m.self):Array.isArray(x.r)?rowSig(x.r):null;if(cls(s)==="L"&&!ovP(x.t))out.push(`답장 “${shortT(x.t)}”`);});
   else if(cls(rowSig(m.self))==="L")out.push("직접 답장");
-  if(!m.noDel){Object.keys(m.to||{}).forEach(k=>{if(cls(rowSig(m.to[k]))==="L")out.push(`${LD[k].n}에게 위임`);});if(cls(rowSig(m.other))==="L")out.push("다른 리더에게 위임");}
+  if(!m.noDel){Object.keys(m.to||{}).forEach(k=>{if(cls(rowSig(m.to[k]))==="L"&&fitOk(m.id,k))out.push(`${LD[k].n}에게 위임`);});if(cls(rowSig(m.other))==="L"&&!IB_FIT[m.id])out.push("다른 리더에게 위임");
+   ((IB_FIT[m.id]||{}).ok||[]).forEach(k=>{const t=`${LD[k].n}에게 위임`;if(LD[k]&&!out.includes(t))out.push(t);});}
   const J=MJ[m.id];if(J){if(RP)RP.forEach(x=>{const y=J.rep.find(r=>r[0].test(x.t));if(y&&y[1]==="L"){const t=`답장 “${shortT(x.t)}”`;if(!out.includes(t))out.push(t);}});
-   Object.keys(J.del).forEach(k=>{if(J.del[k][0]==="L"){const t=k==="*"?"위임":`${LD[k].n}에게 위임`;if(!out.some(o=>o.startsWith(t)||(k==="*"&&/위임$/.test(o))))out.push(t);}});}
+   Object.keys(J.del).forEach(k=>{if(J.del[k][0]==="L"&&!(IB_FIT[m.id]&&(k==="*"||!fitOk(m.id,k)))){const t=k==="*"?"위임":`${LD[k].n}에게 위임`;if(!out.some(o=>o.startsWith(t)||(k==="*"&&/위임$/.test(o))))out.push(t);}});}
   return out.slice(0,3);};
  /* Round 1 메일별 코칭 (없으면 받은편지함 공통 문구) */
  const MC={
@@ -1237,7 +1277,7 @@ window.VIOLATION_FLAGS=[
  const coachOf=id=>{const T=(window.THEORY||{}).inbox||{};const C=(window.COACH||{}).inbox||{};const m=MC[id]||{};return {th:m.th||T.th||[],ld:m.ld||C.ld||"",imp:m.imp||T.imp||""};};
  /* 약속이 이후 어디서 반영되는지 */
  const PW={P1:"이 약속은 3월 말 분기 정산에서 판정됩니다. 3월 KPI 합의서에서 등급 기준을 '리더에게만' 알리면 어긴 것이 되고, 그때 구성원 점수가 2 내려갑니다."};
- const promLine=id=>{const p=(G.prom||{})[id];if(!p)return "";const st=p.status==="이행"?"이번 라운드 판정: 지켰습니다.":p.status==="파기"?"이번 라운드 판정: 어겼습니다.":"아직 판정 전입니다.";
+ const promLine=id=>{const p=(G.prom||{})[id];if(!p)return "";if(p.memo)return `<p class="ib-prom"><span class="seclab">약속 장부</span><br>이 답으로 '${p.text}'(상대: ${p.to})가 약속 장부에 기록되었습니다. 지켰는지 판정하거나 점수에 쓰지는 않습니다. 말로 한 약속도 상대는 기억한다는 점을 남겨 두는 기록입니다.</p>`;const st=p.status==="이행"?"이번 라운드 판정: 지켰습니다.":p.status==="파기"?"이번 라운드 판정: 어겼습니다.":"아직 판정 전입니다.";
   return `<p class="ib-prom"><span class="seclab">약속 장부</span><br>이 처리로 '${p.text}'(상대: ${p.to}, 기한: ${p.due})가 약속 장부에 기록되었습니다. ${PW[id]||"기한에 맞춰 지켰는지 판정됩니다."} ${st}</p>`;};
  const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
  const subOf=(e,m)=>m?(m.t==="CALL"?`전화 · ${String(m.from||"").replace(/^[^가-힣A-Za-z]+/,"")}`:(m.sub==="(제목 없음)"?`${m.from} 메일 (제목 없음)`:m.sub)):e.id;
@@ -1256,7 +1296,9 @@ window.VIOLATION_FLAGS=[
    const to=e.k==="시간 초과"?(e.op?"열었지만 시간 안에 처리하지 못함":"시간 초과로 열지 않음"):e.k==="미결"?(e.op?"열었지만 정하지 못해 미결":"시간 초과로 열지 않아 미결"):"";
    const lab=to||e.lab||e.k;
    const pill=c==="L"?`<span class="pill good">좋은 리더의 선택과 같음</span>`:c==="P"?`<span class="pill bad">좋은 리더의 선택과 다름</span>`:`<span class="pill">판정하지 않음</span>`;
-   const gap=(e.k==="시간 초과"||e.k==="미결")?`${to}. 습관 기록에는 들어가지 않고, 보류와 같은 점수 영향을 받습니다.${lo.length?` 같은 메일에서 좋은 리더의 선택으로 보는 처리: ${lo.join(", ")}.`:""}`
+   const gap=J.src==="fit"?`받는 사람이 이 일과 맞지 않아 좋은 리더의 선택과 다릅니다. ${J.why}${J.hs==="L"?" 맡긴 것 자체는 습관 기록에 리더 행동으로 들어갔습니다.":""}${lo.length?` 같은 메일에서 좋은 리더의 선택으로 보는 처리: ${lo.join(", ")}.`:""}`
+    :J.src==="ov"?`${J.why}${J.hs==="L"?" 습관 기록에는 리더 행동으로 들어갔지만, 이 메일에서는 좋은 리더의 선택과 다릅니다.":""}${lo.length?` 같은 메일에서 좋은 리더의 선택으로 보는 처리: ${lo.join(", ")}.`:""}`
+    :(e.k==="시간 초과"||e.k==="미결")?`${to}. 습관 기록에는 들어가지 않고, 보류와 같은 점수 영향을 받습니다.${lo.length?` 같은 메일에서 좋은 리더의 선택으로 보는 처리: ${lo.join(", ")}.`:""}`
     :J.src==="table"&&c==="L"?"이 처리는 습관 기록에는 들어가지 않지만, 이 메일의 기준으로는 좋은 리더의 선택과 같습니다."
     :J.src==="table"&&c==="P"?`이 처리는 습관 기록에는 들어가지 않습니다. 이 메일의 기준으로는 다릅니다. ${J.why}${lo.length?` 좋은 리더의 선택으로 보는 처리: ${lo.join(", ")}.`:""}`
     :c==="L"?"이 처리는 리더 행동으로 기록되었습니다."
@@ -1269,7 +1311,7 @@ window.VIOLATION_FLAGS=[
     ${e.txt?`<p><span class="seclab">일어난 일</span><br>${esc(e.txt)}</p>`:""}
     <div class="thbox"><div class="th-h"><span class="seclab">이론으로 점검하기</span><span class="th-chips">${co.th.filter(id=>L[id]).map(id=>`<button type="button" class="lxchip" data-lex="${id}">${esc(L[id].name)}</button>`).join("")}</span></div>
      ${co.ld?`<div class="th-row"><span class="th-l">이론이 권하는 행동</span><p>${esc(co.ld)}</p></div>`:""}
-     <div class="th-row"><span class="th-l">내 행동</span><p>${E.legacy||to||lab===e.k?esc(E.legacy?e.k:lab):`“${esc(shortT(lab))}”`} ${J.src!=="habit"?"":c==="L"?`<span class="pill good">리더 행동</span>`:c==="P"?`<span class="pill bad">실무자 습관</span>`:""}</p></div>
+     <div class="th-row"><span class="th-l">내 행동</span><p>${E.legacy||to||lab===e.k?esc(E.legacy?e.k:lab):`“${esc(shortT(lab))}”`} ${J.src==="fit"?`<span class="pill bad">받는 사람이 맞지 않음</span>`:J.src!=="habit"?"":c==="L"?`<span class="pill good">리더 행동</span>`:c==="P"?`<span class="pill bad">실무자 습관</span>`:""}</p></div>
      <div class="th-row th-gap"><span class="th-l">차이</span><p>${esc(gap)}</p></div>
      ${co.imp?`<div class="th-row th-imp"><span class="th-l">다음에 해 볼 행동</span><p>${esc(co.imp)}</p></div>`:""}</div>
     ${e.pr?promLine(e.pr):""}
@@ -1277,7 +1319,7 @@ window.VIOLATION_FLAGS=[
    </div></details>`;};
   const st=E.settle.map(x=>`<p class="note">${esc(x.txt)} <span class="chips">${h.chips({d:x.d,tr:x.tr,wl:x.wl})}</span></p>`).join("");
   return `<details class="dcard ibsec" id="ibsec"${S.P?" open":""}><summary><span class="dt">받은편지함</span><span class="note">참고 결정</span><span class="dm">메시지 ${items.length}건 · ${ibCountText(cnt)}</span><span class="pill">같음 ${S.L} · 다름 ${S.P} · 판정 없음 ${S.N}</span></summary><div class="dbody">
-   <p class="note">받은편지함의 처리는 '핵심 결정' 집계에 넣지 않는 <b>참고 결정</b>입니다. 판정은 습관 기록을 먼저 따릅니다(리더 행동이면 같음, 실무자 습관이면 다름). 습관 기록이 없는 처리는 메일마다 정한 기준을 따르고, 둘 다 없으면 판정하지 않습니다.</p>
+   <p class="note">받은편지함의 처리는 '핵심 결정' 집계에 넣지 않는 <b>참고 결정</b>입니다. 위임은 받는 사람이 이 일과 맞는지를 먼저 봅니다. 그다음은 습관 기록을 따르고(리더 행동이면 같음, 실무자 습관이면 다름), 습관 기록이 없는 처리는 메일마다 정한 기준을 따릅니다. 모두 없으면 판정하지 않습니다.</p>
    ${E.legacy?`<p class="note">이전 버전에서 저장된 진행이라 처리 분류만 남아 있습니다. 내가 고른 문구, 일어난 일, 움직인 값은 이번 라운드부터 다시 기록됩니다.</p>`:""}
    <p><span class="seclab">받은편지함 전체로 움직인 값</span><br><span class="chips">${h.chips(h.inboxAct)}</span></p>${st}
    <div class="iblist">${items.map(card).join("")}</div>
@@ -1293,14 +1335,33 @@ window.tokEffOf=function(gain,used,min){if(!(used>=min))return {v:null,why:"쓴 
 /* ---------- 상태에 맞지 않는 문구 바꾸기 (지시서 v3 B-4, 2026-11-22) ----------
    선택지·대사가 플레이어가 만든 적 없는 것(6월 협상선, 실측 수치, 공개하지 않은 기준, 이미 퍼진 사실)을 전제로 할 때, 같은 자리에서 상태에 맞는 문구로 바꿔 보여 준다.
    선택지의 글자·순서·효과는 그대로 두고 보이는 글만 바꾼다(강사 집계와 결과 코드는 원래 글자를 쓴다). 화면에 넣기 직전(shell)에 바꾸므로 성적표·결산 복기에도 같은 문구가 나온다. */
+/* 피드백 4단계 #4: 9월로 옮긴 '세 개의 설명'에서 본부장 답이 "8월에 다시 보지"로 남아 있던 것 */
+try{const sp=typeof SPEC!=="undefined"?SPEC["6-2"]:null;(sp&&sp.targets||[]).forEach(t=>(t.reply||[]).forEach(r=>{if(typeof r[0]==="string")r[0]=r[0].replace("8월에 다시 보지","12월에 다시 보지");}));}catch(e){}
+/* 피드백 5단계 #9: 8월 차출로 줄어든 여력 칸을 결과 화면에 바로 보여 준다(효과는 그대로) */
+{const s=CONTENT.find(x=>x&&x.id==="8-1b");if(s)(s.options||[]).forEach(o=>{const od=o.onDone,d0=o.done;o.onDone=function(g,h){try{window.__cut0=Object.assign({},g.cells||{});}catch(e){}return od&&od.apply(this,arguments);};
+ o.done=g=>{const base=typeof d0==="function"?d0(g):(d0||"");const a=window.__cut0,c=g.cells||{};if(!a)return base;const K=["RUN","AI","GROW","SEC"],ch=K.filter(k=>(a[k]||0)!==(c[k]||0)).map(k=>`${k} ${a[k]||0}→${c[k]||0}`);const t0=K.reduce((s,k)=>s+(a[k]||0),0),t1=K.reduce((s,k)=>s+(c[k]||0),0);return `${base} 여력이 ${t0}칸에서 ${t1}칸이 되었습니다(${ch.join(", ")}). 줄어든 칸에 기대던 모듈은 업무량이 늘어납니다.`;};});}
+/* 피드백 4단계 #22: 3-8에서 '팀 전체에 사유를 알린 다음 신고'를 고르면 알리기 단계를 건너뛴다(선택지 자체가 알리는 행동이라 따로 알리기 효과를 더하지 않음) */
+{const s=CONTENT.find(x=>x&&x.id==="3-8"),o=s&&(s.options||[]).find(x=>/팀 전체에 사유를 알린/.test(String(x.t||"")));if(o)o.noTell=true;}
+/* 피드백 4단계 #26: 1월 M08·M16을 둘 다 승인해 수요일 새벽 작업이 겹친 경로는 1-4에서 그 이야기를 이어 받는다 */
+{const s=CONTENT.find(x=>x&&x.id==="1-4");if(s)(s.conds=s.conds||[]).push({c:g=>!!g.f.night_clash,t:"수요일 새벽, 문지원의 보안 패치와 강태식의 긴급 작업이 같은 시간에 겹쳤습니다. 두 작업이 서로 끝나기를 기다리느라 아침까지 걸렸습니다."});}
 window.COND_TEXT=[
+ /* 피드백 5단계 #8: 차출 뒤 연말 평가 인원 */
+ {id:"12-3a 인원",when:g=>teamN(g)<30,from:"평가 대상은 팀원 30명 전원입니다.",get to(){return `평가 대상은 팀원 ${teamN()}명 전원입니다(8월 본사 차출 ${30-teamN()}명은 본사에서 평가합니다).`;}},
+ /* 피드백 3단계 #6: 1월 M06을 어떻게 처리했는지에 맞춰 "아무도 몰랐다"를 고친다 */
+ {id:"3-8 1월 공유",when:g=>!!g.f.ai_shared,from:"1월에 AI 사용을 따로 확인하지 않아서 아무도 몰랐습니다.",to:"1월에 결과를 팀 채널에 공유해 보라고 답했고, 그 뒤로 무엇을 넣는지는 따로 확인하지 않았습니다."},
+ {id:"3-8 1월 금지",when:g=>!g.f.ai_shared&&(g.inboxLog||[]).some(e=>e.id==="M06"&&/쓰지 말자/.test(e.lab||e.txt||"")),from:"1월에 AI 사용을 따로 확인하지 않아서 아무도 몰랐습니다.",to:"1월에 승인 전까지 쓰지 말자고 답했지만, 실제로 멈췄는지는 확인하지 않았습니다."},
+ {id:"3-8 1월 위임",when:g=>!g.f.ai_shared&&!!(g.f.del_M06||(g.inboxLog||[]).some(e=>e.id==="M06"&&e.k==="위임")),from:"1월에 AI 사용을 따로 확인하지 않아서 아무도 몰랐습니다.",to:"1월에 판단을 서하준에게 맡겼고, 무엇을 넣었는지는 따로 확인하지 않았습니다."},
  {id:"9-4 A",when:g=>!g.f.planb_contract,from:"계약 조건은 6월 안대로 지킨다",to:"계약 조건은 지금 계약대로 지킨다"},
  {id:"8-1a B",when:g=>!(g.f.ct_measure||g.f.r2_measure),from:"확인된 절감 수치를 들고 가서, 2명을 1명으로 줄이자고 본사와 협상해 본다.",to:"아직 실측은 없지만 절감 근거를 정리해 가서, 2명을 1명으로 줄이자고 본사와 협상해 본다."},
  {id:"8-1a B 결과",when:g=>!(g.f.ct_measure||g.f.r2_measure),from:"확인된 절감 수치를 들고 본사에 갔습니다.",to:"절감 근거를 정리해 본사에 갔습니다."},
  {id:"6-4a 이수진",when:g=>!g.f.pub_prevent,from:"AI 항목을 20%로 넣느라 다른 항목을 고르게 줄이셨으면, 결국 예방 몫이 깎인 거네요. 올해 처음 기준에 들어간 건데요.",to:"AI 항목을 20%로 넣느라 다른 항목을 고르게 줄이셨으면, 저희가 해 온 일은 결국 어디에 들어가는 거예요? 처음부터 기준에 없던 일인데요."},
  {id:"6-4a 이수진(짧은 문구)",when:g=>!g.f.pub_prevent,from:"그럼 예방은 깎인 거네요",to:"그럼 저희가 해 온 일은 어디에 들어가요"},
  {id:"3-8 아는 사람",when:g=>!!g.f.ai_shared,from:"지금 이 사실을 아는 사람은 팀장, 문지원, 서하준 셋뿐입니다.",to:"고객 데이터가 나간 사실을 아는 사람은 지금 팀장, 문지원, 서하준 셋뿐입니다. 다만 서하준의 결과는 1월에 팀 채널에 공유되어, 같은 방식을 따라 해 본 사람이 더 있을 수 있습니다."}];
-window.condText=function(h){if(typeof h!=="string"||typeof G==="undefined"||!G)return h;let x=h;COND_TEXT.forEach(c=>{try{if(x.includes(c.from)&&c.when(G))x=x.split(c.from).join(c.to);}catch(e){}});return x;};
+window.condText=function(h){if(typeof h!=="string"||typeof G==="undefined"||!G)return h;let x=h;COND_TEXT.forEach(c=>{try{if(x.includes(c.from)&&c.when(G))x=x.split(c.from).join(c.to);}catch(e){}});
+ /* 피드백 1단계: 장면 안내문의 "C를 고르면" 같은 글자를 화면에 보이는 선택지 글자로 바꾼다 */
+ try{if(/[A-D](?:·[A-D])*를 고르면/.test(x)){const s=CONTENT[G.idx]||{};let id=s.id;if(s.type==="branch"&&Array.isArray(s.cases)){const c=s.cases[(G.cases||{})[s.id]||0];if(c&&c.id)id=c.id;}
+  if((G.ord||{})[id])x=x.replace(/([A-D](?:·[A-D])*)를 고르면/g,(m,ls)=>ls.split("·").map(l=>dispK(id,l)).sort().join("·")+"를 고르면");}}catch(e){}
+ return x;};
 {const _sh=shell;shell=function(html){return _sh.apply(this,[condText(html)].concat([].slice.call(arguments,1)));};}
 
 /* ---------- 청구서 원인 연결 보강 (지시서 v3 B-5, 2026-11-22) ----------
@@ -1347,7 +1408,7 @@ window.replyGuard=function(m,x,st){
 
 /* ---------- Phase D 서사 보강 (지시서 v3, 2026-11-25) ---------- */
 /* D-1: 4월 M39(김 사원, 집에서 야간 경고)를 받았는데 8월 김 사원 장면(6-3)이 없었던 경로에도, 11월 인사팀 공문(투입량 제외)과 이어지는 메시지 한 통 */
-{const s=CONTENT.find(x=>x&&x.id==="6-4a");if(s){s.conds=(s.conds||[]).concat([{c:g=>!!g.f.got_M39&&!(g.decisions||[]).some(d=>/^6-3/.test(d.scene)),t:g=>`📩 김 사원 DM · "${g.f.night_seen?"4월에 물어보셨던 그 경고요. ":""}대기표에서 빠진 뒤로 낮에는 괜찮아요. 그런데 경고는 아직 집에서 봐요, 근태 안 찍히게요. 공문 2번대로면 이 시간은 어디에도 안 남겠네요."`}]);}}
+{const s=CONTENT.find(x=>x&&x.id==="6-4a");if(s){s.conds=(s.conds||[]).concat([{c:g=>!!g.f.got_M39&&!(g.decisions||[]).some(d=>/^6-3/.test(d.scene)),t:g=>`📩 김 사원 DM · "${g.f.night_seen?"4월에 물어보셨던 그 경고요. ":""}${(g.f.night_open||g.f.night_rotate||g.f.kim_rest||g.f.night_changed||g.f.night_rescued)?"대기표에서 빠진 뒤로 낮에는 괜찮아요. 그런데 경고는 아직 집에서 봐요":"대기표는 그대로라, 경고 오면 아직 집에서 봐요"}, 근태 안 찍히게요. 공문 2번대로면 이 시간은 어디에도 안 남겠네요."`}]);}}
 /* D-3: 2라운드 성적표에서 "지금 공개한 기준으로 설명하기 어려운 기여가 있는 사람"을 한 번 보여 주고, 기준 하나를 보완(재공지 포함)할 수 있게 한다 */
 window.critGapPeople=function(){if(typeof EVAL==="undefined")return [];const pub=G.pub||[],gone=k=>typeof isGone==="function"&&isGone(k);const nm=k=>typeof name==="function"?name(k):k;
  return EVAL.filter(e=>!gone(e.k)).map(e=>{const rs=e.r.filter(r=>!r[3]&&(r[2]||[]).length&&(!r[1]||G.f[r[1]]));const ok=rs.filter(r=>r[2].some(x=>pub.includes(x))).length;
