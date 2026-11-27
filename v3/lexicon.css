@@ -90,3 +90,14 @@ html[data-skin="night"] .th-imp .th-l{color:#8FCDD9}
 .dmore>summary::before{content:"▸ "}.dmore[open]>summary::before{content:"▾ "}
 .thsum .lxchip{margin:0 2px}
 @media (max-width:640px){.th-row{grid-template-columns:minmax(0,1fr);gap:2px}}
+/* 6단계: 가장 관련 있는 이론 강조, 읽음 표시 */
+.lx-keyw{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 8px;border-radius:999px;background:color-mix(in srgb,#E6FF55 45%,transparent)}
+.lx-keyl{font-size:11.5px;font-weight:600;color:#00473C}
+.lxchip.lx-key{border-width:2px;border-color:#00473C}
+.lxchip.seen{opacity:.78}
+.lxchip.seen::after{content:none}
+.lx-read{font-size:11px;font-weight:600;color:var(--good,#1d7a46);margin-left:2px}
+html[data-skin="night"] .lx-keyw{background:color-mix(in srgb,#F0A020 30%,transparent)}
+html[data-skin="night"] .lx-keyl{color:#F0A020}
+.lx-keyw{flex-wrap:wrap;max-width:100%;border-radius:14px}
+.lxstrip .lxchip{white-space:nowrap}

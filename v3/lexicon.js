@@ -350,6 +350,7 @@
  /* ---------- 결정 전에 찾아본 기록 ---------- */
  const curScene=()=>{try{return CONTENT[G.idx]||{};}catch(e){return {};}};
  const roundOf=()=>{try{return G.round||((G.month||1)<=3?1:(G.month<=9?2:3));}catch(e){return 0;}};
+ window.LEX_TH=TH; /* 6단계: 성적표 요약의 "다음 행동"이 장면별 이론의 다음 행동을 읽는다 */
  function noteLookup(eid){
   try{const s=curScene();if(!s.id||!TH[s.type==="inbox"?"inbox":s.id]||G.review||/^(ROUND|V3END|FINALE)/.test(s.id))return;
    const sid=s.type==="inbox"?"inbox:"+s.id:s.id;G.lk=G.lk||[];if(!G.lk.some(x=>x.s===sid&&x.e===eid))G.lk.push({s:sid,e:eid,r:roundOf()});}catch(e){}
@@ -394,16 +395,21 @@
    <p class="lx-src"><b>출처</b> ${esc(x.src)}</p>`;
   a.scrollTop=0;win.classList.add("lx-reading");list();
  }
+ const chipSeen=new Set(); /* 화면 표시용. 저장하지 않는다 */
  function open(id){
   build();lastFocus=document.activeElement;
   const s=curScene();const key=s.type==="inbox"?"inbox":s.id;ctx=(TH[key]&&!/^(ROUND|V3END|FINALE)/.test(s.id||""))?TH[key].th.slice():[];
   win.hidden=false;win.querySelector("input").value="";
   const first=id||ctx[0]||cur||Object.keys(L)[0];
-  if(id)noteLookup(id);
+  /* 6단계: 칩으로 연 이론은 '눌러 봄' 표시만 바꾸고 사전 열람으로 세지 않는다. 열람은 사전 목록에서 직접 누른 것만 센다(show(id,true)) */
+  if(id){const k=s.type==="inbox"?"inbox":s.id;if(k)chipSeen.add(k+"|"+id);}
   show(first,false);if(!id)win.classList.remove("lx-reading");
   list();(id?win.querySelector(".lx-art"):win.querySelector("input")).focus();
  }
- function close(){if(!win)return;win.hidden=true;try{lastFocus&&lastFocus.focus();}catch(e){}}
+ function close(){if(!win)return;win.hidden=true;
+  /* 6단계: 칩의 '읽음' 표시를 바로 반영한다 */
+  let lx=null;try{lx=lastFocus&&lastFocus.getAttribute&&lastFocus.closest&&lastFocus.closest(".lxstrip")?lastFocus.getAttribute("data-lex"):null;const o=document.querySelector("#view .lxstrip");if(o){o.remove();addStrip();}if(lx){const b=document.querySelector(`#view .lxstrip [data-lex="${lx}"]`);if(b)lastFocus=b;}}catch(e){}
+  try{lastFocus&&lastFocus.focus();}catch(e){}}
  window.openLex=open;window.closeLex=close;
  document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-lex]");if(!b)return;e.preventDefault();open(b.dataset.lex||null);});
 
@@ -428,7 +434,9 @@
   if(!parent)return;
   const d=document.createElement("div");d.className="lxstrip";
   const seen=lookedFor(key);
-  d.innerHTML=`<span class="lxs-h">결정 전에 점검해 보기</span>${T.th.map(id=>`<button type="button" class="lxchip${seen.includes(id)?" seen":""}" data-lex="${id}">${esc(L[id].name)}</button>`).join("")}`;
+  /* 6단계: 이 장면과 가장 관련 있는 이론(목록의 첫 항목)을 강조하고, 한 번 눌러 본 이론은 '읽음'으로 바꾼다 */
+  const chip=(id,i)=>{const v=seen.includes(id)||chipSeen.has(key+"|"+id);return `<button type="button" class="lxchip${i===0?" lx-key":""}${v?" seen":""}" data-lex="${id}"${i===0?' aria-describedby="lxkeyl"':""}>${esc(L[id].name)}${v?'<span class="lx-read">읽음</span>':""}</button>`;};
+  d.innerHTML=`<span class="lxs-h">결정 전에 점검해 보기</span>${T.th.filter(id=>L[id]).map((id,i)=>i===0?`<span class="lx-keyw"><span class="lx-keyl" id="lxkeyl">이 장면과 가장 관련 있는 이론</span>${chip(id,0)}</span>`:chip(id,i)).join("")}`;
   parent.insertBefore(d,at);
  }
  const _sh=shell;
@@ -461,7 +469,7 @@
   const top=Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]).filter(id=>L[id]);
   const withTh=cards.filter(c=>TH[c.id]);const looked=withTh.filter(c=>lookedFor(c.id).length).length;
   return `<div class="secbox thsum"><div class="seclab">이론으로 본 이번 라운드</div>${top.length?`<p>이론이 권하는 방향과 다르게 간 결정에 가장 많이 걸린 이론은 ${top.map(id=>`<button type="button" class="lxchip" data-lex="${id}">${esc(L[id].name)}</button>`).join(" ")}입니다.</p><p class="note">${esc(L[top[0]].trap)}</p>`:`<p>판정한 결정에서 이론이 권하는 방향과 크게 어긋난 곳은 없었습니다. 결정 카드의 '다음에 해 볼 행동'으로 한 단계 더 나아가 보세요.</p>`}
-   <p class="note">결정 전에 리더십 사전을 펼쳐 본 결정: ${withTh.length?`${withTh.length}개 중 ${looked}개`:"없음"}. 사전은 메뉴바의 '리더십 사전'에서 언제든 열 수 있습니다.</p></div>`;
+   ${looked?`<p class="note">결정 전에 리더십 사전 목록에서 이론을 직접 찾아본 결정: ${withTh.length}개 중 ${looked}개 (${withTh.filter(c=>lookedFor(c.id).length).map(c=>esc((window.SC_NICK&&SC_NICK[c.id])||strip(val((c.sc||{}).title)||c.id))).join(", ")}).</p>`:""}</div>`;
  };
 
  /* ---------- Round 3 결산 첫 페이지 ---------- */

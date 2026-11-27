@@ -83,7 +83,11 @@
  const strip10=c=>`<span class="wx-cells" role="img" aria-label="${Object.keys(CELL).map(k=>CELL[k][0]+" "+(c[k]||0)+"칸").join(", ")}">${Object.keys(CELL).map(k=>Array.from({length:c[k]||0},()=>`<i class="${CELL[k][1]}"></i>`).join("")).join("")}</span>`;
  const cellLegend=c=>`<span class="wx-cleg">${Object.keys(CELL).map(k=>`<span><i class="${CELL[k][1]}"></i>${CELL[k][0]} ${c[k]||0}</span>`).join("")}</span>`;
  const pathName=s=>String(s||"").replace(/^[A-Z]\.\s*/,"").replace(/\s+(RUN|AI|GROW|SEC)\s.*$/,"");
+ window.wxTab=function(b){try{const w=b.closest(".wx-ctabs");w.querySelectorAll(".wx-tab").forEach(x=>x.setAttribute("aria-selected",String(x===b)));w.querySelectorAll("[data-p]").forEach(p=>{p.hidden=p.getAttribute("data-p")!==b.getAttribute("data-t");});}catch(e){}};
  window.wxCineHtml=function(c,o={}){if(!c)return "";
+  /* 5단계: 규칙으로 고른 갈림길이 KPI 공개 범위가 아니면, KPI 공개 범위 비교를 보조 탭으로 둔다 */
+  if(c.sub&&!o.noTabs){const main=wxCineHtml(Object.assign({},c,{sub:null}),o);const sub=wxCineHtml(c.sub,Object.assign({},o,{hl:false,q:false,noTabs:true}));
+   return `<div class="wx-ctabs"><div class="wx-tabbar" role="tablist" aria-label="인생극장 보기"><button type="button" class="wx-tab" role="tab" aria-selected="true" data-t="0" onclick="wxTab(this)">이번 라운드의 갈림길 · ${esc(c.label)}</button><button type="button" class="wx-tab" role="tab" aria-selected="false" data-t="1" onclick="wxTab(this)">보조 · KPI 공개 범위</button></div><div data-p="0" role="tabpanel">${main}</div><div data-p="1" role="tabpanel" hidden>${sub}</div></div>`;}
   const R2=c.r==="R2";const lowGood=i=>R2&&i===0;const abs=k=>/기준 인지/.test(k);
   const better=(i,a,b)=>lowGood(i)?a<b:a>b;
   const span=Math.max(5,...c.keys.map((k,i)=>abs(k)?0:Math.max(Math.abs(c.mine5[i]),Math.abs(c.alt5[i]))));
@@ -96,13 +100,14 @@
   const say=(c.say||[]).map(x=>`<div class="wx-say">${faceSm(x[0])}<div><b>${esc(whoName(x[0]))}</b><p>“${esc(x[1])}”</p></div></div>`).join("");
   return `<div class="wx-cine${o.compact?" compact":""}${o.hl?" hl":""}">
    ${o.q!==false?`<div class="wx-cq"><span class="wx-lab">${o.round?esc(o.round)+" · ":""}갈림길</span><b>${esc(c.label)}</b></div>`:""}
+   ${c.why?`<p class="wx-why">${esc(c.why)}</p>`:""}
    <div class="wx-paths"><div class="wx-path me"><span class="wx-lab">내가 간 길</span><b>${esc(R2?"내 배분":pathName(c.mineN))}</b>${R2?strip10(mc)+cellLegend(mc):""}</div>
     <div class="wx-vs" aria-hidden="true">VS</div>
-    <div class="wx-path alt"><span class="wx-lab">가지 않은 길 · 추정</span><b>${esc(pathName(c.altN))}</b>${R2?strip10(ac)+cellLegend(ac):""}</div></div>
+    <div class="wx-path alt"><span class="wx-lab">가지 않은 길 · 추정${c.altNote?" · "+esc(c.altNote):""}</span><b>${esc(pathName(c.altN))}</b>${R2?strip10(ac)+cellLegend(ac):""}</div></div>
    <div class="wx-tally"><span>내 길이 나았던 지표 <b class="num">${c.mw}</b></span><span class="wx-split" role="img" aria-label="내 길 ${c.mw}, 다른 길 ${c.aw}"><i class="me" style="flex:${c.mw||0.001}"></i><i class="alt" style="flex:${c.aw||0.001}"></i></span><span>다른 길이 나았던 지표 <b class="num">${c.aw}</b></span></div>
-   <div class="wx-crows"><div class="wx-crow h"><span class="k">${R2?"배분 한 분기 뒤 기대 효과":"결정 직후 변화"}</span><span class="wx-dvh"><i class="me"></i>내 길 <i class="alt"></i>다른 길</span><span class="v">내 길</span><span class="v">다른 길</span></div>${rows}</div>
+   <div class="wx-crows"><div class="wx-crow h"><span class="k">${R2?"배분 한 분기 뒤 기대 효과":c.note?"선택지의 직접 효과":"결정 직후 변화"}</span><span class="wx-dvh"><i class="me"></i>내 길 <i class="alt"></i>다른 길</span><span class="v">내 길</span><span class="v">다른 길</span></div>${rows}</div>
    ${say?`<div class="wx-says"><span class="wx-lab">다른 길이었다면 들었을 말</span>${say}</div>`:""}
-   <p class="note0">결정 직전 상태에서 다른 선택지의 즉시 효과와 확률 결과의 기대값만 다시 계산한 추정입니다. 어느 쪽이 정답인지 판정하지 않습니다.</p>
+   <p class="note0">${esc(c.note||"결정 직전 상태에서 다른 선택지의 즉시 효과와 확률 결과의 기대값만 다시 계산한 추정입니다. 어느 쪽이 정답인지 판정하지 않습니다.")}</p>
   </div>`;};
  window.wxCine=cine;
  /* 라운드 성적표 앞: 인생극장 한 장면 */

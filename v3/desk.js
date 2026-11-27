@@ -103,12 +103,17 @@
  drawSide=function(live){
   const r=_ds.apply(this,arguments);
   try{if(on()){const sh=document.getElementById("shell");if(sh)sh.style.gridTemplateColumns="minmax(0,1fr)";teamHead();
-   if(live&&typeof LD!=="undefined"){const ch=Object.keys(LD).filter(k=>live[k]).map(k=>`${LD[k].n} ${live[k]>0?"+":""}${live[k]}`);if(ch.length)deskNote("리더 신뢰",ch.join(" · "));}}}catch(e){}
+   if(live&&typeof LD!=="undefined"){const ch=Object.keys(LD).filter(k=>live[k]).map(k=>`${LD[k].n} ${live[k]>0?"+":""}${live[k]}`);if(ch.length)deskNote("리더 신뢰",ch.join(", ")+trustCause(),true);}}}catch(e){}
   return r;
  };
  let noteT=null;
- function deskNote(head,text){{const pp=document.getElementById("people");if(pp&&pp.classList.contains("dk-open"))return;}let n=document.getElementById("dknote");if(!n){n=document.createElement("div");n.id="dknote";n.setAttribute("role","status");document.body.appendChild(n);}
-  n.innerHTML=`<span class="ai" style="--c:#5b6770">${typeof ICO!=="undefined"?ICO.users:""}</span><span class="tx"><span class="hd"><b>리더 신뢰·업무량</b><small>지금</small></span><b class="tt">${head}</b><span>${text}</span></span>`;n.hidden=false;n.classList.remove("go");void n.offsetWidth;n.classList.add("go");clearTimeout(noteT);noteT=setTimeout(()=>{n.hidden=true;},3200);}
+ /* 4단계: 신뢰 변동 알림에 원인 한 줄. 지금 장면의 이름과, 받은편지함이면 어떤 메일을 어떻게 처리했는지 */
+ function trustCause(){try{const s=CONTENT[G.idx]||{};
+   if(s.type==="inbox"){const st=s._st||{};const L=(G.inboxLog||[]).slice(-1)[0];const m=(s.mail||[]).find(x=>x.id===(st.sel||(L&&L.id)));
+    if(m){const who=String(m.from||"").replace(/^[^가-힣A-Za-z]+/,"").replace(/\s*[·(].*$/,"").trim();const k=L&&L.id===m.id?L.k:"처리";return ` · ${who} ${m.t==="CALL"?"전화":m.t==="DM"?"메시지":"메일"} ${k}`;}return "";}
+   const n=(window.SC_NICK&&SC_NICK[s.id])||String(s.title||"").replace(/<[^>]*>/g,"");return n?` · ${n} 결정`:"";}catch(e){return "";}}
+ function deskNote(head,text,trust){{const pp=document.getElementById("people");if(pp&&pp.classList.contains("dk-open"))return;}let n=document.getElementById("dknote");if(!n){n=document.createElement("div");n.id="dknote";n.setAttribute("role","status");document.body.appendChild(n);}
+  n.innerHTML=`<span class="ai" style="--c:#5b6770">${typeof ICO!=="undefined"?ICO.users:""}</span><span class="tx"><span class="hd"><b>리더 신뢰·업무량</b><small>지금</small></span><b class="tt">${head}</b><span>${text}</span>${trust?'<small class="dk-go">눌러서 리더 신뢰 보기</small>':""}</span>`;n.classList.toggle("dk-click",!!trust);n.onclick=trust?()=>{n.hidden=true;clearTimeout(noteT);toggleTeam(true);}:null;n.hidden=false;n.classList.remove("go");void n.offsetWidth;n.classList.add("go");clearTimeout(noteT);noteT=setTimeout(()=>{n.hidden=true;},trust?6500:3200);}
  window.deskNote=deskNote;
 
  /* ---------- 받은편지함: 메일과 메신저로 나눠 보기 ---------- */

@@ -281,7 +281,7 @@ function pick5(r,m,base){if(!m||!base)return null;const d=(a,b)=>a-b;
  if(r==="R1"){return[d(m.사람,base.사람),d(m.발언량,base.발언량),d(m.trust.prc,base.trust.prc),d(m.trust.mfg,base.trust.mfg)];}
  if(r==="R2"){return[m.maxW-base.maxW,m.avgT-base.avgT,d(m.성과,base.성과),d(m.재무,base.재무),d(m.안정,base.안정)];}
  return[d(m.안정,base.안정),d(m.헬씨푸드,base.헬씨푸드),d(m.발언량,base.발언량),d(m.trust.mfg,base.trust.mfg),d(m.성과,base.성과)];}
-function cinema(r){
+function cinemaBase(r){
  const C=CINE[r],snap=(G.snap||{})[C.scene],post=(G.post||{})[r];if(!snap||!post)return null;
  let base;{const keep=G;G=fillDefaults(JSON.parse(snap));base=metricsNow();G=keep;}
  let mineN,altN,altM,mine5,alt5,say=[];
@@ -296,8 +296,56 @@ function cinema(r){
  return{r,label:C.label,keys:C.keys,mineN,altN,mine5,alt5,mw,aw,gap,say};}
 function cinemaHtml(r){const c=cinema(r);if(!c)return "";const sg=v=>r==="R1"&&false?v:(v>0?"+":"")+v;
  const cell=(i,v,o)=>{const b=(r==="R2"&&i===0)?v<o:v>o;return `<td class="num" style="${b?"color:var(--good);font-weight:600":""}">${c.keys[i]==="기준 인지(추정)"?v:sg(v)}</td>`;};
- return `<div class="cine"><div class="eyebrow">그래, 결심했어 · ${c.label}</div><table><tr><th></th><th>내 선택${r==="R2"?" (추정)":""}<br><small>${c.mineN}</small></th><th>다른 선택이었다면 (추정)<br><small>${c.altN}</small></th></tr>${c.keys.map((k,i)=>`<tr><td>${k}${r==="R2"&&i===0?' <span class="note">(낮을수록 좋음)</span>':""}</td>${cell(i,c.mine5[i],c.alt5[i])}${cell(i,c.alt5[i],c.mine5[i])}</tr>`).join("")}</table>${c.say.length?`<p class="note" style="margin-top:8px"><b>다른 선택을 했다면 들었을 말</b></p>`:""}${c.say.map(x=>`<p class="note" style="margin-top:4px">${x[0]==="board"?"익명 게시판":name(x[0])}: "${x[1]}"</p>`).join("")}<p class="note">결정 직전 상태에서 다른 선택지의 즉시 효과와 확률 결과의 기대값만 다시 계산했습니다. 어느 쪽이 정답인지 판정하지 않습니다.</p></div>`;}
-window.cinemaHtml=cinemaHtml;window.cinema=cinema;
+ return `<div class="cine"><div class="eyebrow">그래, 결심했어 · ${c.label}</div>${c.why?`<p class="note">${c.why}</p>`:""}<table><tr><th></th><th>내 선택${r==="R2"?" (추정)":""}<br><small>${c.mineN}</small></th><th>다른 선택이었다면 (추정)<br><small>${c.altN}</small></th></tr>${c.keys.map((k,i)=>`<tr><td>${k}${r==="R2"&&i===0?' <span class="note">(낮을수록 좋음)</span>':""}</td>${cell(i,c.mine5[i],c.alt5[i])}${cell(i,c.alt5[i],c.mine5[i])}</tr>`).join("")}</table>${c.say.length?`<p class="note" style="margin-top:8px"><b>다른 선택을 했다면 들었을 말</b></p>`:""}${c.say.map(x=>`<p class="note" style="margin-top:4px">${x[0]==="board"?"익명 게시판":name(x[0])}: "${x[1]}"</p>`).join("")}<p class="note">${c.note||"결정 직전 상태에서 다른 선택지의 즉시 효과와 확률 결과의 기대값만 다시 계산했습니다. 어느 쪽이 정답인지 판정하지 않습니다."}</p></div>`;}
+/* 5단계 (2026-11-27): Round 1 인생극장은 규칙으로 갈림길을 고른다(선 위반 우선, 없으면 변화 크기 합이 가장 큰 결정).
+   선정은 cinepick.js의 순수 함수 cinePick. 여기서는 후보를 모으고 화면용 비교를 만든다. 새 저장 키 없이 기존 기록(G.decisions, G.f, G.vioAt)만 읽는다.
+   KPI 공개 범위 비교(기존 3-1-2 스냅숏 계산)는 보조 탭으로 남긴다. */
+function cineFixed(fn){const R=Math.random;let k=11;Math.random=()=>{k=(k*16807)%2147483647;return (k-1)/2147483646;};try{return fn();}catch(e){console.warn("인생극장 선정",e);return null;}finally{Math.random=R;}}
+function cineOptsOf(id){const s=CONTENT.find(x=>x.id===(/^3-1-[23]$/.test(id)?"3-1":id));if(!s)return null;
+ if(id==="3-1-2")return s.levels||null;if(id==="3-1-3")return s.planb||null;if(s.type!=="choice")return null;
+ let o=val(s.options);if(!Array.isArray(o)&&s.cases){const cs=val(s.cases)||[];const c=cs[(G.cases||{})[id]];o=c?val(c.options):null;}return Array.isArray(o)?o:null;}
+function cineName(id){if(id==="3-1-2")return "KPI 기준을 어디까지 알렸나";if(id==="3-1-3")return "KPI 재검토 조건";const s=CONTENT.find(x=>x.id===id)||{};return (window.SC_NICK&&SC_NICK[id])||noNum(String(val(s.title)||id).replace(/<[^>]*>/g,""));}
+function cineShort(t){t=String(val(t)||"").replace(/["“”]/g,"").replace(/\s+/g," ").trim();return t.length>30?t.slice(0,29)+"…":t;}
+function simFromJson(js,fn){const keep=G,h=H,hn=hN;const le=(window.__lineEvt||[]).length;let m=null;try{G=fillDefaults(JSON.parse(js));G.sound=false;if(fn)fn();m=metricsNow();}catch(e){console.warn("인생극장 계산",e);}G=keep;H=h;hN=hn;try{if(window.__lineEvt)window.__lineEvt.length=le;}catch(e){}return m;}
+function simOptFrom(js,o,rel){return simFromJson(js,()=>{applyFx(val(o.fx)||"",{rel});(o.tw||[]).forEach(t=>{const p=(typeof t.p==="function"?t.p(G):t.p)/100;if(p>0)applyFx(val(t.fx)||"",{pos:p,neg:p,rel});});});}
+const CINE_AX=["성과","재무","사람","안정"],CINE_AXN={성과:"고객",재무:"재무",사람:"구성원",안정:"서비스 안정"};
+let cineCacheK=null,cineCacheV=null;
+function cineCands(){
+ const rs=G.rs||{},from=(rs[1]||{}).dec||0,to=rs[2]&&rs[2].dec!=null?rs[2].dec:(G.decisions||[]).length;
+ const js=(()=>{const c=JSON.parse(JSON.stringify(G));delete c.snap;delete c.post;return JSON.stringify(c);})();
+ const base=simFromJson(js,null);if(!base)return {cands:[],js,base};
+ const vio=(window.violationsOf?violationsOf(1):[]).map(v=>v.k);const ix=window.lineIndex?lineIndex().scene:{};
+ const fxT=o=>{const f=o&&o.fx;return typeof f==="function"?String(f):String(f||"");};
+ const seen=new Set(),cands=[];
+ (G.decisions||[]).slice(from,to).forEach((d,i)=>{const id=d.scene;if(!id||d.doc||seen.has(id)||/\+$/.test(id))return;const opts=cineOptsOf(id);if(!opts||opts.length<2)return;
+  const k=String(d.choice||"").charAt(0);if(!opts.some(o=>o.k===k))return;seen.add(id);
+  const flags=ix[id]||[];const rel=(CONTENT.find(x=>x.id===(/^3-1-/.test(id)?"3-1":id))||{}).rel||null;
+  const co=(window.COACH||{})[id]||(id==="3-1-2"?(window.COACH||{})["3-1"]:null)||{};const best=co.best||[];
+  const os=opts.map(o=>{const m=simOptFrom(js,o,rel);const mag=m?Math.round(CINE_AX.reduce((a,x)=>a+Math.abs(m[x]-base[x]),0)):0;return {k:o.k,viol:flags.some(f=>fxT(o).indexOf("`"+f+"`")>=0),best:best.includes(o.k),mag,m,o};});
+  const mine=os.find(o=>o.k===k);const vk=flags.find(f=>vio.includes(f)&&mine&&mine.viol);
+  cands.push({scene:id,choice:k,order:from+i,label:cineName(id),viol:!!vk,line:vk?((VIOLATION_FLAGS.find(v=>v.k===vk)||{}).line||""):"",mag:mine?mine.mag:0,rel,opts:os});});
+ return {cands,js,base};}
+function cinemaR1(){
+ const key=[(G.decisions||[]).length,G.idx,(G.fxLog||[]).length].join("|");if(cineCacheK===key)return cineCacheV;
+ const out=cineFixed(()=>{
+  const {cands,base}=cineCands();
+  const kpiMine=G.f["c_3-1-2_A"]?"A":G.f["c_3-1-2_B"]?"B":G.f["c_3-1-2_C"]?"C":null;
+  const pick=window.cinePick?cinePick({cands:cands.map(c=>({scene:c.scene,choice:c.choice,order:c.order,label:c.label,viol:c.viol,line:c.line,mag:c.mag,opts:c.opts.map(o=>({k:o.k,viol:o.viol,best:o.best,mag:o.mag}))})),fallback:kpiMine?{scene:"3-1-2",choice:kpiMine}:null}):null;
+  const kpi=cinemaBase("R1");
+  if(!pick)return kpi;
+  if(pick.scene==="3-1-2"&&kpi)return Object.assign({},kpi,{why:pick.reason,pick});
+  const c=cands.find(x=>x.scene===pick.scene);if(!c||!pick.alt||!base)return kpi?Object.assign({},kpi,{why:"선정 이유: 비교할 결정 기록이 부족해 KPI 공개 범위를 보여 줍니다."}):null;
+  const mo=c.opts.find(o=>o.k===c.choice),ao=c.opts.find(o=>o.k===pick.alt);if(!mo||!mo.m||!ao||!ao.m)return kpi;
+  const keys=CINE_AX.map(x=>CINE_AXN[x]).concat(c.rel&&LD[c.rel]?[LD[c.rel].n+" 신뢰"]:[]);
+  const vec=m=>CINE_AX.map(x=>m[x]-base[x]).concat(c.rel&&LD[c.rel]?[m.trust[c.rel]-base.trust[c.rel]]:[]);
+  const mine5=vec(mo.m),alt5=vec(ao.m);let mw=0,aw=0;mine5.forEach((v,i)=>{if(v>alt5[i])mw++;else if(alt5[i]>v)aw++;});
+  return {r:"R1",label:c.label,keys,mineN:c.choice+". "+cineShort(mo.o.t),altN:pick.alt+". "+cineShort(ao.o.t),mine5,alt5,mw,aw,gap:mine5.reduce((a,v,i)=>a+Math.abs(v-alt5[i]),0),say:[],
+   why:pick.reason,pick,viol:c.viol,altNote:c.viol?"선을 넘지 않는 선택지":"",
+   note:"라운드 끝 상태에 두 선택지의 직접 효과와 확률 결과의 기대값을 똑같이 더해 본 추정입니다. 그 뒤에 이어진 일은 넣지 않았습니다. 어느 쪽이 정답인지 판정하지 않습니다."+(c.viol?" 선을 넘은 일은 이 숫자와 별개로 성적표의 선 위반 기록에 남습니다.":""),
+   sub:kpi?Object.assign({},kpi,{tab:"KPI 공개 범위"}):null};});
+ cineCacheK=key;cineCacheV=out;return out;}
+function cinema(r){return r==="R1"?cinemaR1():cinemaBase(r);}
+window.cinemaHtml=cinemaHtml;window.cinema=cinema;window.cinemaBase=cinemaBase;
 
 /* 라운드 결과 이론 카드 (02-5 E) */
 const TCARD=[["voice","조직 침묵 (Morrison & Milliken)","조용함은 평화가 아니라 신호일 수 있다","이번 라운드에 팀이 말하지 않게 된 계기는 무엇이었을까?"],["stress","직무 요구-자원 (Bakker & Demerouti)","요구가 자원을 넘으면 소진이 쌓인다","어느 모듈의 요구를 줄이거나 자원을 늘릴 수 있었나?"],["trust","리더십의 양면 (Bass)","추진력은 성과를 당기지만 관계를 깎고, 배려만으로는 방향이 서지 않는다","이 속도와 이 배려가 꼭 그만큼 필요했나?"],["chain","서비스 수익 체인 (Heskett)","사람의 변화가 늦게 고객과 숫자에 닿는다","체인의 어느 고리에서 시작됐나?"],["cons","절차 공정성 (Leventhal)","같은 기준을 꾸준히 쓰는 것이 공정이다","기준을 바꿀 때 무엇을 했어야 했나?"],["info","정보 공정성 (Colquitt)","근거를 설명받았다는 느낌이 공정을 만든다","기준을 누구에게, 어떻게 알렸나?"]];

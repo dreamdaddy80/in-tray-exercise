@@ -394,3 +394,66 @@ a.rd-step:hover{box-shadow:inset 0 0 0 1.5px var(--accent)}
 .rc-card,.rd-flow{min-width:0;max-width:100%;box-sizing:border-box}
 @media (max-width:899px){.rc-steps{grid-template-columns:minmax(0,1fr)}.rd-arr{display:none}.rc-card{padding:16px}.rc-hd{gap:10px}.rc-ic{width:36px;height:36px}.rc-ic svg{width:18px;height:18px}.rc-code{gap:8px;padding:8px 12px}}
 .rc-save{display:block;margin:4px 0 8px}.rc-save[open]{padding:10px 14px 12px}
+
+/* ---------- 넘어서는 안 되는 선 · 사전 경고 배지와 판정 알림 (Round 1 개선 1단계) ---------- */
+.lineguard{display:flex;gap:12px;align-items:flex-start;margin:12px 0 12px;padding:12px 16px;border-radius:14px;background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--bad) 42%,transparent)}
+.lineguard .lg-ic{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--bad);background:color-mix(in srgb,var(--bad) 11%,transparent)}
+.lineguard .lg-tag{display:block;font-size:13px;font-weight:750;color:var(--bad);letter-spacing:-.01em}
+.lineguard p{margin:3px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink)}
+.reader .lineguard{margin:10px 0 12px}
+.reader .ask .lineguard{margin:0 0 12px}
+.lg-res p{margin:4px 0 0;line-height:1.6}
+.lg-q{margin:6px 0 0!important;font-size:13.5px;line-height:1.55;color:var(--ink)}
+.lg-q span{display:inline-block;margin-right:6px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;color:var(--muted);vertical-align:1px;box-shadow:inset 0 0 0 1px var(--line)}
+.lg-item{margin:4px 0 8px}
+.lg-item .lg-q{padding-left:12px}
+@media (max-width:899px){.lineguard{padding:11px 13px;gap:10px}.lineguard .lg-ic{width:30px;height:30px}.lineguard .lg-ic svg{width:18px;height:18px}}
+
+/* ---------- 성적표 ① 받은편지함 참고 결정 (Round 1 개선 2단계) ---------- */
+.ibsec>summary .pill{margin-left:auto}
+.ibsec .iblist{display:grid;gap:8px;margin-top:12px}
+.ibsec .ibm{margin:0;background:var(--panel)}
+.ibsec .ibm>summary{flex-wrap:wrap;row-gap:4px}
+.ibsec .ibm>summary .dm{flex-basis:100%;order:3;font-size:13px}
+.ibsec .ibm>summary .pill{margin-left:auto}
+.ib-prom{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--sunk);font-size:14px;line-height:1.6}
+a.ibjump{color:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;cursor:pointer}
+a.ibjump:hover{color:var(--accent-ink,var(--ink))}
+.ibtop{display:block;font-size:11.5px;color:var(--muted);margin:1px 0 2px 8px}
+
+/* ---------- 성적표 ① 누구를 만나지 않기로 했는가 · 만나지 않은 결과 (Round 1 개선 3단계) ---------- */
+.pk-grid{display:grid;gap:6px;margin:4px 0 8px;padding:10px 14px;border-radius:12px;background:var(--sunk)}
+.pk-row{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:12px;font-size:14px;line-height:1.5}
+.pk-l{color:var(--muted);font-weight:650;font-size:13px}
+.docres>summary .pill{background:transparent;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.docres>summary .dt{color:var(--muted)}
+.optcmp.ro .ocard{opacity:.92}
+.kpi-docnote{margin-top:6px;padding:8px 12px;border-radius:10px;background:var(--sunk)}
+@media (max-width:899px){.pk-row{grid-template-columns:1fr;gap:2px}}
+/* 4단계: 일관성 점검, 다시 나오는 곳, 신뢰 알림 원인 */
+.cs-line{margin-top:10px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--line) 40%,transparent);border-left:3px solid var(--muted)}
+.cs-line.cs-diff{border-left-color:var(--bad)}
+.cs-line.cs-same{border-left-color:var(--good)}
+.cs-line.cs-part{border-left-color:var(--warn,#b7791f)}
+.backline{margin-top:6px}
+.cs-row{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start}
+.cs-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid currentColor}
+.cs-pill.cs-same{color:var(--good)}.cs-pill.cs-diff{color:var(--bad)}.cs-pill.cs-part{color:var(--warn,#b7791f)}
+#dknote.dk-click{cursor:pointer}
+#dknote .dk-go{font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+#dknote .tx>span:not(.hd){font-size:13.5px}
+html[data-ui="desk"] #dknote .tx>span:not(.hd){color:var(--lg-ink)}
+.cs-row b{font-style:normal}
+.cs-row small{font-size:13px;line-height:1.5;color:var(--ink)}
+/* 5단계: 인생극장 선정 이유와 보조 탭 */
+.wx-why{margin:6px 0 10px;font-size:13.5px;color:var(--muted);line-height:1.55}
+.wx-tabbar{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.wx-tab{appearance:none;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
+.wx-tab[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink);font-weight:600}
+.wx-tab:focus-visible{outline:2px solid var(--accent,#2b6cb0);outline-offset:2px}
+/* 6단계: 성적표 요약 상단 세 카드와 접힌 나머지 */
+.sumtop .sumc .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.sumtop .sumact{font-size:14px;line-height:1.5;font-weight:600}
+.sumrest{margin-top:14px}
+.sumrest>summary{cursor:pointer;font-weight:600;color:var(--muted)}
+.sumrest[open]>summary{margin-bottom:10px}
