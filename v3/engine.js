@@ -335,7 +335,7 @@ function SC_INBOX(s){
     r+=`</div>`;
    }
   }
-  shell(`<div class="mail ${m?"open":""}"><div class="list"><div class="listhead"><span>받은편지함</span><span class="num">${nd}/${s.mail.length} 처리</span></div>${items}</div><div class="reader">${r}</div></div>`,live,st.left);
+  shell(`<div class="mail ${m?"open":""}"><div class="list"><div class="listhead"><span>받은편지함</span><span class="num">${nd}/${s.mail.length} 처리</span></div>${items}${(st.over||all)&&!(st.ringing&&callM&&!st.done[callM.id])?`<div class="listfoot"><button class="btn main" ${A(()=>{if(!st.settled)inboxSettle(st);if(!st.direct)ach("손을 떼는 법");next();})}>${st.over?"시간이 끝났습니다 · ":"모두 처리했습니다 · "}${s.nextLabel||"다음으로"}</button></div>`:""}</div><div class="reader">${r}</div></div>`,live,st.left);
   const f=$("four");if(f)f.onchange=e=>{st.four=e.target.checked;draw();try{const g=$("four");if(g)g.focus();}catch(_){}};
   {const nl=document.querySelector("#view .list");if(nl&&st.lt0!=null)nl.scrollTop=st.lt0;}
   if(st.scrollTo!=null){window.scrollTo(0,st.scrollTo);st.scrollTo=null;}

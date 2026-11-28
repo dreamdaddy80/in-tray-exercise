@@ -47,6 +47,10 @@ const putGL=(opts,map)=>{if(!opts||!map)return;(Array.isArray(opts)?opts:[]).for
 putGL(get("3-1").levels,GL["3-1L"]);putGL(get("3-1").planb,GL["3-1P"]);
 putGL(get("3-9").options,GL.PULSE);putGL(get("9-7").options,GL.PULSE);
 get("5-4").gl1=GL["5-4S1"];putGL(get("5-4").options,GL["5-4"]);
+/* 피드백 #2 (2026-11-28 승인): 공로 추천·익명 게시판·차출 공지에서 실무자 습관 신호를 남긴다.
+   5-4 A 복구만 추천 → ②P, 4-4 C 모듈에 맡겨 정리 → ①L 대신 ④P, 8-1c B 결과만 짧게 공지 → ④P(아래 8-1c 블록) */
+{const o=(get("5-4").options||[]).find(x=>x.k==="A");if(o&&!o.sig)o.sig="②P";}
+{const o=(get("4-4").options||[]).find(x=>x.k==="C");if(o)o.sig="④P";}
 get("6-3").cases.forEach(c=>putGL(c.options,GL[c.id]));get("11-4").cases.forEach(c=>putGL(c.options,GL[c.id]));
 
 /* ---------- 매출성 효과는 재무로 (BSC 재정의, 01 · 02-5) ---------- */
@@ -306,14 +310,17 @@ SCENES.style=function(s){
 };
 SCENES.gate=function(s){
  const r=s.round,T=THEORY[r];let code="",err="",step=G.gateOpen&&G.gateOpen[r]?"theory":"code",cur=G.style||"bal";
+ /* 피드백 #4 (2026-11-28 승인): 강의실 진행의 받은편지함 시간 기본값은 넉넉히(+50%). 표준 시간은 고를 수 있다 */
+ let ctm=G.timeMode==="std"?"std":"plus";
  const open=()=>{(G.gateOpen=G.gateOpen||{})[r]=true;step="theory";draw();};
  const draw=()=>{paint("");
   if(step==="code"){shell(`<div class="pane gate gate-r${r}"><div class="eyebrow">Round ${r}</div><h2>Round ${r} 시작</h2><div class="prose"><p>${r===1?"방금 들은 강의의 핵심을 이론 상기 카드로 한 번 더 보고 시작합니다.":"오늘 강의의 핵심을 이론 상기 카드로 한 번 더 보고 시작합니다. 지난 라운드의 진행은 이 브라우저에 저장되어 있습니다."}</p></div>${err?`<p class="note" style="color:var(--bad)">${err}</p>`:""}
    <details class="ref" style="margin-top:6px"><summary>다른 기기·브라우저에서 이어하기 (복원 코드 붙여넣기)</summary><div style="margin-top:8px;display:grid;gap:6px"><input id="rest_in" placeholder="IT3-SAVE-..." style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:100%"><div class="btns"><button class="btn" ${A(()=>{const v=$("rest_in")&&$("rest_in").value.trim();if(window.v3LoadSaveCode&&window.v3LoadSaveCode(v)){toast("이전 라운드 진행 상태를 복원했습니다.");render();}else{err="복원 코드가 올바르지 않습니다.";draw();}})}>상태 복원하기</button></div></div></details>
+   ${G.selfStudy?"":`<div style="margin-top:10px"><b>받은편지함 시간</b><div class="opts" role="group" aria-label="받은편지함 시간" style="margin-top:6px">${[["plus","넉넉히 (+50%) · 기본","제한 시간을 1.5배로 늘립니다. 처음 하는 분께 권합니다."],["std","표준","원래 제한 시간입니다. 시간 압박까지 연습하고 싶을 때 고르세요."]].map((x,i)=>`<button class="opt" aria-pressed="${ctm===x[0]}" ${A(()=>{ctm=x[0];draw();})}><span class="k">${"AB"[i]}</span><span><b>${x[1]}</b> · ${x[2]}</span></button>`).join("")}</div><p class="note">강사가 안내한 쪽을 고르면 됩니다.</p></div>`}
    ${G.selfStudy?`<p class="note">지난 라운드는 혼자 진행(받은편지함 시간: ${({std:"표준",plus:"넉넉히 +50%",free:"제한 없음"})[G.timeMode||"std"]})이었습니다. 시작하기를 누르면 같은 방식으로 이어집니다.</p>`:""}
-   <div class="foot"><button class="btn" title="강사 없이 혼자 할 때: 성적표에 피드백 세션을 대신하는 해설이 붙습니다" ${A(()=>{step="solo";draw();})}>${G.selfStudy?"혼자 진행 방식 바꾸기":"혼자 진행 (해설 포함)"}</button>${G.selfStudy?`<button class="btn" ${A(()=>{G.selfStudy=false;G.timeMode=undefined;open();})}>강의실 진행으로 시작</button>`:""}<button class="btn main" ${A(()=>{/* 7단계 #27: 혼자 진행 중이면 받은편지함 시간 모드를 다음 라운드에도 이어 간다 */if(!G.selfStudy)G.timeMode=undefined;open();})}>시작하기</button></div></div>`);return;}
-  if(step==="solo"){const TM=[["std","표준","받은편지함 제한 시간 그대로 진행합니다. 강의실 진행과 같습니다."],["plus","넉넉히 (+50%)","받은편지함 제한 시간을 1.5배로 늘립니다."],["free","제한 없음","시간이 끝나지 않습니다. 시간 초과로 보류되는 메시지가 없습니다."]];const cur=G.timeMode||"std";
-   shell(`<div class="pane gate gate-r${r}"><div class="eyebrow">Round ${r} · 혼자 진행</div><h2>받은편지함 시간을 정하세요</h2><div class="prose"><p>혼자 진행하면 성적표에 피드백 세션을 대신하는 해설이 붙습니다. 처음이라 시간에 쫓기기 싫다면 받은편지함 시간을 늘릴 수 있습니다.</p></div><div class="opts">${TM.map((x,i)=>`<button class="opt" aria-pressed="${cur===x[0]}" ${A(()=>{G.timeMode=x[0];draw();})}><span class="k">${"ABC"[i]}</span><span><b>${x[1]}</b> · ${x[2]}</span></button>`).join("")}</div><p class="note">점수를 계산하는 방식은 같습니다. 다만 시간을 늘리거나 없애면 시간 초과 보류가 줄어 결과가 표준과 달라집니다. 결과 코드에 진행 방식이 함께 남고, 강사 집계에서는 따로 셉니다.</p><div class="foot"><button class="btn" ${A(()=>{step="code";draw();})}>← 돌아가기</button><button class="btn main" ${A(()=>{G.selfStudy=true;if(G.timeMode==="std")G.timeMode=undefined;open();})}>이대로 시작</button></div></div>`);return;}
+   <div class="foot"><button class="btn" title="강사 없이 혼자 할 때: 성적표에 피드백 세션을 대신하는 해설이 붙습니다" ${A(()=>{step="solo";draw();})}>${G.selfStudy?"혼자 진행 방식 바꾸기":"혼자 진행 (해설 포함)"}</button>${G.selfStudy?`<button class="btn" ${A(()=>{G.selfStudy=false;G.timeMode="plus";open();})}>강의실 진행으로 시작</button>`:""}<button class="btn main" ${A(()=>{/* 7단계 #27: 혼자 진행 중이면 받은편지함 시간 모드를 다음 라운드에도 이어 간다 */if(!G.selfStudy)G.timeMode=ctm;open();})}>시작하기</button></div></div>`);return;}
+  if(step==="solo"){const TM=[["plus","넉넉히 (+50%)","받은편지함 제한 시간을 1.5배로 늘립니다. 처음 하는 분께 권하며, 강의실 진행의 기본값입니다."],["std","표준","원래 제한 시간으로 진행합니다. 시간 압박까지 연습하고 싶을 때 고르세요."],["free","제한 없음","시간이 끝나지 않습니다. 시간 초과로 보류되는 메시지가 없습니다."]];const cur=G.timeMode||"plus";if(!G.timeMode)G.timeMode="plus";
+   shell(`<div class="pane gate gate-r${r}"><div class="eyebrow">Round ${r} · 혼자 진행</div><h2>받은편지함 시간을 정하세요</h2><div class="prose"><p>혼자 진행하면 성적표에 피드백 세션을 대신하는 해설이 붙습니다. 처음이라 시간에 쫓기기 싫다면 받은편지함 시간을 늘릴 수 있습니다.</p></div><div class="opts">${TM.map((x,i)=>`<button class="opt" aria-pressed="${cur===x[0]}" ${A(()=>{G.timeMode=x[0];draw();})}><span class="k">${"ABC"[i]}</span><span><b>${x[1]}</b> · ${x[2]}</span></button>`).join("")}</div><p class="note">점수를 계산하는 방식은 같습니다. 다만 시간이 길수록 시간 초과 보류가 줄어 결과가 달라질 수 있습니다. 결과 코드에 받은편지함 시간이 함께 남고, 강사 집계에서 시간 설정별 인원을 보여 줍니다.</p><div class="foot"><button class="btn" ${A(()=>{step="code";draw();})}>← 돌아가기</button><button class="btn main" ${A(()=>{G.selfStudy=true;if(G.timeMode==="std")G.timeMode=undefined;open();})}>이대로 시작</button></div></div>`);return;}
   if(step==="theory"){shell(`<div class="pane"><div class="eyebrow">Round ${r} · 이론 상기 카드</div><h2>${T.title}</h2><div class="theory">${T.c.map(c=>`<div><b>${c[0]}</b>${c[1]}<span>오늘 쓰일 곳: ${c[2]}</span></div>`).join("")}</div><p><b>오늘의 질문</b> ${T.q}</p><div class="foot"><span></span><button class="btn main" ${A(()=>{if(r===1){roundStart(1);next();}else{step="style";draw();}})}>${r===1?"시작":"다음"}</button></div></div>`);return;}
   shell(`<div class="pane"><div class="eyebrow">Round ${r} · 스타일</div><h2>이번 라운드는 어떻게 이끌까요?</h2><p class="note">지금 스타일: ${STYLE[G.style||"bal"].n}</p>${styleBtns(cur,k=>{cur=k;draw();})}<div class="foot"><span></span><button class="btn main" ${A(()=>{
    const changed=cur!==G.style;const prevChanged=(G.styleLog||[]).length>=2&&G.styleLog[G.styleLog.length-1].style!==G.styleLog[G.styleLog.length-2].style;
@@ -331,18 +338,20 @@ SCENES.gate=function(s){
 /* ---------- R1-5 KPI 면담 대상 고르기 (03-2) ---------- */
 const KPI_SCENE={rd:"3-2",src:"3-3",mfg:"3-4",prc:"3-5",mkt:"3-6"},KPI_WANT={rd:"B",src:"B",mfg:"B",prc:"C",mkt:"B"};
 SCENES.kpipick=function(s){
- const pick=[];const bor0=G.borrowed||0; /* 3단계: 이 장면에서 야근으로 빌린 시간을 결정 기록에 함께 남긴다 */
+ const pick=[];const bor0=G.borrowed||0;let zeroWarn=false; /* 피드백 #5(2026-11-28): 아무도 고르지 않으면 한 번 확인한다 */ /* 3단계: 이 장면에서 야근으로 빌린 시간을 결정 기록에 함께 남긴다 */
  const draw=()=>{paint("");const cost=pick.length*2,short=cost>G.time;
   shell(`<div class="pane">${head(s)}<div class="prose"><p>리더 다섯 명과 KPI를 합의해야 합니다. 직접 만나 이야기할 사람을 고르세요. <b>한 사람당 ⏳2, 최대 3명.</b> 만나지 않은 리더에게는 합의서 초안을 문서로 보냅니다.</p><p class="note kpi-docnote">만나지 못한 리더는 자기 방식대로 KPI를 써 옵니다. 그 결과도 성적표에 남습니다.</p></div>
   <div class="grid2">${Object.keys(LD).map(k=>{const on=pick.includes(k);return `<button class="person" aria-pressed="${on}" ${A(()=>{const i=pick.indexOf(k);if(i>=0)pick.splice(i,1);else if(pick.length<3)pick.push(k);draw();})}>${face(k,G.trust[k])}<span><b>${name(k)}</b><small>${on?"만나서 합의 · ⏳2":LD[k].m+" · 만나면 알 수 있는 것: 중요하게 여기는 것, 지금 걱정"}</small></span></button>`;}).join("")}</div>
   ${short?`<p class="note">${lackText(cost-G.time)}</p>${borrowLink(cost-G.time,draw)}`:""}
+  ${zeroWarn&&!pick.length?`<p class="note" role="alert"><b>아무도 고르지 않았습니다.</b> 다섯 명 모두에게 합의서 초안을 문서로만 보내고, 리더들은 자기 방식대로 KPI를 써 옵니다. 그대로 진행하려면 버튼을 한 번 더 누르세요.</p>`:""}
   <div class="foot"><span class="note num">${pick.length}/3 · ⏳${cost}</span><button class="btn main" ${short?"disabled":""} ${A(()=>{
+   if(!pick.length&&!zeroWarn){zeroWarn=true;draw();setTimeout(()=>{const a=document.querySelector("#view [role=alert]");if(a&&a.scrollIntoView)a.scrollIntoView({block:"nearest"});},0);return;}
    G.time-=cost;G.tu.all+=cost;G.tu.meet+=cost;G.kpiMeet=pick.slice();G.kpiDoc=Object.keys(LD).filter(k=>!pick.includes(k));
    pick.forEach(k=>{G.f["talk_"+k]=true;(G.known=G.known||{})[k]=Object.assign(G.known[k]||{},{가치:1,걱정1:1});});
    G.kpiDoc.forEach(k=>{const sc=get(KPI_SCENE[k]),o=sc.options.find(x=>x.k===KPI_WANT[k]);
     const fx=String(val(o.fx)||"").split(/\s+/).filter(t=>t&&!/^(rd|src|mfg|prc|mkt)[+-]/.test(t)).join(" ");applyFx(fx);applySig(val(o.sig),1,sc.id,o.k+"(문서)");
     G.f["c_"+sc.id+"_"+o.k]=true;G.f["kpi_doc_"+k]=true;record(sc.id,o.k,{doc:true});});
-   record(s.id,pick.join(","),{cost,bor:Math.max(0,(G.borrowed||0)-bor0)});if(pick.length<=1)applyFx("B3+15");next();})}>정했습니다</button></div></div>`);
+   record(s.id,pick.join(","),{cost,bor:Math.max(0,(G.borrowed||0)-bor0)});if(pick.length<=1)applyFx("B3+15");next();})}>${zeroWarn&&!pick.length?"아무도 만나지 않고 진행":"정했습니다"}</button></div></div>`);
  };
  draw();
 };
@@ -469,12 +478,12 @@ SCENES.exodus=function(s){
 {const V3_EVAL_R={
  rd:[["AI 시범 결과 분기 보고",null,["AI 활용 효과"]],["3월 승인 안 된 외부 AI 사용",null,["보안 준수"],0,"neg"],["운영 인수인계 지표 수용","c_3-2_A",["AI 활용 효과","동료 지원과 온보딩"]],["보안 건 사실 확인 및 재발 방지 협조","v3_rd_sec",["보안 준수","장애 예방 활동"]],["AI 전환 과업 완수","v3_rd_ai",["AI 활용 효과","추가 과제 매출 기여"]],["작년 과제 취소 사정",null,[],1]],
  src:[["3월 승인 안 된 도구 정황 제보",null,["보안 준수"]],["감사 대응 및 계약 검토",null,["보안 준수"]],["조달 전환 교육·단계적 자동화 합의","v3_src_auto",["AI 활용 효과","동료 지원과 온보딩"]],["새벽 라인 우회 위험 사전 제보","v3_src_alert",["장애 예방 활동","보안 준수"]],["본부 차출 시 핵심 인력 보호 협조","v3_src_hq",["동료 지원과 온보딩"]]],
- mfg:[["상반기 장애 복구 3시간 40분",null,["장애 복구 기여"]],["10월 새벽 3시 현장 지휘","v3_mfg_cmd",["장애 복구 기여","보안 준수"]],["생산 구조 인수 및 야간 대기 재설계","v3_mfg_ally",["동료 지원과 온보딩","장애 예방 활동"]],["가공 모듈과 예방·복구 기록 공유","c_5-4_B",["장애 예방 활동","동료 지원과 온보딩"]],["야간에 가장 오래 있었음",null,[],1],["팀장 후보였음",null,[],1],["이력서 소문","mfg_exit",[],1]],
+ mfg:[["상반기 장애 복구 3시간 40분",null,["장애 복구 기여"]],["10월 새벽 3시 현장 지휘와 복구","v3_mfg_cmd",["장애 복구 기여"]],["생산 구조 인수 및 야간 대기 재설계","v3_mfg_ally",["동료 지원과 온보딩","장애 예방 활동"]],["가공 모듈과 예방·복구 기록 공유","c_5-4_B",["장애 예방 활동","동료 지원과 온보딩"]],["야간에 가장 오래 있었음",null,[],1],["팀장 후보였음",null,[],1],["이력서 소문","mfg_exit",[],1]],
  prc:[["재발 없는 8개월 예방 점검",null,["장애 예방 활동"]],["정기 점검 및 인터록 이력 관리",null,["장애 예방 활동"]],["예방의 질 평가 기준 정립","v3_prc_kpi",["장애 예방 활동","동료 지원과 온보딩"]],["장애 공로에서 예방 기여 공동 인정","c_5-4_B",["장애 예방 활동"]],["3번 라인 아차 사고 원인 규명","v3_prc_near",["장애 예방 활동","보안 준수"]],["예전 동료였음",null,[],1]],
  mkt:[["헬씨푸드 제안 및 계약 대응",null,["추가 과제 매출 기여"]],["헬씨푸드 임원 커뮤니케이션",null,["고객 칭찬"]],["하반기 우선 협상권·신규 과제 확보","v3_mkt_win",["추가 과제 매출 기여","고객 칭찬"]],["제안서 실무 작성자 기여 명기","v3_mkt_credit",["동료 지원과 온보딩"]],["한 선임에게 발표 기회 부여","v3_mkt_han",["동료 지원과 온보딩"]],["임원이 좋아함",null,g=>g.f.pub_praise?["고객 칭찬"]:[],g=>!g.f.pub_praise],["표지 관행",null,[],1]],
  kim:[["상반기 야간 복구 참여",null,["장애 복구 기여"]],["야간 경고 3종 처리 규칙 초안 작성","v3_kim_rule",["장애 예방 활동","AI 활용 효과"]],["야간 경고 AI 필터링 전환 기여","c_6-3_2_A",["AI 활용 효과","동료 지원과 온보딩"]],["야간 대기 11회",null,[],1],["근태 밖 야간 접속","night_seen",[],1]],
  han:[["제안서 본문 및 실측 부록 작성",null,["추가 과제 매출 기여"]],["제안서 편집 이력 41건 확인","v3_han_know",["추가 과제 매출 기여","동료 지원과 온보딩"]],["하반기 제안 발표 및 모듈 기여 정리","v3_han_stage",["추가 과제 매출 기여","고객 칭찬"]],["41시간 야근",null,[],1],["익명 게시판 글",null,[],1]],
- bae:[["KPI 전 항목 달성",null,["리더 종합 판단"],0,"kpi"],["작년 이의제기 사유 및 평가 기준 대조 확인","v3_bae_check",["장애 복구 기여","보안 준수"]],["모듈 간 인수인계 및 후배 지원","v3_bae_mentor",["동료 지원과 온보딩"]],["작년 등급 B",null,[],1],["타 부서 이동 희망",null,[],1]]
+ bae:[["KPI 전 항목 달성",null,["리더 종합 판단"],0,"kpi"],["작년 이의제기 자료 대조: 장애 복구 지원과 보안 점검 기여가 등급 근거에서 빠져 있었음","v3_bae_check",["장애 복구 기여","보안 준수"]],["모듈 간 인수인계 및 후배 지원","v3_bae_mentor",["동료 지원과 온보딩"]],["작년 등급 B",null,[],1],["타 부서 이동 희망",null,[],1]]
 };
 EVAL_ALL.forEach(e=>{if(V3_EVAL_R[e.k])e.r=V3_EVAL_R[e.k];});
 const orig=SCENES.evalc;SCENES.evalc=function(s){
@@ -600,7 +609,7 @@ SCENES.roundEnd=function(s){
  /* 점수와 원인 */
  const K5=[["성과","고객","헬씨푸드가 만족하는가, 약속한 서비스를 지켰는가"],["재무","재무","팀 손익: 매출, 운영비, 토큰 비용"],["사람","구성원",`팀원 ${teamN()}명의 몰입과 목소리`],["안정","서비스 안정","시스템 가용성, 장애, 보안"],["F","헬씨푸드 만족","헬씨푸드가 우리 팀을 얼마나 만족스러워하는가"]];
  const now=k=>k==="F"?G.fsat:G.score[k],was=k=>k==="F"?(st.fsat??50):(st.score[k]??50);
- const causes=(k,total,field)=>{field=field||"d";const m={};log.forEach(e=>{const v=(e[field]||{})[k];if(v)m[e.t]=(m[e.t]||0)+v;});const rows=Object.entries(m).filter(x=>x[1]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));const rest=total-rows.reduce((a,x)=>a+x[1],0);if(rest)rows.push([field==="d"?"분기 말 연쇄 · 자동 정산":"동맹·갈등 관계로 번진 몫",rest]);return rows;};
+ const causes=(k,total,field)=>{field=field||"d";const m={};log.forEach(e=>{const v=(e[field]||{})[k];if(v)m[e.t]=(m[e.t]||0)+v;});/* 피드백 #3 (2026-11-28): 결정으로 기록되지 않은 몫(분기 말 연쇄 등)도 같은 줄에 넣고 크기순으로 정렬한다. 이전에는 맨 뒤에 붙어 큰 변화를 작은 결정 탓으로 돌렸다 */const rest=total-Object.values(m).reduce((a,v)=>a+v,0);if(rest){const L=field==="d"?"분기 말 연쇄 · 자동 정산":"동맹·갈등 관계로 번진 몫";m[L]=(m[L]||0)+rest;}return Object.entries(m).filter(x=>x[1]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));};
  const ibJump=()=>A(()=>{tab=1;draw();setTimeout(()=>{const el=document.getElementById("ibsec");if(el){el.open=true;el.scrollIntoView({block:"start"});}},40);});
  const whyLab=(x,k,field)=>{const t=x[0].length>17?x[0].slice(0,17)+"…":x[0];if(x[0]!=="받은편지함 처리"||!window.ibTop)return t;const tp=ibTop(r,k,field==="tr"?"tr":"d",2);
   const tip=tp.length?`가장 크게 움직인 건: ${tp.map(y=>`${y.name} ${sg(y.v)}`).join(", ")}. 누르면 건별로 봅니다.`:"누르면 건별로 봅니다.";
@@ -723,8 +732,8 @@ SCENES.roundEnd=function(s){
    interp:[],q:"좋은 리더와 다른 길을 고른 결정 하나를 골라 보세요. 그때 무엇을 지키려고 그 길을 골랐나요? 같은 것을 지키면서 리더 행동에 더 가까운 방법은 없었을까요?"});};
  /* ② 팀에 남은 것 */
  T[2]=()=>{const it=[];
-  if(up.dv>0){const c=causes(up.k,up.dv)[0];it.push(`가장 많이 오른 점수는 <b>${up.l} ${sg(up.dv)}</b>입니다.${c?` 가장 큰 원인은 「${c[0]}」(${sg(c[1])})입니다.`:""}`);}
-  if(dn.dv<0){const c=causes(dn.k,dn.dv)[0];it.push(`가장 많이 내린 점수는 <b>${dn.l} ${sg(dn.dv)}</b>입니다.${c?` 가장 큰 원인은 「${c[0]}」(${sg(c[1])})입니다.`:""}`);}
+  if(up.dv>0){const cs=causes(up.k,up.dv),c=cs[0],d=cs.find(x=>!/^(분기 말 연쇄|동맹·갈등)/.test(x[0])&&x[1]*up.dv>0);it.push(`가장 많이 오른 점수는 <b>${up.l} ${sg(up.dv)}</b>입니다.${c?` 가장 큰 원인은 「${c[0]}」(${sg(c[1])})입니다.`:""}${c&&d&&d!==c?` 결정 가운데 가장 큰 것은 「${d[0]}」(${sg(d[1])})입니다.`:""}`);}
+  if(dn.dv<0){const cs=causes(dn.k,dn.dv),c=cs[0],d=cs.find(x=>!/^(분기 말 연쇄|동맹·갈등)/.test(x[0])&&x[1]*dn.dv>0);it.push(`가장 많이 내린 점수는 <b>${dn.l} ${sg(dn.dv)}</b>입니다.${c?` 가장 큰 원인은 「${c[0]}」(${sg(c[1])})입니다.`:""}${c&&d&&d!==c?` 결정 가운데 가장 큰 것은 「${d[0]}」(${sg(d[1])})입니다.`:""}`);}
   if(trDn.dv<0)it.push(`신뢰가 가장 많이 떨어진 리더는 <b>${LD[trDn.k].n}</b>(${sg(trDn.dv)})입니다. 신뢰가 40 아래로 내려가면 그 리더가 걸린 결정에서 반발이 커지고, 동맹 관계인 리더에게도 번집니다.`);
   if(G.score.사람<(st.score.사람??50))it.push("구성원 점수가 내려갔습니다. 서비스 수익 체인에 따라 다음 분기 서비스 안정이 함께 내려갈 수 있습니다.");
   if(G.fexp!=null&&G.score.안정<G.fexp)it.push(`서비스 안정(${G.score.안정})이 헬씨푸드 기대(${G.fexp})보다 낮습니다. 이대로면 분기마다 헬씨푸드 만족이 깎이고, 만족과 서비스 안정이 낮으면 고객도, 만족이 50 아래로 내려가면 재무도 깎입니다.`);
@@ -899,16 +908,16 @@ if(typeof document!=="undefined"){
  setOpt("4-3","C",o=>{o.done="안은 그대로 갑니다. 의견은 다음 배분 조정 때 받기로 했습니다.";});
  /* 7. 헬씨푸드 협상 */
  repIntro("4-5",/^헬씨푸드 회의실\. 임원이 부록을 펼쳐 놓는다\.$/,"4월, 헬씨푸드 회의실. 임원과 실무 담당 유 과장이 마주 앉았다. 임원이 1월에 받은 제안서의 부록을 펼쳐 놓는다. 부록의 '주 140시간 절감'은 각 모듈이 낸 추정을 합친 값이었다.");
- repIntro("6-1",/5월에 납품 수량이 틀어졌고/,"임원: \"5월 장애로 납품 집계가 늦어졌고, 그래도 효율은 올랐다고 하셨습니다. 하반기 운영비는 얼마나 내려갑니까?\"");
+ repIntro("6-1",/5월에 납품 수량이 틀어졌고/,"임원: \"4월 장애로 납품 집계가 늦어졌고, 그래도 효율은 올랐다고 하셨습니다. 하반기 운영비는 얼마나 내려갑니까?\"");
  /* 8. 5월 · 장애 공로 중재 */
- {const s=F("5-4");if(s&&Array.isArray(s.intro))s.intro=["5월, 가공 모듈에서 장애가 났다. 생산 모듈이 밤새 붙어 3시간 40분 만에 복구했다. 가공은 그 전 8개월 동안 같은 유형의 장애를 예방 점검으로 막아 왔다."].concat(s.intro);}
+ {const s=F("5-4");if(s&&Array.isArray(s.intro))s.intro=["4월 첫 주말, 가공 모듈에서 장애가 났다. 생산 모듈이 밤새 붙어 3시간 40분 만에 복구했다. 가공은 그 전 8개월 동안 같은 유형의 장애를 예방 점검으로 막아 왔다."].concat(s.intro);}
  /* 9. 8월 · 본사 차출 */
  {const s=F("8-1b");if(s&&Array.isArray(s.intro))s.intro=["본사 차출로 팀원이 빠지는 만큼 팀 여력도 줄어듭니다. 어느 칸의 사람이 빠지느냐에 따라 멈추는 일이 달라집니다."].concat(s.intro);}
  {const s=F("8-1c");if(s){const i0=s.intro;s.intro=[...(Array.isArray(i0)?i0:[]),"차출 결과를 팀원들에게 알릴 차례입니다. 누가 빠지고 어느 일이 줄어드는지, 팀원들은 아직 공문 제목만 봤습니다."];
   const f=s.options;const GL={A:["팀원들이 무엇이 왜 줄었는지 앎","칸이 줄어든 모듈의 반박이 나올 수 있음"],B:["빠르게 알려짐","왜 그 칸인지는 각자 짐작함"],C:["시간을 아낌","사정을 모르는 채 소문이 먼저 돎"]};
   const T={A:"차출 사유와 줄인 칸, 그렇게 정한 기준을 팀 전체에 설명한다",B:"빠지는 인원과 줄인 칸만 짧게 알린다. 길게 쓸수록 말이 붙는다",C:"본사 인사 사안이니 공지하지 않고, 모듈 리더가 필요한 만큼 전한다"}; /* C-1: 길이 맞춤 */
   s.options=g=>{const r=typeof f==="function"?f(g):f;(r||[]).forEach(o=>{if(o.t==="기준과 근거를 설명한다"||o.t===T.A){o.t=T.A;o.gl=o.gl||GL.A;(o.tw||[]).forEach(w=>{if(w.t==="반박이 붙었습니다.")w.t="설명을 올리자, 칸이 줄어든 모듈에서 \"왜 하필 우리 쪽이냐\"는 반박이 붙었습니다.";});}
-   else if(o.t==="결과만 간단히 알린다"||o.t===T.B){o.t=T.B;o.gl=o.gl||GL.B;}else if(o.t==="따로 알리지 않는다"||o.t===T.C){o.t=T.C;o.gl=o.gl||GL.C;}});return r;};}}
+   else if(o.t==="결과만 간단히 알린다"||o.t===T.B){o.t=T.B;o.gl=o.gl||GL.B;if(!o.sig)o.sig="④P";}else if(o.t==="따로 알리지 않는다"||o.t===T.C){o.t=T.C;o.gl=o.gl||GL.C;}});return r;};}}
  /* 10. 8월 · 구성원 장면 */
  {const s=F("6-3_1");if(s&&Array.isArray(s.intro))s.intro=["생산 모듈의 김 사원은 1월부터 야간 대기를 몰아서 서 왔다."].concat(s.intro);}
  repCond("6-3_1",/^1월에 가지 못한 금요일이 있다\.$/,"1월에 김 사원이 물었던 금요일 휴가는 결국 가지 못했다.");

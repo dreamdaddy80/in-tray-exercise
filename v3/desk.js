@@ -508,7 +508,7 @@
   L.innerHTML=`<div class="dkl-top"><b>퓨쳐테크 워크스페이스</b><span class="sp"></span><button type="button" class="dkl-theme"></button></div>
    <div class="dkl-mid"><p class="dkl-date">1월 첫 주 · 월요일</p><p class="dkl-clock">08:40</p>
     <div class="dkl-card"><span class="dkl-av" aria-hidden="true">나</span><b>신임 팀장</b><span class="dkl-team">퓨쳐테크 헬씨푸드 운영팀 · ${typeof teamN==="function"?teamN():30}명</span>
-     <p class="dkl-lead">어제까지 옆자리 동료였던 사람들이 오늘부터 당신을 팀장이라고 부릅니다. 받은편지함에 여덟 통이 와 있습니다.</p>
+     <p class="dkl-lead">어제까지 옆자리 동료였던 사람들이 오늘부터 당신을 팀장이라고 부릅니다. 받은편지함에 여덟 통이 와 있고, 곧 전화가 한 통 옵니다.</p>
      <div class="btns dkl-btns"></div><button type="button" class="dkl-guide-btn">과정 안내 보기</button></div></div>
    <p class="dkl-foot">3라운드 · 1년 · 라운드마다 약 20분 · 정답 없음 · 입력한 내용은 인사 평가와 연결되지 않습니다</p>`;
   const bx=L.querySelector(".dkl-btns");

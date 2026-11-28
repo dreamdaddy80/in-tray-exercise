@@ -1,6 +1,6 @@
 /* 결산 · 원고 03-13 (2-4의 G 순서) */
 const REVIEW2=[["7-1 받은편지함","초록불은 사실일 수 있습니다. 그것을 확인해 줄 사람이 말을 하는지가 다른 문제입니다."],["M41 외부 AI 고백","말해 준 사람을 보호하는 일과 절차를 밟는 일은 같은 순서로 일어나야 합니다."],["7-2 헬씨푸드 신규 제안","받을 일의 크기를 정한 것이 아니라, 지금 돌아가는 일 중 무엇을 밀지를 정한 것입니다."],["7-5 보고서 기명","이름을 쓰면 빠진 사람이 생기고, 이름을 빼면 아무도 하지 않은 일이 됩니다."],["8-1 본사 차출","권한 밖의 일에 한 약속은 권한 밖의 일로 깨집니다. 그때 무엇을 말할지는 권한 안의 일입니다."],["8-4 고객 데이터","일정과 신뢰가 아니라, 이번 한 번과 다음 모든 번을 바꾸는 결정이었습니다."],["8-5 자동화 확대","절감의 속도와 사람이 자기 일을 다시 찾는 속도는 다릅니다."],["9-1 새벽 장애","내가 들어가면 오늘 빨라집니다. 다음 새벽에 전화가 올지는 다른 곳에서 정해집니다."],["9-2 공로 인정","불 끄는 일을 칭찬할수록 불을 막는 사람의 시간이 사라집니다. 그래도 불은 꺼야 합니다."],["9-4 헬씨푸드 클레임","오류를 인정하는 비용은 지금 나고, 넘기는 비용은 다음 계약에 납니다."],["10-2 수주 범위","큰 계약을 받는 날에 팀의 다음 해가 정해집니다."],["10-4 예산","어느 동맹의 손을 드는지가 아니라, 어떤 잣대를 쓰는지를 보여 준 결정이었습니다."],["11-2 우수 사례","표지는 작은 칸입니다. 그 칸에 누구 이름을 쓰는지를 모두가 봅니다."],["12-3 연말 평가","12월에 쓸 수 있는 기록은 1월부터 쌓은 것뿐입니다."],["12-4 이의 면담","등급을 바꿀 수는 없어도, 왜 그런지는 말할 수 있습니다. 말할 것이 있었는지는 앞선 열한 달이 정했습니다."]];
-const TITLE_L={"기준을 보여주는 팀장":"무엇으로 정할지 먼저 말했고, 말한 대로 정했습니다.","조용한 팀의 팀장":"올해 팀은 조용했습니다.","약속을 지키는 팀장":"장부의 약속이 모두 지켜졌습니다.","혼자 다 하는 해결사":"문제는 풀렸습니다. 다음에 풀 사람은 아직 없습니다.","숫자를 믿는 심판":"숫자는 정확했습니다. 숫자에 없는 일은 없는 일이 되었습니다.","일을 부르는 팀장":"팀은 많은 일을 받았습니다. 무엇을 내려놓았는지는 적혀 있지 않습니다.","말 없는 실행가":"결정은 빨랐습니다. 이유는 소문이 대신 말했습니다.","줄 위의 팀장":"어느 쪽으로도 떨어지지 않았습니다."};
+const TITLE_L={"기준을 보여주는 팀장":"무엇으로 정할지 먼저 말했고, 말한 대로 정했습니다.","조용한 팀의 팀장":"올해 팀은 조용했습니다.","약속을 지키는 팀장":"장부의 약속이 모두 지켜졌습니다.","혼자 다 하는 해결사":"문제는 풀렸습니다. 다음에 풀 사람은 아직 없습니다.","숫자를 믿는 심판":"숫자는 정확했습니다. 숫자에 없는 일은 없는 일이 되었습니다.","일을 부르는 팀장":"팀은 많은 일을 받았습니다. 무엇을 내려놓았는지는 적혀 있지 않습니다.","말 없는 실행가":"결정은 빨랐습니다. 이유는 소문이 대신 말했습니다.","줄 위의 팀장":"어느 쪽으로도 떨어지지 않았습니다.","맡기고 설명하는 팀장":"습관은 리더 쪽으로 기울었습니다. 공개한 기준과 실제 판단을 끝까지 맞추는 일이 남았습니다."};
 const PROM_TXT={P1:["3월에 알렸습니다.","구성원은 끝내 보지 못했습니다."],P2:["표가 바뀌었습니다.","표는 그대로였습니다."],P3:["올해는 지켰습니다.","8월의 공문에 그 사유가 있었습니다."],P4:["답을 주었습니다.","9월은 지나갔습니다."],P5:["맡겼습니다.","\"설계를 맡을 줄 알았습니다.\""],P6:["고쳤습니다.","10월은 지나갔습니다."],P7:["발표자 칸에 이름이 있었습니다.","다른 사람이 발표했습니다."],P8:["아직 지키는 중입니다.","—"]};
 function consPct(){const c=G.cons;if(!c.length)return null;let n=0;c.forEach(x=>{if(x.fit)n+=x.half?.5:1;});return Math.round(n/c.length*100);}
 const OFFRES=["올랐지만 자원은 다른 곳에","고른 두 장은 올랐습니다. 다만 칸과 토큰을 놓은 곳은 고른 방향과 달랐습니다. 무엇이 점수를 올렸는지 따로 보세요."];
@@ -22,10 +22,25 @@ function titleOf(){
  if(ax.every(x=>x.r.v!=null&&x.r.v>=60)&&pct>=75&&(G.quality||0)>=60)return"기준을 보여주는 팀장";
  if(G.unsent.length>=5)return"조용한 팀의 팀장";
  const ps=Object.values(G.prom).filter(p=>!p.memo&&p.status!=="진행 중");if(ps.length>=3&&ps.every(p=>p.status==="이행"))return"약속을 지키는 팀장";
- const low=ax.filter(x=>x.r.v!=null).sort((p,q)=>p.r.v-q.r.v)[0];
- if(low)return{1:"혼자 다 하는 해결사",2:"숫자를 믿는 심판",3:"일을 부르는 팀장",4:"말 없는 실행가"}[low.a];
+ /* 피드백 #1 (2026-11-28): 가장 낮은 축이라는 이유만으로 실무자 칭호를 주지 않는다. 누적 비율이 50% 아래로 기운 축(기록 2건 이상)에만 준다.
+    네 축이 모두 60% 이상이면 리더 쪽 칭호를 준다. 근거는 titleBasis()가 화면에 함께 보여 준다 */
+ const meas=ax.filter(x=>x.r.v!=null&&x.r.n>=2);
+ const low=meas.slice().sort((p,q)=>p.r.v-q.r.v)[0];
+ if(low&&low.r.v<50)return{1:"혼자 다 하는 해결사",2:"숫자를 믿는 심판",3:"일을 부르는 팀장",4:"말 없는 실행가"}[low.a];
+ if(meas.length>=3&&meas.every(x=>x.r.v>=60))return"맡기고 설명하는 팀장";
  return"줄 위의 팀장";
 }
+/* 칭호를 정한 근거: 네 축의 누적 비율과, 칭호를 정한 축에서 가장 무게가 큰 결정 세 개 */
+function titleBasis(t){try{const ax=[1,2,3,4].map(a=>({a,r:axScore(a)}));const P={"혼자 다 하는 해결사":1,"숫자를 믿는 심판":2,"일을 부르는 팀장":3,"말 없는 실행가":4}[t];
+ /* 같은 장면의 기록은 한 줄로 묶고, 무게가 큰 장면 세 개만 보인다 */
+ const top=(a,side)=>{const m={};G.sig.filter(x=>x.a===a&&x.s===side&&habitSig(x)).forEach(x=>{const k=nm(x.scene);const r=m[k]||(m[k]={w:0,c:[]});r.w+=(x.w||0);const c=choiceText(x.scene,x.choice);if(c&&!r.c.includes(c))r.c.push(c);});return Object.keys(m).sort((p,q)=>m[q].w-m[p].w).slice(0,3).map(k=>k+(m[k].c.length?`(${m[k].c.slice(0,2).join(", ")})`:""));};
+ const line=ax.map(x=>`${AXN[x.a]} ${x.r.v==null?"기록 없음":x.r.v+"%"}`).join(" · ");
+ let why="";if(P){const e=top(P,"P");why=`${AXN[P]}에서 실무자 습관 쪽 기록이 리더 행동보다 많았습니다${e.length?`. 가장 크게 기운 결정: ${e.join(", ")}`:""}.`;}
+ else if(t==="숫자를 끌어올린 사령관"||t==="모두가 좋아하는 팀장"){const st=(G.styleLog||[])[0];const o=st&&typeof STYLE_OPTS!=="undefined"?STYLE_OPTS.find(x=>x.k===st.style):null;why=`세 라운드 모두 ${o?o.t.split(" · ")[0]+" ":"같은 "}스타일을 골랐고, 고객 ${G.score.성과} · 구성원 ${G.score.사람}으로 끝났습니다. 이 칭호는 습관 비율보다 먼저 정해집니다.`;}
+ else if(t==="조용한 팀의 팀장"){why=`보내지 않고 남긴 메시지가 ${(G.unsent||[]).length}건입니다. 이 칭호는 습관 비율보다 먼저 정해집니다.`;}
+ else if(t==="줄 위의 팀장"){const mid=ax.filter(x=>x.r.v!=null&&x.r.v<60).map(x=>AXN[x.a]);why=`50% 아래로 기운 축은 없습니다${mid.length?`. 60%에 못 미친 축: ${mid.join(", ")}`:""}.`;}
+ else if(t==="맡기고 설명하는 팀장"||t==="기준을 보여주는 팀장"){const pct=consPct();why=`네 축 모두 리더 행동 쪽이 60% 이상입니다${pct!=null?` · 공개한 기준과의 일관성 ${pct}%`:""}${G.quality!=null?` · 기준의 질 ${G.quality}`:""}.`;}
+ return `<span class="note">칭호의 근거 · 1년 누적 리더 행동 비율: ${line}${why?`<br>${why}`:""}</span>`;}catch(e){return "";}}
 function breaches(){const o=[];if(G.f.sec_breach)o.push("3월: 정보보안팀에 알리기 전에 우리가 먼저 범위를 파악하기로 했습니다."+(G.f.sec_breach_caught?"":" 이 일은 끝까지 아무도 몰랐습니다. 판정은 같습니다."));if(G.f.sec_hidden)o.push(((G.vioAt&&G.vioAt.sec_hidden&&G.vioAt.sec_hidden.m)||4)+"월: 한 선임의 외부 AI 입력을 보고받고 조치하지 않았습니다."+(G.f.sec_found?"":" 이 일은 끝까지 아무도 몰랐습니다. 판정은 같습니다."));if(G.f.sec_breach_data)o.push("8월: 승인 없이 고객 데이터를 외부 서비스로 돌렸습니다."+(G.f.sec_data_found?"":" 이 일은 끝까지 아무도 몰랐습니다. 판정은 같습니다."));if(G.f.inc_breach)o.push("9월: 긴급 승인 없이 우회 패치를 올렸습니다."+(G.f.inc_found?"":" 이 일은 끝까지 아무도 몰랐습니다. 판정은 같습니다.")+(G.f.inc_breach_nowrite?" 세 개의 설명에 쓰지 않았습니다.":""));return o;}
 function evalAch(){const a=x=>{if(!G.ach.includes(x))G.ach.push(x);};
  if(G.f.planb_kpi&&G.f.planb_alloc&&G.f.planb_contract)a("깨질 것을 계획한 사람");if(G.f.renotice)a("다시 공지");
@@ -90,7 +105,7 @@ function SC_FINALE(s){
   if(reveal<2){revealPage(reveal,()=>{reveal++;draw();});return;}
   if(page===0)shell(`<div class="pane"><div class="eyebrow">📘 온보딩 노트④</div>${noteInline(3)}${nb()}</div>`);
   else if(page===1)shell(`<div class="pane"><div class="eyebrow">결산</div><h2 style="font-size:28px">${br.length?"기준 미달":"기준 통과"}</h2><div class="prose">${br.length?`<p>다른 점수와 관계없이, 아래의 선택은 넘어서는 안 되는 선을 넘었습니다.</p>${br.map(x=>`<p>${x}</p>`).join("")}`:"<p>올해 장애 절차와 보안 기준을 벗어난 선택이 없었습니다.</p>"}</div>${nb()}</div>`);
-  else if(page===2){const h=[...(G.hist||[])];const ch=trendChart();shell(`<div class="pane"><div class="eyebrow">칭호</div><h2>${ti}</h2><p class="voice">${ti==="숫자를 믿는 심판"&&(G.f.pub_prevent||G.f.pub_support||(G.pub||[]).some(x=>/예방|온보딩/.test(x)))?"드러나지 않는 기여도 기준표에 넣었습니다. 그래도 실제로 판단할 때는 숫자를 먼저 보는 습관이 더 자주 나왔습니다.":TITLE_L[ti]}</p>${ch.html}
+  else if(page===2){const h=[...(G.hist||[])];const ch=trendChart();shell(`<div class="pane"><div class="eyebrow">칭호</div><h2>${ti}</h2><p class="voice">${ti==="숫자를 믿는 심판"&&(G.f.pub_prevent||G.f.pub_support||(G.pub||[]).some(x=>/예방|온보딩/.test(x)))?"드러나지 않는 기여도 기준표에 넣었습니다. 그래도 실제로 판단할 때는 숫자를 먼저 보는 습관이 더 자주 나왔습니다.":TITLE_L[ti]}</p><p>${titleBasis(ti)}</p>${ch.html}
    <div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:14px;min-width:320px;width:100%"><thead><tr><th style="text-align:left;padding:4px 8px">성적표</th>${["시작","1분기","2분기","3분기","4분기"].map(q=>`<th style="padding:4px 8px" class="num">${q}</th>`).join("")}</tr></thead><tbody>${SCORES.concat(["헬씨푸드","헬씨푸드기대"]).map(k=>`<tr style="border-top:1px solid var(--line)"><td style="padding:4px 8px">${k==="헬씨푸드"?"헬씨푸드 만족":k==="헬씨푸드기대"?"헬씨푸드 기대":SL(k)}</td><td class="num" style="text-align:center">50</td>${[0,1,2,3].map(i=>`<td class="num" style="text-align:center">${h[i]?h[i][k]:"-"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
    ${(G.chain||[]).map(chainLine).filter(Boolean).map(t=>`<p class="note">${t}</p>`).join("")}${(G.fexpLog||[]).length?`<details class="ref"><summary>헬씨푸드 기대가 움직인 결정</summary><p class="note" style="margin-top:6px">${G.fexpLog.map(x=>`${x.m}월 ${x.t} → 기대 ${x.d>0?"+":""}${x.d}`).join("<br>")}</p><p class="note">약속을 키우면 같은 서비스 안정 점수도 불만이 됩니다.</p></details>`:""}${nb()}</div>`);ch.bind();}
   else if(page===3)shell(`<div class="pane"><div class="eyebrow">결과 유형</div><div class="happen"><span class="label">1월의 다짐</span><span class="voice">${G.pledge}</span></div><h2>${ty[0]}</h2><p>${ty[1]}</p><p class="note">우선순위: ${G.prio.join(", ")}${G.f.prio_changed?" (6월에 우선순위를 바꿈)":""}</p>${nb()}</div>`);

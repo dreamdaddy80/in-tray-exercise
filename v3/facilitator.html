@@ -231,10 +231,10 @@ function tokCard(L){const A=L.filter(x=>Array.isArray(x.tk));if(!A.length)return
  const rows=Object.keys(g).sort((a,b)=>a-b).map(k=>{const B=g[k],Bn=B.filter(x=>x.tk.length>=5);return `<tr><td class="lbl">💳${k}</td>${cnt(B.length,A.length)}<td class="n">${num(avg(B.map(x=>x.tk[0])))}</td><td class="n">${Bn.length?Bn.reduce((a,x)=>a+(x.tk[2]||0),0):"—"}</td><td class="n">${Bn.length?Bn.reduce((a,x)=>a+(x.tk[3]||0),0)+"회":"—"}</td><td class="n">${num(avg(B.map(x=>(x.kpi||[])[1])))}</td></tr>`;}).join("");
  return card("토큰 손익",tbl(`<th>분기 한도</th><th class="n">명</th><th class="n">쓴 토큰</th><th class="n">잠긴 기회</th><th class="n">긴급 증액</th><th class="n">재무</th>`,rows)+(N.length?`<p>${Object.keys(TT).filter(k=>c(k)).map(k=>`${TT[k]} ${c(k)}명`).join(" · ")}</p>`:""),"토큰은 아끼면 재무를 지키고, 쓰면 팀장 시간·위험·점수를 삽니다. 유형은 학습자 성적표 ② 탭의 '토큰 손익'과 같은 기준으로 하나씩 붙습니다.");}
 
-function opsCard(L,R){const V=L.filter(x=>x.vb!=null),vb=V.filter(x=>x.vb>0);const U=L.filter(x=>x.ud>0);const T=L.filter(x=>x.timeMode==="plus"||x.timeMode==="free");
+function opsCard(L,R){const V=L.filter(x=>x.vb!=null),vb=V.filter(x=>x.vb>0);const U=L.filter(x=>x.ud>0);/* 2026-11-28: 강의실 기본값이 넉넉히(+50%)로 바뀜. 코드에 시간 값이 없으면 표준 */const TM=m=>L.filter(x=>(x.timeMode||"std")===m);
  const nl=A=>PRESENT||!A.length?"":`<td class="names">${A.map(x=>esc(nameOf(x))+(x.vb>0?` (${x.vb})`:x.ud>0?` (${x.ud})`:"")).join(", ")}</td>`;
- const rows=[["이번 라운드 선 위반",vb,V.length],["이전 장면으로 되돌리기",U,L.length],["받은편지함 시간을 늘리거나 없앰",T,L.length]].map(([n,A,t])=>`<tr><td class="lbl">${n}</td><td class="n">${A.length}${t!==L.length?` / ${t}`:""}</td>${PRESENT?"":nl(A)||"<td></td>"}</tr>`).join("");
- return card("진행 기록",tbl(`<th></th><th class="n">명</th>${PRESENT?"":"<th>참가자</th>"}`,rows),"선 위반은 장애 절차·보안·현장 안전 기준을 벗어난 결정 수입니다(어떤 결정인지는 각자 성적표 요약 맨 위). 되돌린 사람에게는 결정을 바꾼 이유를 물어보세요. 시간을 늘린 사람은 보류 건수·서비스 안정 비교에서 빼고 보세요.");}
+ const rows=[["이번 라운드 선 위반",vb,V.length],["이전 장면으로 되돌리기",U,L.length],["받은편지함 시간 · 넉넉히 (+50%, 기본)",TM("plus"),L.length,1],["받은편지함 시간 · 표준",TM("std"),L.length],["받은편지함 시간 · 제한 없음",TM("free"),L.length]].filter(([n,A],i)=>i<2||A.length).map(([n,A,t,noNames])=>`<tr><td class="lbl">${n}</td><td class="n">${A.length}${t!==L.length?` / ${t}`:""}</td>${PRESENT?"":(noNames?"":nl(A))||"<td></td>"}</tr>`).join("");
+ return card("진행 기록",tbl(`<th></th><th class="n">명</th>${PRESENT?"":"<th>참가자</th>"}`,rows),"선 위반은 장애 절차·보안·현장 안전 기준을 벗어난 결정 수입니다(어떤 결정인지는 각자 성적표 요약 맨 위). 되돌린 사람에게는 결정을 바꾼 이유를 물어보세요. 받은편지함 시간 설정이 다른 사람은 보류 건수·서비스 안정을 같은 줄에 놓고 비교하지 마세요.");}
 
 function endCard(L){const A=L.filter(x=>"ex" in x||"vt" in x);if(!A.length)return card("결산 요약","<p class='empty'>이 반의 Round 3 코드에는 결산 요약 항목이 없습니다. 떠난 사람 수는 손을 들어 확인하세요.</p>");
  const ex=[[0,0,"0명"],[1,2,"1~2명"],[3,99,"3명 이상"]].map(([a,b,n])=>[n,A.filter(x=>x.ex!=null&&x.ex>=a&&x.ex<=b)]);
@@ -255,10 +255,10 @@ function loCard(L){const A=L.filter(x=>Array.isArray(x.lo));if(!A.length)return 
 
 /* ---------- 그리기 ---------- */
 function roundPanel(R){const L=DATA.D.filter(x=>x.r===R);if(!L.length)return `<div class="card empty">Round ${R} 코드가 아직 없습니다.</div>`;
- const vio=L.filter(x=>x.vb>0).length,tm=L.filter(x=>x.timeMode==="plus"||x.timeMode==="free").length;
+ const vio=L.filter(x=>x.vb>0).length,tmc={plus:0,std:0,free:0};L.forEach(x=>{const m=x.timeMode||"std";tmc[m]=(tmc[m]||0)+1;});const tm=Object.values(tmc).filter(n=>n>0).length>1;
  let h=`<div class="sess"><h2>Round ${R} · ${L.length}명</h2><span class="note">${SESS[R]}</span></div>
  <div class="kpis"><div class="kpi"><b>${mmss(med(L.map(x=>x.t)))}</b><span>걸린 시간 중앙값</span></div><div class="kpi"><b>${vio}명</b><span>이번 라운드에 선을 넘은 사람</span></div>${KPI.map((k,i)=>`<div class="kpi"><b>${num(avg(L.map(x=>(x.kpi||[])[i])))}</b><span>${k} 반 평균</span></div>`).join("")}</div>
- ${names(L)?`<p class="hide-present">${names(L)}</p>`:""}${tm?`<p class="note">받은편지함 시간을 늘리거나 없앤 사람 ${tm}명이 섞여 있습니다.</p>`:""}`;
+ ${names(L)?`<p class="hide-present">${names(L)}</p>`:""}${tm?`<p class="note">받은편지함 시간 설정이 섞여 있습니다: 넉넉히 ${tmc.plus}명 · 표준 ${tmc.std}명${tmc.free?` · 제한 없음 ${tmc.free}명`:""}.</p>`:""}`;
  const dec=ks=>ks.map(k=>decCard(k,L)).join("");
  const cards=R===1?[inboxCard(L),dec(["M08"]),dec(["pub"]),critCard(L),pickCard(L),dec(["1-5","3-8"]),rubCard(L,1),axCard(L),styleCard(L),opsCard(L,1)]
   :R===2?[allocCard(L),m39Card(L),tokCard(L),rubCard(L,2),dec(["4-5","6-1","5-4","8-1a","8-1b","8-1c"]),inboxCard(L),axCard(L),styleCard(L),opsCard(L,2)]
