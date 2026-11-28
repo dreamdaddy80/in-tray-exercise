@@ -1,106 +1,314 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-skin="food">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>진행자 집계</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<title>진행자 집계 · 헬씨푸드 운영팀 첫 해</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-/* 진행자 집계: 학습자가 제출한 라운드 결과 코드를 붙여 넣으면 반 전체를 보여 준다. 서버 없이 이 브라우저에서만 계산한다. */
-:root{--bg:#E7E9E6;--panel:#FBFBFA;--sunk:#F0F1EE;--ink:#151615;--muted:#666A63;--line:#E3E5E1;--accent:#DDF46A;--good:#2E7D3A;--bad:#B4402F;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F110F;--panel:#1B1D1B;--sunk:#202320;--ink:#EFF1EC;--muted:#9A9F98;--line:#2B2E2A;--accent:#D4EE5E;--good:#7ED08F;--bad:#F08A7A;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500}}
-:root[data-theme="dark"]{--bg:#0F110F;--panel:#1B1D1B;--sunk:#202320;--ink:#EFF1EC;--muted:#9A9F98;--line:#2B2E2A;--accent:#D4EE5E;--good:#7ED08F;--bad:#F08A7A}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;font-size:15px;line-height:1.55;word-break:keep-all}
-.wrap{max-width:1100px;margin:0 auto;padding:16px}
-h1{font-size:22px;margin:4px 0 10px}h2{font-size:17px;margin:0 0 8px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0}
-textarea{width:100%;min-height:120px;font:13px/1.4 ui-monospace,monospace;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
-button{font:inherit;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}button.main{background:var(--accent);border-color:var(--accent);color:#151615}
-.note{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px}
-table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:5px 6px;border-top:1px solid var(--line);text-align:left}td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
-.bar{height:10px;border-radius:5px;background:var(--s1);display:inline-block;vertical-align:middle}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.present .nick{filter:blur(6px)}
-</style>
-<style id="theme-v4">
-/* 톤앤매너 v5 (2026-11-21): 게임 화면과 같은 딥 네이비 · 앰버 · 아이스 블루 */
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
-:root,:root[data-theme="light"],:root[data-theme="dark"]{--bg:#05090C;--panel:#0E1A21;--sunk:#12232C;--ink:#E9EEF0;--muted:#8FA3AB;--line:#1F3540;--accent:#F0A020;--good:#8FCDD9;--bad:#F2917F;--s1:#8FCDD9;--s2:#F0A020;--s3:#457280;--s4:#D6CAAE;color-scheme:dark}
-body{font-family:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,sans-serif;letter-spacing:-.01em;background:radial-gradient(900px 560px at 88% -8%,rgba(240,160,32,.20),transparent 62%),radial-gradient(1000px 640px at -6% 4%,rgba(69,114,128,.36),transparent 60%),#05090C;background-attachment:fixed}
-h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
-.card{border:0;border-radius:22px;background:rgba(14,26,33,.78);box-shadow:inset 0 0 0 1px rgba(143,205,217,.12),0 24px 48px rgba(0,0,0,.4);padding:18px 20px}
-textarea{border:0;background:rgba(5,12,16,.6);box-shadow:inset 0 0 0 1px rgba(143,205,217,.18);border-radius:16px}
-textarea:focus{outline:none;box-shadow:inset 0 0 0 1.5px #8FCDD9}
-button{border:0;background:rgba(143,205,217,.06);box-shadow:inset 0 0 0 1px rgba(143,205,217,.22);font-weight:600;padding:8px 16px}
-button:hover{box-shadow:inset 0 0 0 1px rgba(143,205,217,.45)}
-button.main{background:#F0A020;color:#0B0F12;box-shadow:0 0 0 1px rgba(255,214,140,.5),0 10px 28px rgba(240,160,32,.3)}
-button.main:hover{background:#F7B23E}
-th{color:var(--muted);font-weight:600;font-size:12.5px}
-th,td{border-top-color:var(--line)}
-.bar{border-radius:999px}
+/* 진행자 집계 (2026-11-28 개편)
+   학습자가 보낸 결과 코드(IT3-R…)를 붙여 넣으면 반 전체를 보여 준다. 서버 없이 이 브라우저에서만 계산한다.
+   톤앤매너는 게임의 세 테마(헬씨푸드 · 딥 네이비 · 오렌지)를 따른다. 기본은 헬씨푸드: 크림 바탕, 흰 카드, 포레스트 그린, 버튼 안의 샤르트뢰즈, 그림자 없음. */
+:root,[data-skin="food"]{--bg:#F4F3E7;--panel:#FFFFFF;--sunk:#ECEBDC;--ink:#0E150E;--muted:#6F7067;--line:#DCDACB;--accent:#00473C;--on-accent:#E6FF55;--soft:#D8E5D6;--bar:#00473C;--bad:#A72700;--bad-soft:#F6E1D9;color-scheme:light}
+[data-skin="night"]{--bg:#05090C;--panel:#0E1A21;--sunk:#12232C;--ink:#E9EEF0;--muted:#8FA3AB;--line:#1F3540;--accent:#F0A020;--on-accent:#0B0F12;--soft:#2A2314;--bar:#8FCDD9;--bad:#F2917F;--bad-soft:#3A1F1A;color-scheme:dark}
+[data-skin="orange"]{--bg:#FBF6EF;--panel:#FFFFFF;--sunk:#FAF3EA;--ink:#2E2925;--muted:#7A6F67;--line:#EFE5DA;--accent:#E8772E;--on-accent:#FFFFFF;--soft:#FDEEDF;--bar:#E8772E;--bad:#C2462F;--bad-soft:#FBE4DE;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.55;letter-spacing:-.01em;word-break:keep-all}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 64px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.eyebrow{font-size:13px;color:var(--muted);font-weight:600}
+h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:2px 0 4px}
+h2{font-size:18px;font-weight:700;margin:0 0 4px}
+h3{font-size:15.5px;font-weight:700;margin:0 0 8px}
+p{margin:0 0 8px}
+.lead{color:var(--muted);font-size:14px;max-width:760px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px 20px;margin:12px 0}
+textarea{width:100%;min-height:110px;font:13px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);resize:vertical}
+textarea:focus,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;font-weight:600;padding:9px 18px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.main{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.note{color:var(--muted);font-size:13px}
+.skins{display:flex;gap:6px;align-items:center}
+.skin{display:inline-flex;align-items:center;gap:3px;padding:6px 10px;font-size:12.5px;font-weight:600}
+.skin i{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+.skin[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.status{margin-top:10px;font-size:13.5px}
+.status .warn{color:var(--bad)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 6px}
+.tab{padding:9px 16px;background:var(--panel)}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.tab small{font-weight:500;opacity:.8;margin-left:4px}
+.sess{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline;margin:14px 2px 4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin:8px 0 4px}
+.kpi{background:var(--sunk);border-radius:14px;padding:10px 14px}
+.kpi b{display:block;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));gap:12px}
+.grid>.card{margin:0}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 7px;border-top:1px solid var(--line);text-align:left;vertical-align:middle}
+th{color:var(--muted);font-weight:600;font-size:12.5px;line-height:1.3;border-top:0;vertical-align:bottom}
+td.n,th.n{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+td.lbl{min-width:150px}
+.bar{display:inline-block;height:8px;border-radius:999px;background:var(--bar);vertical-align:middle;margin-left:6px}
+.track{display:inline-block;width:60px;height:8px;border-radius:999px;background:var(--soft);vertical-align:middle;margin-left:6px;position:relative;overflow:hidden}
+.track i{position:absolute;left:0;top:0;bottom:0;background:var(--bar);border-radius:999px}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 8px;border-radius:999px;margin-left:6px;vertical-align:1px}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.soft{background:var(--soft);color:var(--accent)}
+[data-skin="night"] .tag.soft{color:var(--bar)}
+.how{color:var(--muted);font-size:12.5px;margin:8px 0 0}
+.empty{color:var(--muted);font-size:13.5px}
+details.prev{margin-top:12px}
+details.prev>summary{cursor:pointer;font-weight:700;padding:10px 2px;list-style-position:inside}
+.hi{color:var(--bad);font-weight:700}
+.names{font-size:13px;color:var(--muted)}
+footer{margin-top:28px;color:var(--muted);font-size:12.5px}
+/* 발표 모드: 이름을 숨기고, 글자를 키우고, 한 줄에 표 하나씩, 설명 문단을 접는다 */
+body.present{font-size:17px}
+body.present .grid{grid-template-columns:1fr}
+body.present table{font-size:18px}
+body.present th{font-size:15px}
+body.present .how,body.present .names,body.present .lead,body.present .hide-present{display:none}
+body.present h3{font-size:19px}
+@media (max-width:640px){.wrap{padding:16px 12px 48px}h1{font-size:23px}table{font-size:13px}td.lbl{min-width:140px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <div class="wrap">
- <h1>진행자 집계 · In-Tray v3</h1>
- <p class="note">학습자가 라운드 성적표나 결산에서 복사한 결과 코드(<code>IT3-R…</code>)를 한 줄에 하나씩 붙여 넣으세요. 코드에는 별칭, 스타일, 핵심 선택, 지표, 습관 점수만 들어 있고 쓴 글은 없습니다. 계산은 이 브라우저 안에서만 합니다.</p>
- <div class="card"><textarea id="in" placeholder="IT3-R1-eyJ2Ijoz...-1a2b"></textarea>
-  <div class="row" style="margin-top:8px"><button class="main" id="go">집계하기</button><label class="row note"><input type="checkbox" id="pres"> 발표 모드 (별칭 가리기)</label><span class="note" id="msg"></span></div></div>
+ <header>
+  <div><div class="eyebrow">퓨쳐테크 워크스페이스 · 진행자</div><h1>진행자 집계</h1>
+   <p class="lead">헬씨푸드 운영팀 첫 해. 학습자가 라운드 끝 화면과 결산 9쪽의 보내기 카드에서 복사한 결과 코드(<code>IT3-R…</code>)를 붙여 넣으면 반 전체 결과를 보여 줍니다. 계산은 이 브라우저 안에서만 하고 어디로도 보내지 않습니다.</p></div>
+  <div class="skins" role="group" aria-label="화면 테마">
+   <button class="skin" data-k="food" aria-pressed="false"><i style="background:#F4F3E7"></i><i style="background:#00473C"></i><i style="background:#E6FF55"></i> 헬씨푸드</button>
+   <button class="skin" data-k="night" aria-pressed="false"><i style="background:#082534"></i><i style="background:#8FCDD9"></i><i style="background:#F0A020"></i> 딥 네이비</button>
+   <button class="skin" data-k="orange" aria-pressed="false"><i style="background:#E8772E"></i><i style="background:#F4B98F"></i><i style="background:#FDEEDF"></i> 오렌지</button>
+  </div>
+ </header>
+ <div class="card hide-present">
+  <label for="in" class="h3"><b>결과 코드 붙여 넣기</b></label>
+  <p class="note">단톡방이나 설문 내용을 통째로 붙여 넣어도 됩니다. 코드만 골라 읽고, 같은 사람이 여러 번 보낸 코드는 한 번만 셉니다. 붙여 넣은 내용은 이 브라우저에 남아서 새로고침해도 사라지지 않습니다.</p>
+  <textarea id="in" placeholder="IT3-R1-eyJ2IjozLC…-1a2b" spellcheck="false"></textarea>
+  <div class="row" style="margin-top:10px"><button class="main" id="go">집계하기</button><button id="clear">모두 지우기</button><button id="csv">학습자별 기록 내려받기 (CSV)</button></div>
+  <div class="status" id="msg" aria-live="polite"></div>
+ </div>
+ <div class="row" style="justify-content:space-between;margin-top:6px">
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <label class="row note"><input type="checkbox" id="pres"> 발표 모드 (이름 가리기 · 큰 글자)</label>
+ </div>
  <div id="out"></div>
+ <footer class="hide-present">결과 코드에는 별칭, 이끄는 방식, 주요 결정의 선택, 다섯 가지 점수, 자가진단과 실제 습관, 받은편지함 처리 건수, 토큰 사용, 선 위반·되돌린 횟수, 글의 자동 점검 점수(글 내용 제외), 학습 목표 자동 판정, 걸린 시간이 들어 있습니다. Round 3 코드에는 떠난 사람 수, 평가 근거를 갖춘 수, 90일 액션 플랜에서 고른 축이 더 있습니다. 실명, 직접 쓴 글, 메일 답장 내용은 들어 있지 않습니다. 결과는 교육에만 쓰고 인사 평가와 연결하지 않습니다.</footer>
 </div>
 <script>
+"use strict";
 const $=id=>document.getElementById(id);
-const KEYS={"M08":["M08 강태식 전화 (해외 공장 경고)",{"직":"직접 처리 (로그를 직접 봄)","답":"답장만","위":"맡김","코":"위임 (선배에게 맡김)","보":"보류","시":"시간 초과"},{"코":"위"}],"1-5":["첫 주간 회의",{A:"보고형",B:"토론형",C:"격주+1:1"}],pub:["KPI 기준 공개 수준",{A:"전체 공개",B:"항목만",C:"리더에게만"}],"3-8":["승인 안 된 AI 도구",{A:"즉시 신고",B:"먼저 파악 후 신고",C:"공개 조치 후 신고"}],"4-5":["헬씨푸드 운영비 요구 1단계",{A:"추정치라 밝힘",B:"3% + 2년",C:"신규 과제로 대신"}],"6-1":["하반기 계약",{A:"동결 + 실측",B:"5% 인하 + 우선 협상권",C:"동결 + 신규 2건"}],"5-4":["장애 공로 추천",{A:"생산",B:"두 모듈",C:"보류"}],"8-1a":["본사 차출 대응",{A:"그대로 보냄",B:"1명으로 협상",C:"파견으로"}],"R3-1a":["새벽 지휘",{A:"강태식 지휘",B:"직접 원격 지휘"}],"R3-1b":["3번 라인",{A:"정지 + 절차",B:"부분 가동",C:"우회 승인"}],"9-4":["헬씨푸드 재협상",{A:"오류 인정 + 검증",B:"운영비 깎아 줌",C:"조사 후 답",D:"산식부터"}],"6-4b":["지침 변경 알림",{A:"전원 재공지",B:"리더 통해",C:"평가 때"}],"12-3a":["나머지 구성원 평가",{A:"관찰 확인",B:"리더 의견대로",C:"KPI 순서"}]};
-const STY={push:"추진형",care:"배려형",bal:"균형형"};const KPI=["고객","재무","구성원","서비스 안정","헬씨푸드 만족"];const AX=["① 맡기기","② 평가","③ 자원","④ 설명"];
-function decode(line){const m=line.trim().match(/^IT3-R(\d)-([A-Za-z0-9_-]+)-([0-9a-f]{4})$/);if(!m)return null;const b=m[2];let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;if((h%65536).toString(16).padStart(4,"0")!==m[3])return{bad:"검사 값 불일치"};
- try{const j=JSON.parse(decodeURIComponent(escape(atob(b.replace(/-/g,"+").replace(/_/g,"/")))));j.r=+m[1];return j;}catch(e){return{bad:"해석 실패"};}}
-const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):"—";const med=a=>{if(!a.length)return "—";const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)];};
-function run(){
- const rows=$("in").value.split(/\s+/).filter(Boolean).map(decode);const ok=rows.filter(r=>r&&!r.bad),bad=rows.length-ok.length;
- $("msg").textContent=`${ok.length}개 읽음${bad?` · ${bad}개는 읽지 못함`:""}`;
- /* 같은 별칭·라운드는 마지막 코드만 쓴다 */
- const last={};ok.forEach(r=>{last[(r.nick||"?")+"|"+r.r]=r;});const D=Object.values(last);
- const rounds=[1,2,3].filter(r=>D.some(x=>x.r===r));let h="";
- rounds.forEach(R=>{const L=D.filter(x=>x.r===R);
-  h+=`<div class="card"><h2>Round ${R} · ${L.length}명</h2><p class="note nick">별칭: ${L.map(x=>x.nick||"(없음)").join(", ")}</p><p class="note">소요 시간 중앙값 ${Math.round(med(L.map(x=>x.t||0))/60)}분</p>${(()=>{/* 밸런스 재검토(2026-11-27): 분기 말 연쇄가 바뀐 판(bv 2)과 이전 코드가 섞이면 지표 평균을 같이 보지 않도록 알린다 */const o=L.filter(x=>(x.bv||0)<2).length;return o&&o<L.length?`<p class="note">분기 말 연쇄를 바꾸기 전 판의 코드 ${o}건이 섞여 있습니다. 지표 평균은 같은 판끼리 비교하세요.</p>`:"";})()}<div class="grid">`;
-  /* 핵심 선택 분포 + 반 인생극장 */
-  Object.keys(KEYS).forEach(k=>{const g={};L.forEach(x=>{const v=(x.ch||{})[k];if(v==null)return;const c=String(v)[0];(g[c]=g[c]||[]).push(x);});const cs=Object.keys(g).sort();if(!cs.length)return;
-   h+=`<div><b>${KEYS[k][0]}</b><table><tr><th>선택</th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${cs.map(c=>`<tr><td>${(KEYS[k][2]||{})[c]||c}. ${KEYS[k][1][c]||""}</td><td class="n">${g[c].length} <span class="bar" style="width:${Math.round(g[c].length/L.length*36)}px"></span></td>${KPI.map((_,i)=>`<td class="n">${avg(g[c].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table><p class="note">반 인생극장: 같은 결정에서 다른 길을 고른 동료들의 라운드 끝 지표 평균</p></div>`;});
-  if(L.some(x=>(x.ch||{}).cells)){const g={};L.forEach(x=>{const c=(x.ch||{}).cells;if(!c)return;const top=["RUN","AI","GROW","SEC"][[...c].map(Number).indexOf(Math.max(...[...c].map(Number)))];(g[top]=g[top]||[]).push(x);});
-   h+=`<div><b>여력 배분 (가장 많이 놓은 칸)</b><table><tr><th>칸</th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${Object.keys(g).map(c=>`<tr><td>${c}</td><td class="n">${g[c].length}</td>${KPI.map((_,i)=>`<td class="n">${avg(g[c].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table></div>`;}
-  /* 받은편지함 처리 방식 (이번 라운드) */
-  if(L.some(x=>x.ib&&x.ib.some(v=>v>0))){const I=L.filter(x=>x.ib);const s=i=>I.reduce((a,x)=>a+(x.ib[i]||0),0);const tot=[0,1,3,4].reduce((a,i)=>a+s(i),0)||1;const dl=s(1);
-   h+=`<div><b>받은편지함 처리 방식</b><table><tr><th>처리</th><th>건수(반 전체)</th><th>비율</th></tr>${[["직접 처리·답장",0],["위임",1],["코칭",3],["보류",4]].map(([n,i])=>`<tr><td>${n}</td><td class="n">${s(i)}</td><td class="n">${Math.round(s(i)/tot*100)}%</td></tr>`).join("")}</table><p class="note">위임 ${dl}건 중 4요소(기대 결과·기한·권한·이유)를 켠 위임 ${s(2)}건 (${dl?Math.round(s(2)/dl*100):0}%). 전화로 들어온 건은 직접 답장에 포함됩니다.</p></div>`;}
-  /* M39: 심리적 안전이 50 이상일 때만 도착하는 메일 */
-  if(L.some(x=>x.m39!=null)){const g={1:[],0:[]};L.forEach(x=>{if(x.m39!=null)g[x.m39].push(x);});
-   h+=`<div><b>M39 (김 사원 · 근태 밖 야간 경고 확인) 도착</b><table><tr><th></th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${[[1,"받음"],[0,"못 받음"]].map(([k,n])=>`<tr><td>${n}</td><td class="n">${g[k].length}</td>${KPI.map((_,i)=>`<td class="n">${avg(g[k].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table><p class="note">팀의 심리적 안전이 50 이상인 팀장에게만 도착합니다. 못 받은 사람은 결산 2쪽 '보내지 않은 메시지'에서 이 메일을 처음 봅니다.</p></div>`;}
-  /* 서술형 미리 보기 · 토큰 */
-  if(L.some(x=>x.rb)){
-   /* 피드백 6단계 #32: rv 3부터 Round 1 핵심 과제 근거는 ①숫자·사실 ②누가·무엇이 ③어떻게 흔들리는지로 점검한다. 기준이 다른 코드끼리 섞지 않는다 */
-   const r1n=x=>R===1&&(x.rv||0)>=3;const LN=L.filter(r1n),LO=L.filter(x=>!r1n(x));
-   if(LN.some(x=>x.rb)){const ns=LN.flatMap(x=>x.rb||[]);const c=k=>ns.filter(v=>v===k).length;
-    h+=`<div><b>1월 핵심 과제 근거 (3요소 자동 점검)</b><p>답안 ${ns.length}건 · 3/3 ${c(3)}건 · 2/3 ${c(2)}건 · 1/3 이하 ${c(1)+c(0)}건</p><p class="note">입력 안내와 같은 ① 메모에서 본 숫자나 사실 ② 누가, 무엇이 ③ 어떻게 흔들리는지를 낱말로 점검한 참고 표시입니다. 최종 채점은 응답 묶음으로 강사가 합니다.${LO.some(x=>x.rb)?` 아래는 이 기준 이전 코드 ${LO.filter(x=>x.rb).length}건입니다.`:""}</p></div>`;}
-   if(LO.some(x=>x.rb)){const ns=LO.flatMap(x=>x.rb||[]);const c=k=>ns.filter(v=>v===k).length;
-   h+=`<div><b>서술형 미리 보기 (3요소 자동 점검)</b><p>답안 ${ns.length}건 · 3/3 ${c(3)}건 · 2/3 ${c(2)}건 · 1/3 이하 ${c(1)+c(0)}건</p>${(()=>{const o=LO.filter(x=>x.rb&&!((x.rv||0)>=2)).length;return `<p class="note"><b>채점 기준 강화(2026-11-25) 이후 결과</b>입니다. ①은 공개한 기준·원칙 이름이 그대로 들어갈 때만, ③은 날짜·기한 표현이 있을 때만 인정합니다. 그래서 이전보다 점수가 전반적으로 낮게 나옵니다.${o?` 이 집계에는 강화 이전 코드 ${o}건이 섞여 있습니다(같은 반끼리만 비교하세요).`:""}</p>`;})()}<p class="note">① 기준·원칙 ② 상대 맥락 ③ 다음 행동·기한을 낱말로 점검한 예비 판정입니다. 최종 채점은 응답 묶음으로 강사가 합니다.</p></div>`;}}
-  if(L.some(x=>x.tk)){const g={};L.forEach(x=>{if(!x.tk)return;(g[x.tk[1]]=g[x.tk[1]]||[]).push(x);});
-   /* 2026-11-27 A안: 효율 대신 토큰 손익. tk = [쓴 토큰, 한도, 잠긴 기회, 긴급 증액, 손익 유형, 잘못 쓴 토큰] (이전 코드는 앞 두 칸만) */
-   const TT={w:"잘못 쓴 토큰",s:"한도 부족",o:"한도 과잉",t:"증액으로 보충",b:"균형",n:"쓰지 않음"};const N=L.filter(x=>x.tk&&x.tk.length>=5),O=L.filter(x=>x.tk&&x.tk.length<5);
-   const cnt=k=>N.filter(x=>x.tk[4]===k).length;
-   h+=`<div><b>토큰 손익</b><table><tr><th>한도</th><th>명</th><th>쓴 토큰</th><th>잠긴 기회</th><th>긴급 증액</th><th>재무</th></tr>${Object.keys(g).sort((a,b)=>a-b).map(c=>{const A=g[c],An=A.filter(x=>x.tk.length>=5);return `<tr><td>💳${c}</td><td class="n">${A.length}</td><td class="n">${avg(A.map(x=>x.tk[0]))}</td><td class="n">${An.length?An.reduce((a,x)=>a+(x.tk[2]||0),0):"—"}</td><td class="n">${An.length?An.reduce((a,x)=>a+(x.tk[3]||0),0)+"회":"—"}</td><td class="n">${avg(A.map(x=>x.kpi[1]))}</td></tr>`;}).join("")}</table>${N.length?`<p>${Object.keys(TT).filter(k=>cnt(k)).map(k=>`${TT[k]} ${cnt(k)}명`).join(" · ")}</p>`:""}<p class="note">토큰은 아끼면 재무를 지키고, 쓰면 팀장 시간·위험·점수를 삽니다. 유형은 잘못 쓴 토큰(좋은 리더의 선택이 아닌 곳에 씀) → 한도 부족(좋은 선택이 잠겼는데 증액하지 않음) → 한도 과잉(한도 100 이상인데 60% 미만 사용) → 증액으로 보충 → 균형 → 쓰지 않음 순서로 하나를 붙입니다. 학습자 성적표 ② 탭의 '토큰 손익'과 같은 기준입니다.${O.length?` 이 기준 이전 코드 ${O.length}건은 유형과 잠김·증액 칸에서 뺐습니다.`:""}</p></div>`;}
-  /* 넘어서는 안 되는 선 위반 (B-1, 2026-11-22). vb가 없는 옛 코드는 집계에서 뺀다 */
-  if(L.some(x=>x.vb!=null)){const A=L.filter(x=>x.vb!=null),bad=A.filter(x=>x.vb>0);
-   h+=`<div><b>넘어서는 안 되는 선 위반</b><table><tr><th></th><th>명</th><th>참가자</th></tr><tr><td>위반 없음</td><td class="n">${A.length-bad.length}</td><td></td></tr><tr><td>위반 있음</td><td class="n">${bad.length}</td><td>${bad.map(x=>(x.nick||"익명")+" ("+x.vb+")").join(", ")}</td></tr></table><p class="note">장애 절차·보안·현장 안전 기준을 벗어난 결정 수입니다. 어떤 결정인지는 각 참가자의 성적표 요약 맨 위에 있습니다.</p></div>`;}
-  /* 되돌리기 (2026-11-22) */
-  if(L.some(x=>x.ud!=null)){const g=[[0,0,"0회"],[1,2,"1~2회"],[3,999,"3회 이상"]].map(([a,b,n])=>[n,L.filter(x=>x.ud!=null&&x.ud>=a&&x.ud<=b)]);
-   h+=`<div><b>이전 장면으로 되돌리기</b><table><tr><th>횟수</th><th>명</th><th>참가자</th></tr>${g.map(([n,A])=>`<tr><td>${n}</td><td class="n">${A.length}</td><td>${n==="0회"?"":A.map(x=>(x.nick||"익명")+(x.ud?` (${x.ud})`:"")).join(", ")}</td></tr>`).join("")}</table><p class="note">되돌린 장면과 순서는 각 참가자의 성적표 요약에 있습니다. 결정을 바꾼 이유를 피드백 시간에 물어보세요.</p></div>`;}
-  /* 받은편지함 시간 방식 (B-7, 2026-11-25). timeMode가 없는 옛 코드는 표준으로 읽는다 */
-  {const tm=x=>x.timeMode==="plus"?"plus":x.timeMode==="free"?"free":"std";const TN={std:"표준",plus:"넉넉히 (+50%)",free:"제한 없음"};const g=["std","plus","free"].map(k=>[k,L.filter(x=>tm(x)===k)]);
-   if(g[1][1].length||g[2][1].length)h+=`<div><b>받은편지함 시간 방식</b><table><tr><th>방식</th><th>명</th><th>참가자</th></tr>${g.map(([k,A])=>`<tr><td>${TN[k]}</td><td class="n">${A.length}</td><td>${k==="std"?"":A.map(x=>x.nick||"익명").join(", ")}</td></tr>`).join("")}</table><p class="note">혼자 진행에서 시간을 늘리거나 없앤 참가자입니다. 점수 계산식은 같지만 시간 초과 보류가 줄거나 없어서 결과가 표준과 다릅니다. 보류 건수·서비스 안정을 비교할 때는 표준 참가자끼리만 보세요.</p></div>`;}
-  /* 스타일별 */
-  const sg={};L.forEach(x=>{(sg[x.style]=sg[x.style]||[]).push(x);});
-  h+=`<div><b>스타일별 지표 평균</b><table><tr><th>스타일</th><th>명</th>${KPI.map(x=>`<th>${x}</th>`).join("")}</tr>${Object.keys(sg).map(s=>`<tr><td>${STY[s]||s}</td><td class="n">${sg[s].length}</td>${KPI.map((_,i)=>`<td class="n">${avg(sg[s].map(x=>x.kpi[i]))}</td>`).join("")}</tr>`).join("")}</table></div>`;
-  /* 4축 */
-  h+=`<div><b>네 축 평균 · 스스로 본 나 vs 실제 행동</b><table><tr><th>축</th><th>자가진단</th><th>실제 행동</th><th>차이</th></tr>${[1,2,3,4].map(a=>{const s=avg(L.map(x=>x.ax&&x.ax.self?x.ax.self[a]:null).filter(v=>v!=null)),v=avg(L.map(x=>x.ax&&x.ax.act?x.ax.act[a]:null).filter(v=>v!=null));const d=typeof s==="number"&&typeof v==="number"?v-s:"—";return `<tr><td>${AX[a-1]}</td><td class="n">${s}</td><td class="n">${v}</td><td class="n" style="color:${d<-15?"var(--bad)":"inherit"}">${d}</td></tr>`;}).join("")}</table><p class="note">실제 행동이 자가진단보다 15 넘게 낮은 축이 반 전체의 맹점 후보입니다.</p></div>`;
-  if(R===1){const g2=L.filter(x=>x.g2).length;h+=`<div><b>학습 목표 ② (기준 설계) 자동 판정</b><p>${g2}/${L.length}명 충족</p></div>`;}
-  h+=`</div></div>`;});
- $("out").innerHTML=h||'<div class="card note">읽은 코드가 없습니다.</div>';
-}
-$("go").onclick=run;$("pres").onchange=e=>document.body.classList.toggle("present",e.target.checked);
+const esc=x=>String(x??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const KPI=["고객","재무","구성원","서비스 안정","헬씨푸드 만족"];
+const AX=["① 일 맡기기","② 평가하기","③ 자원 나누기","④ 설명하기"];
+const STY={push:"추진형",care:"배려형",bal:"균형형"};
+const LDN={rd:"서하준 (R&D)",src:"문지원 (조달)",mfg:"강태식 (생산)",prc:"이수진 (가공)",mkt:"정다은 (마케팅)"};
+const CARDS=["장애 예방 활동","보안 준수","장애 복구 기여","동료 지원과 온보딩","AI 활용 효과","추가 과제 매출 기여","고객 칭찬","책임감 있는 근무","리더 종합 판단"];
+const AREA={RUN:"기존 운영",AI:"AI 전환",GROW:"추가 제안",SEC:"예방·보안"};
+const ARCH={"운영 안정형":[4,2,2,2],"전환 가속형":[2,4,2,2],"성장형":[2,2,4,2],"예방형":[2,2,2,4]};
+/* 핵심 결정: 현재 원고(2026-11-27 배포본)의 장면 제목과 선택지 요지. bad는 넘어서는 안 되는 선을 넘는 선택지 */
+const DEC={
+ "M08":{r:1,t:"강태식 전화 · 해외 공장 지연 경고",m:"1월 첫날",o:{"코":"선배에게 맡김 (\"선배가 맡아 주세요\")","답":"회의 뒤 연락하겠다고 메시지","직":"로그를 직접 받아 봄","위":"다른 리더에게 넘김","보":"받지 않음 (보류·시간 초과)","시":"받지 않음 (보류·시간 초과)"},ord:["코","답","직","위","보"]},
+ "1-5":{r:1,t:"첫 주간 회의",m:"1월",o:{A:"돌아가며 보고 (전임 방식)",B:"안건 전날 공유, 쟁점만 토론",C:"전체 회의 격주, 모듈별로 따로 듣기"}},
+ "pub":{r:1,t:"등급 기여 기준 공개 수준",m:"3월",o:{A:"뜻·사례까지 문서로 전체 공개",B:"항목만 공개, 적용은 면담에서",C:"리더들과만 맞춰 둠"}},
+ "3-8":{r:1,t:"고객 데이터가 외부 AI로",m:"3월",o:{A:"바로 멈추고 보안팀에 신고",B:"우리가 먼저 범위를 파악한 뒤 알림",C:"서하준을 시범에서 빼고 팀에 알린 뒤 신고"},bad:{B:"보안"}},
+ "4-5":{r:2,t:"헬씨푸드 운영비 협상",m:"4월",o:{A:"추정임을 밝히고 실측 뒤 6월 논의",B:"인하 3%로 좁히고 계약 2년",C:"운영비 대신 AI 신규 과제 추가"}},
+ "6-1":{r:2,t:"하반기 계약",m:"6월",o:{A:"동결, 실측 절감만 내년 단가에",B:"5% 인하, 신규 과제 우선 협상권",C:"동결, 신규 과제 2건 추가"}},
+ "5-4":{r:2,t:"장애 공로 추천 (강태식 대 이수진)",m:"6월",o:{A:"복구한 생산 모듈로 추천",B:"복구와 예방을 엮어 두 모듈로",C:"이번엔 쉬고 기준부터 정함"}},
+ "8-1a":{r:2,t:"본사 차출 요청",m:"8월",o:{A:"공문대로 2명 보냄",B:"절감 수치로 1명으로 협상",C:"6개월 파견으로 바꾸자고 함"}},
+ "8-1b":{r:2,t:"차출로 줄일 칸",m:"8월",o:{A:"신규 과제·AI 칸부터 줄임",B:"운영·예방 칸에서 줄임",C:"많은 칸부터 고르게 덜어 냄"}},
+ "8-1c":{r:2,t:"차출 결과 알리기",m:"8월",o:{A:"사유·줄인 칸·기준을 팀 전체에 설명",B:"빠지는 인원과 줄인 칸만 짧게",C:"공지 없이 리더가 필요한 만큼 전달"}},
+ "R3-1a":{r:3,t:"새벽 3시 · 누가 지휘하나",m:"10월",o:{A:"강태식이 지휘, 나는 통지·보고",B:"내가 원격으로 직접 지휘"}},
+ "R3-1b":{r:3,t:"새벽 3시 · 3번 라인",m:"10월",o:{A:"세우고 절차대로 원인 확인",B:"이상 구간만 세우고 감시",C:"인터록 우회, 승인은 아침에 사후로"},bad:{C:"현장 안전"}},
+ "9-4":{r:3,t:"헬씨푸드 임원 전화 · 산정 오류",m:"10월",o:{A:"오류 인정, 양쪽 검증, 계약은 6월 안대로",B:"이번 분기 운영비를 깎아 줌",C:"조사 뒤 답, 협상은 미룸",D:"산식 정의부터 맞추자고 함"}},
+ "6-4a":{r:3,t:"인사팀 평가 지침 변경 · 적용",m:"11월",o:{A:"지침대로 AI 20%, 다른 항목을 고르게 줄임",B:"20%는 지키되 점검 자동화도 AI로 인정받게 협의",C:"올해는 3월 안 유지, 적용을 내년으로"}},
+ "6-4b":{r:3,t:"인사팀 평가 지침 변경 · 알리기",m:"11월",o:{A:"전원에게 다시 알리고 합의서 수정",B:"리더에게 설명, 구성원은 리더가 전달",C:"12월 평가 공지 때 한 번에"}},
+ "12-3a":{r:3,t:"나머지 구성원 23명 평가",m:"12월",o:{A:"리더 의견서의 관찰 사실 확인 뒤 확정",B:"리더 제안 등급 그대로 일괄 확정",C:"KPI 달성률 순서로 배분"}}};
+const R1KEYS=["M08","1-5","3-1","R1-pick","3-8","pub"];
+const SESS={1:"피드백 세션 1 · 2일 차 아침 · 기준을 세우고 손을 뗀다는 것",2:"피드백 세션 2 · 2일 차 오후 · 자원의 교환비와 세 개의 언어",3:"종합 디브리핑 · 3일 차 · 새벽 3시의 원칙, 그리고 내일 아침의 첫 행동"};
+let PRESENT=false,TAB="1",DATA=null;
+
+/* ---------- 읽기 ---------- */
+function hash(b){let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;return (h%65536).toString(16).padStart(4,"0");}
+function parse(text){
+ const re=/IT3-R([123])-([A-Za-z0-9_-]+)-([0-9a-f]{4})/g;const ok=[];let bad=0,m;
+ while((m=re.exec(text))){if(hash(m[2])!==m[3]){bad++;continue;}
+  try{const j=JSON.parse(decodeURIComponent(escape(atob(m[2].replace(/-/g,"+").replace(/_/g,"/")))));if(!j||j.v!==3){bad++;continue;}j.r=+m[1];j._code=m[0];ok.push(j);}catch(e){bad++;}}
+ const started=(text.match(/IT3-R/g)||[]).length;
+ return {ok,bad,cut:Math.max(0,started-ok.length-bad)};}
+/* 같은 사람 판정: 별칭과 걸린 시간을 뺀 내용이 같으면 같은 코드다(별칭을 바꾸거나 다시 복사하면 이 두 값만 바뀐다) */
+const fp=x=>{const o=Object.assign({},x);delete o.nick;delete o.t;delete o._code;delete o.r;return x.r+"|"+JSON.stringify(o);};
+/* 라운드를 건너 한 사람을 잇는 표지: 자가진단 응답 + Round 1 결정(뒤 라운드 코드에도 그대로 들어 있다) */
+const sig=x=>JSON.stringify([x.ax&&x.ax.self||null,R1KEYS.map(k=>(x.ch||{})[k]??null)]);
+function build(text){
+ const P=parse(text);const seen=new Map();let dup=0;
+ P.ok.forEach(x=>{const k=fp(x);if(seen.has(k)){dup++;const y=seen.get(k);if(x.nick)y.nick=x.nick;y.t=Math.max(y.t||0,x.t||0);}else seen.set(k,x);});
+ const D=[...seen.values()];
+ /* 사람 묶기 */
+ const ppl=new Map();D.forEach(x=>{const s=sig(x);let p=ppl.get(s);if(!p){p={id:s,codes:{}};ppl.set(s,p);}
+  if(p.codes[x.r]){/* 같은 표지인데 다른 코드: 다른 사람으로 본다 */let i=2;while(ppl.has(s+"#"+i))i++;p={id:s+"#"+i,codes:{}};ppl.set(p.id,p);}
+  p.codes[x.r]=x;x._p=p;});
+ const P2=[...ppl.values()];let anon=0;
+ P2.forEach(p=>{const ns=[3,2,1].map(r=>p.codes[r]&&p.codes[r].nick).filter(Boolean);p.nick=ns[0]||"";});
+ /* 같은 별칭 여러 명 */
+ const byNick={};P2.forEach(p=>{if(p.nick)(byNick[p.nick]=byNick[p.nick]||[]).push(p);});
+ const clash=Object.keys(byNick).filter(n=>byNick[n].length>1);
+ Object.values(byNick).forEach(a=>{if(a.length>1)a.forEach((p,i)=>{p.label=p.nick+" ("+(i+1)+")";});});
+ P2.forEach(p=>{if(!p.label)p.label=p.nick||("익명 "+(++anon));});
+ const old=D.filter(x=>(x.bv||0)<2||(x.rv||0)<3).length;
+ return {D,P:P2,bad:P.bad,cut:P.cut,dup,clash,old};}
+
+/* ---------- 계산 도우미 ---------- */
+const avg=a=>{a=a.filter(v=>typeof v==="number"&&!isNaN(v));return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null;};
+const med=a=>{a=a.filter(v=>typeof v==="number").sort((x,y)=>x-y);return a.length?a[Math.floor(a.length/2)]:null;};
+const mmss=s=>s==null?"—":`${Math.floor(s/60)}분 ${String(s%60).padStart(2,"0")}초`;
+const nameOf=x=>x._p?x._p.label:(x.nick||"익명");
+const names=L=>PRESENT?"":`<span class="names">${L.map(x=>esc(nameOf(x))).join(", ")}</span>`;
+const num=v=>v==null?"—":v;
+function kpiCells(G){if(PRESENT&&G.length<2)return KPI.map(()=>`<td class="n" title="한 명이라 발표 모드에서 가립니다">·</td>`).join("");return KPI.map((_,i)=>`<td class="n">${num(avg(G.map(x=>(x.kpi||[])[i])))}</td>`).join("");}
+const kpiHead=()=>["고객","재무","구성원","서비스<br>안정","헬씨푸드<br>만족"].map(k=>`<th class="n">${k}</th>`).join("");
+const cnt=(n,tot)=>`<td class="n">${n}<span class="bar" style="width:${tot?Math.max(n?4:0,Math.round(n/tot*60)):0}px"></span></td>`;
+const card=(title,body,how)=>`<div class="card"><h3>${title}</h3>${body}${how?`<p class="how">${how}</p>`:""}</div>`;
+const tbl=(head,rows)=>`<div class="scroll"><table><tr>${head}</tr>${rows}</table></div>`;
+
+/* 결정 분포 + 반 인생극장 */
+function decCard(k,L){const d=DEC[k];const g={};L.forEach(x=>{const v=(x.ch||{})[k];if(v==null||v==="")return;let c=String(v)[0];if(k==="M08"&&c==="시")c="보";(g[c]=g[c]||[]).push(x);});
+ const keys=(d.ord||Object.keys(d.o)).filter(c=>g[c]).concat(Object.keys(g).filter(c=>!(d.ord||Object.keys(d.o)).includes(c)));if(!keys.length)return "";
+ const n=keys.reduce((a,c)=>a+g[c].length,0);
+ const rows=keys.map(c=>`<tr><td class="lbl">${k==="M08"?"":`<b>${esc(c)}</b> `}${esc(d.o[c]||c)}${d.bad&&d.bad[c]?`<span class="tag bad">선 위반 · ${d.bad[c]}</span>`:""}</td>${cnt(g[c].length,n)}${kpiCells(g[c])}</tr>`).join("");
+ return card(`${esc(d.t)} <span class="note">· ${d.m}</span>`,tbl(`<th>선택</th><th class="n">명</th>${kpiHead()}`,rows),"같은 갈림길에서 다른 길을 고른 동료들의 이 라운드 끝 점수 평균입니다(반 인생극장). 화면의 선택지 순서는 사람마다 섞여 있어 문자보다 내용으로 말해 주세요.");}
+
+function inboxCard(L){const I=L.filter(x=>Array.isArray(x.ib)&&x.ib.some(v=>v>0));if(!I.length)return "";const s=i=>I.reduce((a,x)=>a+(x.ib[i]||0),0);const tot=[0,1,3,4].reduce((a,i)=>a+s(i),0)||1;const dl=s(1);
+ const rows=[["직접 처리·답장",0],["위임",1],["코칭 (질문으로 맡김)",3],["보류·시간 초과",4]].map(([n,i])=>`<tr><td class="lbl">${n}</td><td class="n">${s(i)}</td><td class="n">${Math.round(s(i)/tot*100)}%<span class="track"><i style="width:${Math.round(s(i)/tot*100)}%"></i></span></td></tr>`).join("");
+ return card("받은편지함 처리 방식 · 반 전체",tbl(`<th>처리</th><th class="n">건수</th><th class="n">비율</th>`,rows)+`<p>위임 ${dl}건 중 네 요소(기대 결과·기한·권한·이유)를 함께 전한 위임 <b>${s(2)}건 (${dl?Math.round(s(2)/dl*100):0}%)</b></p>`,"전화로 들어온 건은 직접 처리·답장에 포함됩니다.");}
+
+function pickCard(L){const A=L.filter(x=>(x.ch||{})["R1-pick"]!=null);if(!A.length)return "";const g={};let none=0;const per=[];
+ A.forEach(x=>{const a=String(x.ch["R1-pick"]).split(",").filter(Boolean);per.push(a.length);if(!a.length)none++;a.forEach(k=>{g[k]=(g[k]||0)+1;});});
+ const rows=Object.keys(LDN).map(k=>`<tr><td class="lbl">${LDN[k]}</td>${cnt(g[k]||0,A.length)}<td class="n">${A.length-(g[k]||0)}</td></tr>`).join("");
+ return card("KPI 면담 · 누구를 직접 만났나",tbl(`<th>모듈 리더</th><th class="n">만난 사람</th><th class="n">문서로만</th>`,rows)+`<p>평균 ${(per.reduce((a,b)=>a+b,0)/per.length).toFixed(1)}명을 만났고, 아무도 만나지 않은 사람은 ${none}명입니다.</p>`,"만나지 않은 리더는 자기 방식대로 KPI를 써 옵니다. 이견이 큰 사람(강태식, 이수진)을 만났는지가 쟁점입니다.");}
+
+function critCard(L){const A=L.filter(x=>Array.isArray(x.kc));const g2=L.filter(x=>x.g2).length;
+ if(!A.length)return card("등급 기여 기준 설계 · 학습 목표 ②",`<p><b>${g2}/${L.length}명</b> 충족</p>`,"기준 3개 이상, 드러나지 않는 기여 1개 이상, 팀 KPI와의 연결이 모두 맞아야 충족입니다.");
+ const hid=A.filter(x=>x.kc[1]>0).length,link=A.filter(x=>x.kc[0]&&x.kc[2]===x.kc[0]).length,three=A.filter(x=>x.kc[0]>=3).length;
+ const fr={};A.forEach(x=>{String(x.ks||"").split("").forEach(i=>{fr[i]=(fr[i]||0)+1;});});
+ const top=Object.keys(fr).sort((a,b)=>fr[b]-fr[a]).map(i=>`${esc(CARDS[+i]||i)} ${fr[i]}`).join(" · ");
+ const rows=[["기준 3개 이상",three],["드러나지 않는 기여 포함",hid],["팀 KPI와의 연결이 모두 맞음",link],["학습 목표 ② 충족 (세 조건 모두)",g2]].map(([n,v])=>`<tr><td class="lbl">${n}</td>${cnt(v,L.length)}</tr>`).join("");
+ return card("등급 기여 기준 설계 · 학습 목표 ②",tbl(`<th>조건</th><th class="n">명 / ${L.length}</th>`,rows)+(top?`<p class="note">많이 고른 기준: ${top}</p>`:""),"드러나지 않는 기여(예방, 동료 지원, 보안 준수처럼 숫자로 잘 안 보이는 일)를 기준에 넣었는지가 연말 평가와 이의제기까지 이어집니다.");}
+
+function rubCard(L,R){const W=L.filter(x=>Array.isArray(x.rw));const T=R===1?["1월 핵심 과제 근거"]:R===2?["배분 공지문","세 개의 설명 (직접 쓴 글)"]:["평가 결과 공지"];
+ const how=R===1?"① 메모에서 본 숫자나 사실 ② 누가, 무엇이 ③ 어떻게 흔들리는지를 낱말로 점검한 참고 표시입니다.":"① 공개한 기준·원칙의 이름 ② 상대의 궁금증 ③ 다음 행동과 기한을 낱말로 점검한 참고 표시입니다.";
+ if(!W.length){const A=L.filter(x=>Array.isArray(x.rb));if(!A.length)return "";const ns=A.flatMap(x=>x.rb);const c=k=>ns.filter(v=>v===k).length;
+  return card("쓴 글 자동 점검",`<p>글 ${ns.length}편 · 3/3 ${c(3)} · 2/3 ${c(2)} · 1/3 이하 ${c(1)+c(0)}</p>`,how+" 최종 채점은 응답 묶음으로 강사가 합니다.");}
+ const rows=T.map((t,i)=>{const v=W.map(x=>x.rw[i]);const c=k=>v.filter(y=>y===k).length;const no=v.filter(y=>y==null).length;return `<tr><td class="lbl">${t}</td><td class="n">${c(3)}</td><td class="n">${c(2)}</td><td class="n">${c(1)+c(0)}</td><td class="n">${no}</td></tr>`;}).join("");
+ return card("쓴 글 자동 점검 (3요소)",tbl(`<th>글</th><th class="n">3/3</th><th class="n">2/3</th><th class="n">1/3 이하</th><th class="n">쓰지 않음</th>`,rows),how+" 최종 채점은 응답 묶음으로 강사가 합니다.");}
+
+function axCard(L){const rows=[1,2,3,4].map(a=>{const s=avg(L.map(x=>x.ax&&x.ax.self?x.ax.self[a]:null)),v=avg(L.map(x=>x.ax&&x.ax.act?x.ax.act[a]:null));const d=s!=null&&v!=null?v-s:null;return `<tr><td class="lbl">${AX[a-1]}</td><td class="n">${num(s)}</td><td class="n">${num(v)}</td><td class="n ${d!=null&&d<-15?"hi":""}">${d==null?"—":(d>0?"+":"")+d}</td></tr>`;}).join("");
+ return card("네 축 · 스스로 본 나 대 실제 행동",tbl(`<th>축</th><th class="n">자가진단</th><th class="n">실제 행동</th><th class="n">차이</th>`,rows),"실제 행동이 자가진단보다 15 넘게 낮은 축(붉은 숫자)이 반 전체의 맹점 후보입니다. 실제 행동은 리더 행동 쪽으로 기록된 비율(%)이며, 아직 해당 장면이 없는 축은 —로 둡니다.");}
+
+function styleCard(L){const g={};L.forEach(x=>{(g[x.style||"bal"]=g[x.style||"bal"]||[]).push(x);});
+ const rows=["push","care","bal"].filter(k=>g[k]).map(k=>`<tr><td class="lbl">${STY[k]}</td>${cnt(g[k].length,L.length)}${kpiCells(g[k])}</tr>`).join("");
+ return card("이끄는 방식별 점수 평균",tbl(`<th>스타일</th><th class="n">명</th>${kpiHead()}`,rows),"라운드를 마칠 때 고른 스타일 기준입니다.");}
+
+function allocCard(L){const A=L.filter(x=>(x.ch||{}).cells);if(!A.length)return "";const g={};const sum=[0,0,0,0];let hold=0;
+ A.forEach(x=>{const c=[...String(x.ch.cells)].map(Number);c.forEach((v,i)=>sum[i]+=v);hold+=Math.max(0,10-c.reduce((a,b)=>a+b,0));
+  const ds=Object.entries(ARCH).map(([n,a])=>[n,a.reduce((s,v,i)=>s+Math.abs(v-(c[i]||0)),0)]).sort((p,q)=>p[1]-q[1]);const t=ds[0][1]===ds[1][1]?"고른 배분":ds[0][0];(g[t]=g[t]||[]).push(x);});
+ const order=["운영 안정형","전환 가속형","성장형","예방형","고른 배분"].filter(k=>g[k]);
+ const rows=order.map(k=>`<tr><td class="lbl">${k}</td>${cnt(g[k].length,A.length)}${kpiCells(g[k])}</tr>`).join("");
+ const av=["RUN","AI","GROW","SEC"].map((k,i)=>`${AREA[k]} ${(sum[i]/A.length).toFixed(1)}`).join(" · ");
+ return card("여력 10칸 배분 유형",tbl(`<th>가장 가까운 유형</th><th class="n">명</th>${kpiHead()}`,rows)+`<p class="note">반 평균: ${av}${hold?` · 보류 ${(hold/A.length).toFixed(1)}`:""}칸</p>`,"성적표의 인생극장②와 같은 네 유형(한 칸에 4칸)에 가장 가까운 쪽으로 묶었습니다. 두 유형과 거리가 같으면 '고른 배분'입니다.");}
+
+function m39Card(L){const A=L.filter(x=>x.m39!=null);if(!A.length)return "";const g={1:A.filter(x=>x.m39===1),0:A.filter(x=>x.m39===0)};
+ const rows=[[1,"받음"],[0,"못 받음"]].map(([k,n])=>`<tr><td class="lbl">${n}</td>${cnt(g[k].length,A.length)}${kpiCells(g[k])}</tr>`).join("");
+ return card("M39 · 김 사원의 메일이 도착했나",tbl(`<th></th><th class="n">명</th>${kpiHead()}`,rows),"근태가 찍히지 않게 집에서 야간 경고를 본다는 김 사원의 메일은 팀의 심리적 안전이 50 이상일 때만 도착합니다. 못 받은 사람은 결산 2쪽 '보내지 않은 메시지'에서 처음 봅니다.");}
+
+function tokCard(L){const A=L.filter(x=>Array.isArray(x.tk));if(!A.length)return "";const g={};A.forEach(x=>{(g[x.tk[1]]=g[x.tk[1]]||[]).push(x);});
+ const TT={w:"잘못 쓴 토큰",s:"한도 부족",o:"한도 과잉",t:"증액으로 보충",b:"균형",n:"쓰지 않음"};const N=A.filter(x=>x.tk.length>=5);const c=k=>N.filter(x=>x.tk[4]===k).length;
+ const rows=Object.keys(g).sort((a,b)=>a-b).map(k=>{const B=g[k],Bn=B.filter(x=>x.tk.length>=5);return `<tr><td class="lbl">💳${k}</td>${cnt(B.length,A.length)}<td class="n">${num(avg(B.map(x=>x.tk[0])))}</td><td class="n">${Bn.length?Bn.reduce((a,x)=>a+(x.tk[2]||0),0):"—"}</td><td class="n">${Bn.length?Bn.reduce((a,x)=>a+(x.tk[3]||0),0)+"회":"—"}</td><td class="n">${num(avg(B.map(x=>(x.kpi||[])[1])))}</td></tr>`;}).join("");
+ return card("토큰 손익",tbl(`<th>분기 한도</th><th class="n">명</th><th class="n">쓴 토큰</th><th class="n">잠긴 기회</th><th class="n">긴급 증액</th><th class="n">재무</th>`,rows)+(N.length?`<p>${Object.keys(TT).filter(k=>c(k)).map(k=>`${TT[k]} ${c(k)}명`).join(" · ")}</p>`:""),"토큰은 아끼면 재무를 지키고, 쓰면 팀장 시간·위험·점수를 삽니다. 유형은 학습자 성적표 ② 탭의 '토큰 손익'과 같은 기준으로 하나씩 붙습니다.");}
+
+function opsCard(L,R){const V=L.filter(x=>x.vb!=null),vb=V.filter(x=>x.vb>0);const U=L.filter(x=>x.ud>0);const T=L.filter(x=>x.timeMode==="plus"||x.timeMode==="free");
+ const nl=A=>PRESENT||!A.length?"":`<td class="names">${A.map(x=>esc(nameOf(x))+(x.vb>0?` (${x.vb})`:x.ud>0?` (${x.ud})`:"")).join(", ")}</td>`;
+ const rows=[["이번 라운드 선 위반",vb,V.length],["이전 장면으로 되돌리기",U,L.length],["받은편지함 시간을 늘리거나 없앰",T,L.length]].map(([n,A,t])=>`<tr><td class="lbl">${n}</td><td class="n">${A.length}${t!==L.length?` / ${t}`:""}</td>${PRESENT?"":nl(A)||"<td></td>"}</tr>`).join("");
+ return card("진행 기록",tbl(`<th></th><th class="n">명</th>${PRESENT?"":"<th>참가자</th>"}`,rows),"선 위반은 장애 절차·보안·현장 안전 기준을 벗어난 결정 수입니다(어떤 결정인지는 각자 성적표 요약 맨 위). 되돌린 사람에게는 결정을 바꾼 이유를 물어보세요. 시간을 늘린 사람은 보류 건수·서비스 안정 비교에서 빼고 보세요.");}
+
+function endCard(L){const A=L.filter(x=>"ex" in x||"vt" in x);if(!A.length)return card("결산 요약","<p class='empty'>이 반의 Round 3 코드에는 결산 요약 항목이 없습니다. 떠난 사람 수는 손을 들어 확인하세요.</p>");
+ const ex=[[0,0,"0명"],[1,2,"1~2명"],[3,99,"3명 이상"]].map(([a,b,n])=>[n,A.filter(x=>x.ex!=null&&x.ex>=a&&x.ex<=b)]);
+ const ap={o:"기록을 짚어 설명함",x:"기록 없이 설명함",g:"이의제기 없음 (근거 충족)",s:"이의제기 없음 (말하지 않은 사람 있음)"};
+ const r1=`<tr><td class="lbl">1년 동안 선을 넘음 (기준 미달 도장)</td>${cnt(A.filter(x=>x.vt>0).length,A.length)}</tr>`+ex.map(([n,B])=>`<tr><td class="lbl">내년 1월 떠나는 사람 ${n}</td>${cnt(B.length,A.length)}</tr>`).join("")+`<tr><td class="lbl">병가 신청이 나온 팀</td>${cnt(A.filter(x=>x.sk).length,A.length)}</tr>`;
+ const ev=A.filter(x=>x.en);const r2=`<tr><td class="lbl">7명 모두 근거를 갖춰 평가</td>${cnt(ev.filter(x=>x.eg>=x.en).length,A.length)}</tr><tr><td class="lbl">'KPI 순서로 채우기'를 씀</td>${cnt(A.filter(x=>x.ko).length,A.length)}</tr>`+Object.keys(ap).map(k=>`<tr><td class="lbl">이의제기 · ${ap[k]}</td>${cnt(A.filter(x=>x.ap===k).length,A.length)}</tr>`).join("");
+ return card("결산 요약",tbl(`<th></th><th class="n">명</th>`,r1+r2),"떠나는 사람 수는 난수 없이 정해지므로 같은 선택이면 같은 결과입니다. 결산 1쪽 '청구의 순간'과 8쪽 '1년의 흔적'에서 각자 이유를 볼 수 있습니다.");}
+
+function planCard(L){const A=L.filter(x=>x.pa);if(!A.length)return "";const g={};A.forEach(x=>{g[x.pa]=(g[x.pa]||0)+1;});
+ const rows=[1,2,3,4].map(a=>`<tr><td class="lbl">${AX[a-1]}</td>${cnt(g[a]||0,A.length)}</tr>`).join("");const pf=A.map(x=>x.pf||0);
+ return card("90일 액션 플랜 · 집중할 축",tbl(`<th>축</th><th class="n">명</th>`,rows)+`<p>Start·Stop·지표·함께 볼 사람 4칸 중 평균 ${(pf.reduce((a,b)=>a+b,0)/pf.length).toFixed(1)}칸을 채웠습니다.</p>`,"3인 1조 동료 코칭 때 같은 축을 고른 사람끼리 묶어도 좋습니다.");}
+
+const LO=["① 분석 · 핵심 과제 정의","② 정렬 · 기여 기준 공개","③ 결정 · 여력과 토큰 배분 기준","④ 판단 · 공개한 기준과 일관","⑤ 조율 · 대상에 맞게 설명","⑥ 평가 · 관찰 기록으로 등급"];
+function loCard(L){const A=L.filter(x=>Array.isArray(x.lo));if(!A.length)return "";
+ const rows=LO.map((n,i)=>{const v=A.map(x=>x.lo[i]);const y=v.filter(z=>z===1).length,no=v.filter(z=>z===0).length,na=v.filter(z=>z==null).length;return `<tr><td class="lbl">${n}</td>${cnt(y,A.length)}<td class="n">${no}</td><td class="n">${na}</td></tr>`;}).join("");
+ const five=A.filter(x=>x.lo.filter(z=>z===1).length>=5).length;
+ return card("학습 목표 · 자동 참고 판정",tbl(`<th>학습 목표</th><th class="n">충족</th><th class="n">미충족</th><th class="n">아직 없음</th>`,rows)+`<p>6개 중 5개 이상 충족: <b>${five}/${A.length}명</b></p>`,"결산 상세 '학습 목표'와 같은 근거로 자동 판정한 참고값입니다. 서술형이 걸린 ①③⑤는 응답 묶음을 강사가 채점해 확정합니다.");}
+
+/* ---------- 그리기 ---------- */
+function roundPanel(R){const L=DATA.D.filter(x=>x.r===R);if(!L.length)return `<div class="card empty">Round ${R} 코드가 아직 없습니다.</div>`;
+ const vio=L.filter(x=>x.vb>0).length,tm=L.filter(x=>x.timeMode==="plus"||x.timeMode==="free").length;
+ let h=`<div class="sess"><h2>Round ${R} · ${L.length}명</h2><span class="note">${SESS[R]}</span></div>
+ <div class="kpis"><div class="kpi"><b>${mmss(med(L.map(x=>x.t)))}</b><span>걸린 시간 중앙값</span></div><div class="kpi"><b>${vio}명</b><span>이번 라운드에 선을 넘은 사람</span></div>${KPI.map((k,i)=>`<div class="kpi"><b>${num(avg(L.map(x=>(x.kpi||[])[i])))}</b><span>${k} 반 평균</span></div>`).join("")}</div>
+ ${names(L)?`<p class="hide-present">${names(L)}</p>`:""}${tm?`<p class="note">받은편지함 시간을 늘리거나 없앤 사람 ${tm}명이 섞여 있습니다.</p>`:""}`;
+ const dec=ks=>ks.map(k=>decCard(k,L)).join("");
+ const cards=R===1?[inboxCard(L),dec(["M08"]),dec(["pub"]),critCard(L),pickCard(L),dec(["1-5","3-8"]),rubCard(L,1),axCard(L),styleCard(L),opsCard(L,1)]
+  :R===2?[allocCard(L),m39Card(L),tokCard(L),rubCard(L,2),dec(["4-5","6-1","5-4","8-1a","8-1b","8-1c"]),inboxCard(L),axCard(L),styleCard(L),opsCard(L,2)]
+  :[dec(["R3-1b","R3-1a"]),endCard(L),dec(["9-4","6-4a","6-4b","12-3a"]),planCard(L),axCard(L),loCard(L),rubCard(L,3),tokCard(L),styleCard(L),opsCard(L,3)];
+ h+=`<div class="grid">${cards.join("")}</div>`;
+ if(R>1){const prev=Object.keys(DEC).filter(k=>DEC[k].r<R).map(k=>decCard(k,L)).join("");
+  if(prev)h+=`<details class="prev"><summary>앞 라운드 결정의 청구서 · 앞에서 고른 길별로 이 라운드 끝 점수 보기</summary><div class="grid">${prev}</div></details>`;}
+ return h;}
+
+function peoplePanel(){const P=DATA.P;if(!P.length)return "";const last=p=>p.codes[3]||p.codes[2]||p.codes[1];
+ const rows=P.map(p=>{const x=last(p);const lo=Array.isArray(x.lo)?x.lo:[];const v=[1,2,3].reduce((a,r)=>a+((p.codes[r]&&p.codes[r].vb)||0),0);
+  return `<tr><td class="lbl">${esc(p.label)}</td>${[1,2,3].map(r=>`<td class="n">${p.codes[r]?"제출":"—"}</td>`).join("")}<td>${STY[x.style]||""}</td>${KPI.map((_,i)=>`<td class="n">${num((x.kpi||[])[i])}</td>`).join("")}<td class="n">${v||0}</td>${[0,1,2,3,4,5].map(i=>`<td class="n">${lo[i]===1?"충족":lo[i]===0?"미충족":"—"}</td>`).join("")}</tr>`;}).join("");
+ return `<div class="sess"><h2>학습자별 기록 · ${P.length}명</h2><span class="note">평가 계획 2수준(학습 목표)의 원자료입니다. 점수는 가장 늦은 라운드 코드 기준입니다.</span></div>
+ <div class="card">${tbl(`<th>참가자</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th>스타일</th>${kpiHead()}<th class="n">선 위반</th>${LO.map(n=>`<th class="n">${n.slice(0,1)}</th>`).join("")}`,rows)}
+ <p class="how">별칭이 없는 사람은 '익명 n'으로, 같은 별칭이 둘 이상이면 번호를 붙였습니다. 라운드가 다른 코드는 자가진단 응답과 Round 1 결정이 같으면 같은 사람으로 묶었습니다. 학습 목표는 자동 참고 판정이며 ①③⑤는 강사 채점으로 확정합니다.</p></div>`;}
+
+function draw(){const out=$("out");if(!DATA||!DATA.D.length){$("tabs").innerHTML="";out.innerHTML=`<div class="card empty">읽은 코드가 없습니다. 위 칸에 결과 코드를 붙여 넣고 '집계하기'를 누르세요.</div>`;return;}
+ const n=r=>DATA.D.filter(x=>x.r===r).length;const T=[["1","Round 1",n(1)],["2","Round 2",n(2)],["3","Round 3",n(3)]].concat(PRESENT?[]:[["p","학습자별",DATA.P.length]]);
+ if(!T.some(t=>t[0]===TAB&&(t[0]==="p"||t[2])))TAB=String([3,2,1].find(r=>n(r))||1);
+ $("tabs").innerHTML=T.map(([k,t,c])=>`<button class="tab" role="tab" aria-selected="${k===TAB}" data-tab="${k}">${t}<small>${c}명</small></button>`).join("");
+ out.innerHTML=TAB==="p"?peoplePanel():roundPanel(+TAB);}
+
+function status(){const d=DATA;if(!d){$("msg").textContent="";return;}const per=[1,2,3].map(r=>`Round ${r} ${d.D.filter(x=>x.r===r).length}명`).join(" · ");
+ const w=[];if(d.bad)w.push(`${d.bad}개는 검사 값이 맞지 않아 뺐습니다(복사하다 잘렸거나 바뀐 코드)`);if(d.cut)w.push(`끝이 잘린 듯한 코드 ${d.cut}개`);
+ if(d.dup)w.push(`같은 사람이 다시 보낸 코드 ${d.dup}개는 한 번만 셌습니다`);if(d.clash.length)w.push(`같은 별칭 ${d.clash.map(x=>"'"+esc(x)+"'").join(", ")}을 쓴 사람이 둘 이상이라 번호를 붙였습니다`);
+ if(d.old)w.push(`이전 버전 게임에서 만든 코드 ${d.old}개가 섞여 있습니다. 점수 평균은 같은 버전끼리 보세요`);
+ $("msg").innerHTML=`<b>${per}</b>${w.length?`<br><span class="warn">${w.join(" · ")}</span>`:""}`;}
+
+function run(){const t=$("in").value;try{localStorage.setItem("ftm_fac_codes",t);}catch(e){}DATA=build(t);const r=[3,2,1].find(r=>DATA.D.some(x=>x.r===r));if(r&&TAB!=="p")TAB=String(r);status();draw();}
+
+/* CSV: 학습자 한 사람의 라운드별 코드를 한 줄씩. 엑셀에서 한글이 깨지지 않도록 BOM을 붙인다 */
+function csv(){if(!DATA||!DATA.D.length){$("msg").innerHTML+="<br>내려받을 코드가 없습니다.";return;}
+ const keys=Object.keys(DEC).concat(["3-1","R1-pick","cells"]);
+ const H=["참가자","별칭","라운드","스타일"].concat(KPI,["선 위반","되돌리기","시간 방식","걸린 시간(초)","받은편지함 직접·답장","위임","4요소 위임","코칭","보류","M39","쓴 토큰","토큰 한도","토큰 유형","글 자동 점검"],AX.map(a=>a+" 자가진단"),AX.map(a=>a+" 실제"),LO,["기준 수","드러나지 않는 기여","연결 맞음","고른 기준","떠나는 사람","병가","KPI 순서로 채우기","근거 갖춘 평가","평가 수","이의제기 면담","1년 선 위반","액션 플랜 축","플랜 칸 채움"],keys.map(k=>"결정 "+k));
+ const q=v=>{v=v==null?"":String(v);return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;};
+ const rows=DATA.D.slice().sort((a,b)=>a._p.label.localeCompare(b._p.label,"ko")||a.r-b.r).map(x=>{const ib=x.ib||[],tk=x.tk||[],lo=x.lo||[],kc=x.kc||[];
+  return [x._p.label,x.nick||"",x.r,STY[x.style]||x.style].concat([0,1,2,3,4].map(i=>(x.kpi||[])[i]),[x.vb,x.ud,x.timeMode||"std",x.t,ib[0],ib[1],ib[2],ib[3],ib[4],x.m39,tk[0],tk[1],tk[4],(x.rw||x.rb||[]).map(v=>v==null?"-":v).join("/")],
+   [1,2,3,4].map(a=>x.ax&&x.ax.self?x.ax.self[a]:""),[1,2,3,4].map(a=>x.ax&&x.ax.act?x.ax.act[a]:""),[0,1,2,3,4,5].map(i=>lo[i]===1?"충족":lo[i]===0?"미충족":""),
+   [kc[0],kc[1],kc[2],String(x.ks||"").split("").map(i=>CARDS[+i]).join("·"),x.ex,x.sk,x.ko,x.eg,x.en,x.ap,x.vt,x.pa?AX[x.pa-1]:"",x.pf],keys.map(k=>(x.ch||{})[k])).map(q).join(",");});
+ const blob=new Blob(["﻿"+[H.map(q).join(",")].concat(rows).join("\r\n")],{type:"text/csv;charset=utf-8"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="intray-v3-학습자별기록.csv";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+
+/* 테마: 진행자가 고른 값 → 같은 사이트의 게임에서 고른 값 → 헬씨푸드 */
+function skin(k){if(!["food","night","orange"].includes(k))k="food";document.documentElement.dataset.skin=k;document.querySelectorAll(".skin").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===k)));}
+let sk0="food";try{sk0=localStorage.getItem("ftm_fac_theme")||localStorage.getItem("ftm_theme")||"food";}catch(e){}skin(sk0);
+document.querySelectorAll(".skin").forEach(b=>b.onclick=()=>{skin(b.dataset.k);try{localStorage.setItem("ftm_fac_theme",b.dataset.k);}catch(e){}});
+$("go").onclick=run;
+$("clear").onclick=()=>{if(!confirm("붙여 넣은 코드를 모두 지울까요? 이 브라우저에 저장된 것도 함께 지워집니다."))return;$("in").value="";try{localStorage.removeItem("ftm_fac_codes");}catch(e){}DATA=null;status();draw();};
+$("csv").onclick=csv;
+$("pres").onchange=e=>{PRESENT=e.target.checked;document.body.classList.toggle("present",PRESENT);if(PRESENT&&TAB==="p")TAB="1";draw();};
+$("tabs").onclick=e=>{const b=e.target.closest(".tab");if(!b)return;TAB=b.dataset.tab;draw();};
+try{const s=localStorage.getItem("ftm_fac_codes");if(s){$("in").value=s;run();}else draw();}catch(e){draw();}
 </script>

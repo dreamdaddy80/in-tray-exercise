@@ -457,6 +457,23 @@ window.v3RubricN=function(r){const W=G.written||{},out=[];const p=t=>{const x=ev
  if(r===2){if(W.notice&&W.notice.글)p(W.notice.글);if(W.three&&W.three.직접&&W.three.직접.글)p(W.three.직접.글);}
  if(r===3&&W["12-6"]){const w=W["12-6"];p(typeof w==="string"?w:(w.team||w.글||JSON.stringify(w)));}
  return out.length?out:undefined;};
+/* 진행자 집계 점검(2026-11-28) B7: 글마다 자리를 고정한 자동 점검 점수. 쓰지 않은 글은 null.
+   R1 [핵심 과제 근거] · R2 [배분 공지문, 세 개의 설명(직접 쓴 글)] · R3 [평가 결과 공지]. rb는 이전 집계와 맞추려고 그대로 둔다 */
+window.v3RubricW=function(r){const W=G.written||{};const n=t=>{if(!t)return null;const x=evalRubric3(t,r);return x?x.n:null;};
+ if(r===1)return [Array.isArray(W.tasks)&&W.tasks.length?(()=>{const x=evalRubricR1(W.tasks.map(x=>x.근거||"").join(" "));return x?x.n:null;})():null];
+ if(r===2)return [W.notice&&W.notice.방식!=="none"?n(W.notice.글):null,n(W.three&&W.three.직접&&W.three.직접.글)];
+ const w=W["12-6"];return [w?n(typeof w==="string"?w:(w.team||w.글||JSON.stringify(w))):null];};
+/* D2: 학습 목표 6개 자동 참고 판정(1 충족 · 0 미충족 · null 아직 해당 장면 전). 결산 상세 '학습 목표'와 같은 근거를 쓴다.
+   서술형이 걸린 목표(①③⑤)는 강사 채점으로 확정한다 */
+window.v3LearnObj=function(){const W=G.written||{};const R1=window.v3RubricW?v3RubricW(1)[0]:null;
+ const vio=window.violationsAll?violationsAll().length:0;const pct=typeof consPct==="function"?consPct():null;
+ const th=W.three&&W.three.직접&&W.three.직접.글?evalRubric3(W.three.직접.글,2):null,w12=G.wrote&&G.wrote["12-6"];
+ return [R1==null?null:(R1>=2?1:0),
+  G.kpiChk?(G.goal2?1:0):null,
+  G.goal3?((G.goal3.three&&!(G.f.sec_breach_data||G.f.sec_hidden))?1:0):null,
+  pct==null?null:((pct>=75&&!vio)?1:0),
+  th==null?null:((th.n>=2&&(w12==null||w12>=2))?1:0),
+  G.evalN?((G.goal6a&&(G.appeal0||G.appealOK))?1:0):null];};
 window.v3RubricHtml=function(r){
  const items=[];
  if(r===1&&G.written&&Array.isArray(G.written.tasks)&&G.written.tasks.length){

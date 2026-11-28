@@ -506,10 +506,21 @@ const AXN3={1:"① 일 맡기기",2:"② 평가하기",3:"③ 자원 나누기",
 function axRange(from){const a={1:{L:0,P:0},2:{L:0,P:0},3:{L:0,P:0},4:{L:0,P:0}};G.sig.slice(from).filter(habitSig).forEach(x=>{a[x.a][x.s]+=x.w;});const o={};for(const k in a){const t=a[k].L+a[k].P;o[k]=t?Math.round(a[k].L/t*100):null;}return o;}
 function lastChoice(id){const d=(G.decisions||[]).filter(x=>x.scene===id);return d.length?d[d.length-1].choice:null;}
 function resultCode(r){
- const ch={};["M08","1-5","3-1","R1-pick","3-8","4-5","6-1","5-4","8-1a","R3-1a","R3-1b","9-4","6-4b","12-3a"].forEach(id=>{const c=lastChoice(id);if(c!=null)ch[id]=String(c).slice(0,12);});
+ const ch={};["M08","1-5","3-1","R1-pick","3-8","4-5","6-1","5-4","8-1a","8-1b","8-1c","R3-1a","R3-1b","9-4","6-4a","6-4b","12-3a"].forEach(id=>{const c=lastChoice(id);if(c!=null)ch[id]=String(c).slice(0,12);});
  if(G.f.pub_full)ch.pub="A";else if(G.f.pub_items)ch.pub="B";else if(G.f.pub_leaders)ch.pub="C";
  if(G.cells)ch.cells=["RUN","AI","GROW","SEC"].map(k=>G.cells[k]||0).join("");
  const o={v:3,bv:2,r,nick:G.nick||"",style:G.style||"bal",ch,kpi:[G.score.성과,G.score.재무,G.score.사람,G.score.안정,G.fsat],ax:{self:G.diag||null,act:axRange(0)},g2:G.goal2,ib:(()=>{const st=(G.rs||{})[r]||{},nx=(G.rs||{})[r+1];const ms=(G.decisions||[]).slice(st.dec||0,nx?nx.dec:undefined).filter(x=>/^M\d+/.test(x.scene)).map(x=>String(x.choice).split(":")[0]);const n=k=>ms.filter(x=>x===k).length;const ds=(nx&&nx.ds0)||G.ds||{},d0=st.ds0||{};return [n("직접")+n("답장"),n("위임"),Math.max(0,(ds.f||0)-(d0.f||0)),n("코칭"),n("보류")+n("시간 초과(보류)")+n("시간 초과(미결)")];})(),m39:r>=2?(G.f.got_M39?1:0):undefined,rb:window.v3RubricN?v3RubricN(r):undefined,rv:3,tk:(()=>{/* [쓴 토큰, 한도, 잠긴 기회, 긴급 증액, 손익 유형, 잘못 쓴 토큰]. 앞 두 칸은 이전 코드와 같다 */try{const L=tokLedger(r);return [(G.roundTok&&G.roundTok[r])||0,G.tokenCap||40,L.locks.length,L.top,L.type,L.wrongTok];}catch(e){return [(G.roundTok&&G.roundTok[r])||0,G.tokenCap||40];}})(),ud:(G.undo&&G.undo.n&&G.undo.n[r])||0,vb:(window.violationsOf?violationsOf(r).length:0),timeMode:(G.timeMode&&G.timeMode!=="std")?G.timeMode:undefined,k0:(()=>{const s0=((G.rs||{})[r]||{}).score;return s0?[s0.성과??50,s0.안정??50]:undefined;})(),t:Math.round((Date.now()-((G.rs||{})[r]||{}).t0)/1000)||0};
+/* 진행자 집계 점검(2026-11-28): 새 항목만 덧붙인다. 이전 항목과 계산식은 그대로다.
+    rw 글별 자동 점검 · kc 기여 기준 [고른 수, 드러나지 않는 기여 수, 연결이 맞은 수] · ks 고른 기준 카드 번호 · lo 학습 목표 ①~⑥ 자동 참고 판정
+    Round 3만: ex 내년 1월 떠나는 사람 · sk 병가 · ko KPI 순서로 채우기 · eg/en 근거를 갖춘 평가 수/평가 수 · ap 이의제기 면담 · vt 1년 선 위반 수 · pa 90일 액션 플랜 축 · pf 플랜 칸 채운 수 */
+ try{o.rw=window.v3RubricW?v3RubricW(r):undefined;
+  if(G.kpiChk)o.kc=[G.kpiChk.n,G.kpiChk.hidden,G.kpiChk.right];
+  if(Array.isArray(G.pub)&&G.pub.length){const cs=(byId["3-1"]&&byId["3-1"].cards)||[];o.ks=G.pub.map(n=>cs.findIndex(c=>c.n===n)).filter(i=>i>=0).join("");}
+  o.lo=window.v3LearnObj?v3LearnObj():undefined;
+  if(r===3){const x=G.exodus;o.ex=x?(x.n||0):undefined;o.sk=x&&x.sick?1:0;o.ko=G.f.kpi_order?1:0;o.eg=G.evalGood;o.en=G.evalN;
+   o.ap=G.appeal0==="침묵"?"s":G.appeal0?"g":G.appealOK===true?"o":G.appealOK===false?"x":undefined;
+   o.vt=window.violationsAll?violationsAll().length:undefined;const pl=G.plan||{};o.pa=pl.ax||undefined;o.pf=["start","stop","kpi","who"].filter(k=>pl[k]&&String(pl[k]).trim()).length;}
+ }catch(e){}
  const b=btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
  let h=0;for(const c of b)h=(h*31+c.charCodeAt(0))>>>0;return `IT3-R${r}-${b}-${(h%65536).toString(16).padStart(4,"0")}`;
 }
@@ -1059,7 +1070,7 @@ if(!document.getElementById("sc-css")){const st=document.createElement("style");
 window.rcCard=function(r){
  const esc=x=>String(x??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
  const code=v3ResultCode(r),when=r<3?"내일 아침 피드백 세션":"종합 디브리핑";
- const IN=["별칭","이끄는 방식","주요 결정의 선택","다섯 가지 점수","자가진단과 실제 습관","걸린 시간"],OUT=["실명·사번","직접 쓴 글","메일 답장 내용"];
+ const IN=["별칭","이끄는 방식","주요 결정의 선택","다섯 가지 점수","자가진단과 실제 습관","받은편지함 처리 건수","토큰 사용","선 위반·되돌린 횟수","글의 자동 점검 점수(글 내용 제외)","학습 목표 자동 판정","걸린 시간"].concat(r===3?["떠난 사람 수·평가 근거 수·액션 플랜 축"]:[]),OUT=["실명·사번","직접 쓴 글","메일 답장 내용"];
  const copy=()=>{const n=document.getElementById("rc-nick");if(n)G.nick=n.value.trim().slice(0,20);save();const c=v3ResultCode(r);rcPaint(r,c);
   const ok=document.getElementById("rc-ok"),done=()=>{if(ok)ok.innerHTML=`<b>✓ 복사했습니다</b> · 끝 네 글자 ${esc(c.slice(-4))}`;const cd=document.querySelector(".rc-card");if(cd)cd.classList.add("sent");toast(r<3?"결과 코드를 복사했습니다. 안내받은 곳에 붙여 넣어 주세요.":"최종 결과 코드를 복사했습니다.");};
   const fail=()=>{const d=document.getElementById("rc-full-d");if(d)d.open=true;const t=document.getElementById("rc-full");if(t){t.focus();t.select();}if(ok)ok.textContent="자동 복사가 막혔습니다. 아래 칸에서 직접 복사해 주세요.";};
@@ -1076,7 +1087,7 @@ window.rcCard=function(r){
   <div class="rc-mores">
    <details class="rc-more"><summary>코드에 담기는 것</summary><div class="rc-chips">${IN.map(x=>`<span class="in">${x}</span>`).join("")}${OUT.map(x=>`<span class="out">${x}</span>`).join("")}</div><p class="note0">결과는 교육에만 쓰이고 인사 평가와 이어지지 않습니다.</p></details>
    <details class="rc-more" id="rc-full-d"><summary>코드 전체 보기</summary><textarea id="rc-full" readonly rows="3" aria-label="결과 코드 전체">${esc(code)}</textarea></details>
-   <details class="rc-more"><summary>강사는 이 코드를 어디에 쓰나요?</summary><ol class="rc-fac"><li>강사가 <a href="facilitator.html" target="_blank" rel="noopener">진행자 집계 페이지</a>에 모인 코드를 한 줄에 하나씩 붙여 넣습니다.</li><li>같은 갈림길에서 각 선택을 고른 인원, 그 사람들의 지표 평균, 반 전체의 습관 맹점, 걸린 시간이 나옵니다.</li><li>'발표 모드'로 별칭을 가린 채 화면에 띄워 피드백 세션을 진행합니다.</li></ol><p class="note0">계산은 강사의 브라우저 안에서만 하고 어디로도 보내지 않습니다. 따로 로그인하는 강사 모드는 없습니다.</p></details>
+   <details class="rc-more"><summary>강사는 이 코드를 어디에 쓰나요?</summary><ol class="rc-fac"><li>강사가 <a href="facilitator.html" target="_blank" rel="noopener">진행자 집계 페이지</a>에 모인 코드를 한꺼번에 붙여 넣습니다.</li><li>같은 갈림길에서 각 선택을 고른 인원, 그 사람들의 지표 평균, 반 전체의 습관 맹점, 걸린 시간이 나옵니다.</li><li>'발표 모드'로 이름을 모두 가린 채 화면에 띄워 피드백 세션을 진행합니다. 한 사람만 고른 선택지는 점수도 가립니다.</li></ol><p class="note0">계산은 강사의 브라우저 안에서만 하고 어디로도 보내지 않습니다. 따로 로그인하는 강사 모드는 없습니다.</p></details>
   </div></section>`;};
 window.rcPaint=function(r,c0){const c=c0||v3ResultCode(r);const e=document.getElementById("rc"),t=document.getElementById("rc-tail"),f=document.getElementById("rc-full"),cd=document.querySelector(".rc-card");
  if(e)e.textContent=c.slice(0,22)+"…"+c.slice(-10);if(t)t.textContent=c.slice(-4);if(f)f.value=c;if(cd)cd.querySelector(".rc-code").title=c;};
@@ -1084,8 +1095,8 @@ document.addEventListener("input",e=>{if(e.target&&e.target.id==="rc-nick"){G.ni
 /* 결과 코드 설명 (2026-11-20) */
 window.rcExplain=function(r){return `<div class="prose" style="font-size:14.5px"><p>아래 긴 글자 줄은 <b>이번 라운드 결과를 한 줄로 압축한 코드</b>입니다. 이 게임은 각자의 브라우저에서만 돌아가서, 결과가 강사에게 자동으로 모이지 않습니다. 그래서 이 코드를 강사에게 보내는 방식으로 반 전체 결과를 모읍니다.</p></div>
 <div class="steps"><div><b>1</b> <span> · '코드 복사'를 누르고, 강사가 안내한 곳(메신저, 설문 등)에 붙여 넣어 보냅니다.</span></div><div><b>2</b> <span> · 강사가 모든 코드를 집계 페이지에 한꺼번에 넣습니다.</span></div><div><b>3</b> <span> · ${r<3?"다음 날 아침 피드백 세션":"종합 피드백 세션"}에서 반 전체 결과를 함께 봅니다. 같은 갈림길에서 동료들은 어떤 길을 골랐고 결과가 어땠는지, 반 전체가 자주 놓친 습관은 무엇인지를 봅니다.</span></div></div>
-<div class="scgrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"><div class="sccard"><span style="color:var(--good)">들어가는 것</span><small class="def" style="font-size:13px">별칭 · 고른 이끄는 방식 · 주요 결정의 선택지 · 고객·재무·구성원·서비스 안정·헬씨푸드 만족 점수 · 자가진단과 실제 습관 비율 · 걸린 시간</small></div><div class="sccard"><span style="color:var(--bad)">들어가지 않는 것</span><small class="def" style="font-size:13px">실명·사번 · 직접 쓴 글(과제 근거, 공지문, 설명) · 메일 답장 내용. 결과는 교육에만 쓰이고 인사 평가와 이어지지 않습니다.</small></div></div>
-<p class="note">별칭은 집계 화면에서 내 결과를 찾는 이름표입니다. 비워 두어도 됩니다. 코드 맨 끝 네 글자는 복사하다 잘리거나 바뀌지 않았는지 확인하는 검사용 숫자라서, 코드는 처음부터 끝까지 그대로 보내야 합니다.</p><details class="ref"><summary>강사는 이 코드를 어디에 쓰나요? (강사 모드 안내)</summary><div style="margin-top:6px;font-size:14px;line-height:1.65"><p>따로 로그인하는 강사 모드는 없습니다. 강사는 같은 주소의 <a href="facilitator.html" target="_blank" rel="noopener">진행자 집계 페이지(facilitator.html)</a>를 엽니다.</p><p>① 학습자들이 보낸 코드를 한 줄에 하나씩 붙여 넣고 '집계하기'를 누릅니다. ② 같은 갈림길에서 각 선택을 고른 인원과 그 사람들의 지표 평균, KPI 조건 충족 인원, 반 전체의 습관 맹점 후보, 소요 시간이 나옵니다. ③ '발표 모드'를 켜면 별칭을 가린 채 화면에 띄워 피드백 세션을 진행할 수 있습니다.</p><p>계산은 강사의 브라우저 안에서만 하고 어디로도 보내지 않습니다. 라운드 시작 화면에서 '시작하기'를 누르면 바로 시작합니다. 강사 없이 혼자 할 때는 '혼자 진행 (해설 포함)'을 누르면 성적표에 피드백 세션을 대신하는 해설이 붙습니다.</p></div></details>`;};
+<div class="scgrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"><div class="sccard"><span style="color:var(--good)">들어가는 것</span><small class="def" style="font-size:13px">별칭 · 고른 이끄는 방식 · 주요 결정의 선택지 · 고객·재무·구성원·서비스 안정·헬씨푸드 만족 점수 · 자가진단과 실제 습관 비율 · 받은편지함 처리 건수 · 토큰 사용 · 선 위반과 되돌린 횟수 · 쓴 글의 자동 점검 점수(3점 만점, 글 내용은 빠짐) · 학습 목표 자동 판정 · 걸린 시간${r===3?" · 떠난 사람 수, 평가 근거를 갖춘 수, 90일 액션 플랜에서 고른 축":""}</small></div><div class="sccard"><span style="color:var(--bad)">들어가지 않는 것</span><small class="def" style="font-size:13px">실명·사번 · 직접 쓴 글(과제 근거, 공지문, 설명) · 메일 답장 내용. 결과는 교육에만 쓰이고 인사 평가와 이어지지 않습니다.</small></div></div>
+<p class="note">별칭은 집계 화면에서 내 결과를 찾는 이름표입니다. 비워 두어도 됩니다. 코드 맨 끝 네 글자는 복사하다 잘리거나 바뀌지 않았는지 확인하는 검사용 숫자라서, 코드는 처음부터 끝까지 그대로 보내야 합니다.</p><details class="ref"><summary>강사는 이 코드를 어디에 쓰나요? (강사 모드 안내)</summary><div style="margin-top:6px;font-size:14px;line-height:1.65"><p>따로 로그인하는 강사 모드는 없습니다. 강사는 같은 주소의 <a href="facilitator.html" target="_blank" rel="noopener">진행자 집계 페이지(facilitator.html)</a>를 엽니다.</p><p>① 학습자들이 보낸 코드를 한꺼번에 붙여 넣고 '집계하기'를 누릅니다. ② 같은 갈림길에서 각 선택을 고른 인원과 그 사람들의 지표 평균, KPI 조건 충족 인원, 반 전체의 습관 맹점 후보, 소요 시간이 나옵니다. ③ '발표 모드'를 켜면 이름을 모두 가린 채 화면에 띄워 피드백 세션을 진행할 수 있습니다.</p><p>계산은 강사의 브라우저 안에서만 하고 어디로도 보내지 않습니다. 라운드 시작 화면에서 '시작하기'를 누르면 바로 시작합니다. 강사 없이 혼자 할 때는 '혼자 진행 (해설 포함)'을 누르면 성적표에 피드백 세션을 대신하는 해설이 붙습니다.</p></div></details>`;};
 
 if(!document.getElementById("sc2-css")){const st=document.createElement("style");st.id="sc2-css";st.textContent=`
 .sctabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px;position:sticky;top:0;z-index:2;background:var(--bg,var(--panel));padding:6px 0}
